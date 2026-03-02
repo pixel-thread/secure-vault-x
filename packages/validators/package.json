@@ -1,0 +1,23 @@
+{
+ "name": "@securevault/validators",
+ "version": "1.0.0",
+ "private": true,
+ "main": "./src/index.ts",
+ "types": "./src/index.ts",
+ "exports": {
+  ".": "./src/index.ts"
+ },
+ "scripts": {
+  "generate": "tsc",
+  "build": "tsc",
+  "lint": "eslint ."
+ },
+ "dependencies": {
+  "zod": "^3.22.4"
+ },
+ "devDependencies": {
+  "@securevault/eslint-config": "workspace:*",
+  "@securevault/typescript-config": "workspace:*",
+  "typescript": "^5.3.3"
+ }
+}

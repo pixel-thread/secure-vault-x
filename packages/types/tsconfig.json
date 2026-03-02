@@ -1,0 +1,15 @@
+{
+ "extends": "@securevault/typescript-config/base.json",
+ "compilerOptions": {
+  "emitDeclarationOnly": true,
+  "outDir": "dist",
+  "rootDir": "src"
+ },
+ "include": [
+  "src"
+ ],
+ "exclude": [
+  "node_modules",
+  "dist"
+ ]
+}

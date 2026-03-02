@@ -1,0 +1,26 @@
+{
+  "name": "@securevault/database",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "prisma generate --schema=src/schema.prisma",
+    "push": "prisma db push --schema=src/schema.prisma",
+    "build": "tsc",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "devDependencies": {
+    "@securevault/eslint-config": "workspace:*",
+    "@securevault/typescript-config": "workspace:*",
+    "prisma": "^5.22.0",
+    "typescript": "^5.3.3"
+  }
+}

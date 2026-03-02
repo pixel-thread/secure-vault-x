@@ -1,0 +1,106 @@
+@baseUrl = http://localhost:3000
+@email = test2@example.com
+@password = Password123!
+@otpCode = 897828 
+
+### Health Check
+GET {{baseUrl}}/api/health
+
+### ==========================
+### 1. EMAIL/PASSWORD FLOW
+### ==========================
+
+### Password Registration
+POST {{baseUrl}}/api/auth/password/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Password Login (Initial)
+# Returns { "requiresMfa": true } if MFA enabled
+POST {{baseUrl}}/api/auth/password/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### MFA Verification
+# Use the code printed in the server logs in DEV
+POST {{baseUrl}}/api/auth/mfa/verify
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "code": "{{otpCode}}"
+}
+
+### Refresh Token Rotation
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### ==========================
+### 2. WEBAUTHN (PASSKEYS) FLOW
+### ==========================
+
+### Register: Generate Options
+POST {{baseUrl}}/api/auth/register/generate-options
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### Register: Verify Response
+POST {{baseUrl}}/api/auth/register/verify
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "registrationResponse": {},
+  "deviceName": "My Device",
+  "encryptedMEK": "payload_here"
+}
+
+### Login: Generate Options
+POST {{baseUrl}}/api/auth/login/generate-options
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### Login: Verify Response
+POST {{baseUrl}}/api/auth/login/verify
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "authenticationResponse": {}
+}
+
+### ==========================
+### 3. VAULT SYNC (PROTECTED)
+### ==========================
+
+### Get Latest Vault
+GET {{baseUrl}}/api/vault
+Authorization: Bearer {{authToken}}
+
+### Sync/Push Vault Changes
+POST {{baseUrl}}/api/vault
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "encryptedData": "new_encrypted_vault_data",
+  "version": 1
+}

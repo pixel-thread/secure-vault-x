@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?
+  mfaEnabled   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  credentials      WebAuthnCredential[]
+  devices          Device[]
+  refreshTokens    RefreshToken[]
+  otpVerifications OtpVerification[]
+}
+
+model WebAuthnCredential {
+  id           String @id @default(uuid())
+  userId       String
+  credentialId String @unique
+  publicKey    Bytes
+  counter      BigInt
+  transports   String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Device {
+  id           String   @id @default(uuid())
+  userId       String
+  deviceName   String
+  encryptedMEK String
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Vault {
+  id            String   @id @default(uuid())
+  userId        String
+  encryptedData String
+  version       Int      @default(1)
+  updatedAt     DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique // Hashed token
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  userId    String
+  code      String
+  type      String // e.g. "EMAIL_LOGIN"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
