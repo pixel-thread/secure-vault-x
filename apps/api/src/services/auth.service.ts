@@ -16,7 +16,7 @@ import {
 } from "../utils/errors/common";
 
 const RP_ID = process.env.RP_ID || "localhost";
-const RP_NAME = "SecureVault X";
+const RP_NAME = process.env.RP_NAME || "Secure-Vault X";
 const EXPECTED_ORIGIN = process.env.EXPECTED_ORIGIN || "http://localhost:3000";
 const JWT_SECRET_STRING = process.env.JWT_SECRET;
 if (!JWT_SECRET_STRING && process.env.NODE_ENV === "production") {
@@ -216,20 +216,19 @@ export class AuthService {
 
   static async registerPassword(email: string, passwordRaw: string) {
     let user = await prisma.user.findUnique({ where: { email } });
-    if (user && user.passwordHash) {
-      throw new ConflictError("User already created with a password");
-    }
+    if (user && user.passwordHash)
+      throw new ConflictError("User already exist");
 
     const passwordHash = await bcrypt.hash(passwordRaw, 12);
 
     if (!user) {
       user = await prisma.user.create({
-        data: { email, passwordHash, mfaEnabled: true },
+        data: { email, passwordHash },
       });
     } else {
       user = await prisma.user.update({
         where: { id: user.id },
-        data: { passwordHash, mfaEnabled: true },
+        data: { passwordHash },
       });
     }
 
@@ -287,8 +286,10 @@ export class AuthService {
     });
 
     if (!otpRecord) throw new BadRequestError("No pending OTP found");
+
     if (otpRecord.expiresAt < new Date())
       throw new BadRequestError("OTP Expired");
+
     if (otpRecord.code !== code) throw new BadRequestError("Invalid OTP");
 
     // Validated, burn the OTP so it can't be reused

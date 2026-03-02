@@ -10,9 +10,9 @@ import {
 import { errorResponse } from "../utils/helper/response";
 
 export const errorHandler = (err: Error, c: Context) => {
-  console.log(err);
   // Handle Unauthorized (401)
   if (err instanceof UnauthorizedError) {
+    console.log(err);
     return errorResponse(c, {
       status: 401,
       message: "Unauthorized",
@@ -100,7 +100,7 @@ export const errorHandler = (err: Error, c: Context) => {
   }
 
   // Generic Internal Error (500)
-  console.error(`[Error Handler]: ${err.stack || err.message}`);
+  // console.error(`[Error Handler]: ${err.stack || err.message}`);
 
   return errorResponse(c, {
     status: 500,

@@ -46,6 +46,7 @@ authRouter.post(
   zValidator("json", passwordRegisterSchema),
   AuthController.registerPassword,
 );
+
 authRouter.post(
   AUTH_ENDPOINT.POST_PASSWORD_LOGIN,
   zValidator("json", passwordLoginSchema),
@@ -64,10 +65,6 @@ authRouter.post(
   AuthController.refreshTokens,
 );
 
-authRouter.get(
-  AUTH_ENDPOINT.GET_ME,
-  protect,
-  AuthController.getMe,
-);
+authRouter.get(AUTH_ENDPOINT.GET_ME, protect, AuthController.getMe);
 
 export { authRouter };

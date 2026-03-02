@@ -5,7 +5,7 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 interface ResponseProps<T> {
   success?: boolean;
   message?: string;
-  data?: T | null;
+  data?: T;
   meta?: MetaT;
   status?: ContentfulStatusCode;
   error?: T;
@@ -22,7 +22,7 @@ export const sendResponse = <T>(
   {
     success = true,
     message = "Request successful",
-    data = null,
+    data,
     status = 200,
     meta,
     error,
