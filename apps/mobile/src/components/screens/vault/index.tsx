@@ -18,6 +18,7 @@ import { useAuthStore } from '../../../store/auth';
 import { encryptData, decryptData } from '@securevault/crypto';
 import { useColorScheme } from 'nativewind';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { http } from '@securevault/utils-native';
 import { AddPasswordForm } from './AddPasswordForm';
 import { AddBankCardForm } from './AddBankCardForm';
 
@@ -133,14 +134,12 @@ export default function VaultScreen() {
   } = useQuery({
     queryKey: ['vault'],
     queryFn: async () => {
-      if (!jwtToken || !mek) return mockVault;
+      if (!mek) return mockVault;
 
-      const response = await fetch(API_VAULT, {
-        headers: { Authorization: `Bearer ${jwtToken}` },
-      });
+      const response = await http.get<any>(API_VAULT);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.success) {
+        const data = response.data;
         if (data.encryptedData) {
           const envelope = JSON.parse(data.encryptedData);
           if (envelope.e && envelope.iv) {
@@ -173,21 +172,13 @@ export default function VaultScreen() {
         version: version + 1,
       };
 
-      const res = await fetch(API_VAULT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwtToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await http.post<any>(API_VAULT, payload);
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to push vault up');
+      if (!res.success) {
+        throw new Error(res.message || 'Failed to push vault up');
       }
 
-      const data = await res.json();
+      const data = res.data;
       return { version: data.version, vaultState: newVaultState };
     },
     onSuccess: (data) => {

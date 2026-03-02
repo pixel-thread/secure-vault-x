@@ -233,8 +233,9 @@ export class AuthService {
     }
 
     return {
-      status: "success",
-      message: "Password registered. Please login to continue.",
+      email: user.email,
+      mfaEnabled: user.mfaEnabled,
+      createdAt: user.createdAt,
     };
   }
 

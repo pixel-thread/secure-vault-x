@@ -2,6 +2,7 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
+import { useAuthStore } from '../../../store/auth';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordLoginSchema } from '@securevault/validators';
@@ -10,7 +11,6 @@ import { useMutation } from '@tanstack/react-query';
 import { http } from '@securevault/utils-native';
 import { AUTH_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
-import { logger } from '@securevault/utils';
 
 type FormValue = {
   email: string;
@@ -22,6 +22,7 @@ type ApiRes = {
 };
 
 export default function LoginScreen() {
+  const { setAuth } = useAuthStore();
   const {
     control,
     handleSubmit,
@@ -29,8 +30,8 @@ export default function LoginScreen() {
   } = useForm<FormValue>({
     resolver: zodResolver(passwordLoginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'jyrwaboys@gmail.com',
+      password: 'Password123!',
     },
   });
 
@@ -39,12 +40,12 @@ export default function LoginScreen() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_PASSWORD_LOGIN, data),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.success) {
-        const loginData = data?.data;
+        const loginData = data?.data as any;
         if (loginData?.refreshToken && loginData?.accessToken) {
-          tokenManager.setAccessToken(loginData?.accessToken);
-          tokenManager.setRefreshToken(loginData?.refreshToken);
+          await tokenManager.setBothTokens(loginData?.accessToken, loginData?.refreshToken);
+          setAuth(loginData.accessToken);
           toast.success('Welcome back!', {
             description: 'You have been successfully logged in.',
           });
@@ -62,9 +63,6 @@ export default function LoginScreen() {
 
   const onSubmit = async (data: FormValue) => {
     try {
-      // Trigger Native Biometrics & DKEK load or mock login
-      // await setAuth(data.email, 'mock_jwt_token');
-
       mutate(data);
     } catch (err: any) {
       toast.error('Authentication Failed', {
@@ -97,11 +95,10 @@ export default function LoginScreen() {
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.email
+                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.email
                     ? 'border-red-500 focus:border-red-500'
                     : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                }`}
+                  }`}
                 placeholder="Email Address"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 onBlur={onBlur}
@@ -126,11 +123,10 @@ export default function LoginScreen() {
             name="password"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.password
+                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.password
                     ? 'border-red-500 focus:border-red-500'
                     : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                }`}
+                  }`}
                 placeholder="Password"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 onBlur={onBlur}

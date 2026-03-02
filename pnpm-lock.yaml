@@ -123,6 +123,9 @@ importers:
       '@securevault/libs':
         specifier: workspace:^
         version: link:../../packages/libs
+      '@securevault/types':
+        specifier: workspace:^
+        version: link:../../packages/types
       '@securevault/ui-native':
         specifier: workspace:^
         version: link:../../packages/ui-native

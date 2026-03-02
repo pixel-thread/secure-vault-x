@@ -2,8 +2,9 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { tokenManager } from "@securevault/libs";
 import { AUTH_ENDPOINT } from "@securevault/constants";
 
+const baseURL = process.env.EXPO_PUBLIC_API_URL;
 const axiosInstance = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  baseURL: baseURL?.endsWith("/api") ? baseURL.slice(0, -4) : baseURL,
 });
 
 /* -------------------------------------------------- */

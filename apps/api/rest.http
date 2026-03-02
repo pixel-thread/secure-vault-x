@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:3000
-@email = test@example.com
+@email = jyrwaboys@gmail.com
 @password = Password123!
 @otpCode = 383234 
 

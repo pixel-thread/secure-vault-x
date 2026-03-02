@@ -54,17 +54,16 @@ export class AuthController {
     const result = await AuthService.registerPassword(email, password);
     return successResponse(c, {
       data: result,
-      message: "Registration successful",
+      message: "Registration successfully, please login to continue.",
     });
   }
 
   static async loginPassword(c: Context) {
     const { email, password } = await c.req.json();
-
     const result = (await AuthService.loginPassword(email, password)) as any;
     return successResponse(c, {
       data: result,
-      message: result.message,
+      message: result.message || "Login successful",
     });
   }
 

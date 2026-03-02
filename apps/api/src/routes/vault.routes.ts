@@ -8,7 +8,8 @@ import { protect } from "../middlewares/auth.middleware";
 const vaultRouter = new Hono();
 
 // Every Vault Route requires Authentication
-vaultRouter.use("*", protect);
+vaultRouter.use("/api/vault", protect);
+vaultRouter.use("/api/vault/*", protect);
 
 vaultRouter.get(VAULT_ENDPOINT.GET_VAULT, VaultController.getVault);
 vaultRouter.post(

@@ -2,6 +2,7 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
+import { useAuthStore } from '../../../store/auth';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordRegisterSchema } from '@securevault/validators';
@@ -22,6 +23,7 @@ type ApiRes = {
 };
 
 export default function SignupScreen() {
+  const { setAuth } = useAuthStore();
   const {
     control,
     handleSubmit,
@@ -39,11 +41,11 @@ export default function SignupScreen() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_PASSWORD_REGISTER, data),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.success) {
         if (data.data?.refreshToken && data.data?.accessToken) {
-          tokenManager.setAccessToken(data.data?.accessToken);
-          tokenManager.setRefreshToken(data.data?.refreshToken);
+          await tokenManager.setBothTokens(data.data.accessToken, data.data.refreshToken);
+          setAuth(data.data.accessToken);
           toast.success('Account Created!', {
             description: 'Your secure vault is ready.',
           });
@@ -80,7 +82,7 @@ export default function SignupScreen() {
         </Text>
       </View>
 
-      <View className="w-full max-w-sm space-y-4">
+      <View className="w-full max-w-sm gap-y-4">
         <View>
           <Text className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             Email
@@ -156,4 +158,3 @@ export default function SignupScreen() {
     </View>
   );
 }
-
