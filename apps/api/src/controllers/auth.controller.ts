@@ -94,4 +94,10 @@ export class AuthController {
     const user = await AuthService.getMe(userId);
     return successResponse(c, { data: user });
   }
+
+  static async logout(c: Context) {
+    const userId = c.get("userId");
+    const result = await AuthService.logout(userId);
+    return successResponse(c, { data: result });
+  }
 }

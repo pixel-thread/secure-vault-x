@@ -13,7 +13,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const { setIsLoading, isLoading, setUser, isAuthenticated, setIsAuthenticated } = useAuthStore();
 
   const { isPending, mutate } = useMutation({
-    mutationFn: () => http.post<UserT>(AUTH_ENDPOINT.GET_ME),
+    mutationFn: () => http.get<UserT>(AUTH_ENDPOINT.GET_ME),
     onSuccess: async (data) => {
       if (data.success && data?.data) {
         setUser(data.data);

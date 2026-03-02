@@ -23,7 +23,6 @@ type ApiRes = {
 };
 
 export default function SignupScreen() {
-  const { setAuth } = useAuthStore();
   const {
     control,
     handleSubmit,
@@ -37,30 +36,23 @@ export default function SignupScreen() {
   });
 
   const { colorScheme } = useColorScheme();
+
   const isDarkMode = colorScheme === 'dark';
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_PASSWORD_REGISTER, data),
     onSuccess: async (data) => {
       if (data.success) {
-        if (data.data?.refreshToken && data.data?.accessToken) {
-          await tokenManager.setBothTokens(data.data.accessToken, data.data.refreshToken);
-          setAuth(data.data.accessToken);
-          toast.success('Account Created!', {
-            description: 'Your secure vault is ready.',
-          });
-          router.replace('/(drawer)/(tabs)');
-        }
+        toast.success('Account Created!', {
+          description: data.message,
+        });
+        router.replace('/auth');
+        return data.data;
       } else {
         toast.error('Registration Failed', {
           description: data.message || 'Please try again.',
         });
       }
-    },
-    onError: (error: any) => {
-      toast.error('Registration Error', {
-        description: error.message || 'An unexpected error occurred.',
-      });
     },
   });
 
@@ -92,10 +84,11 @@ export default function SignupScreen() {
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.email
-                  ? 'border-red-500 focus:border-red-500'
-                  : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                  }`}
+                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                  errors.email
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                }`}
                 placeholder="Email Address"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 onBlur={onBlur}
@@ -120,10 +113,11 @@ export default function SignupScreen() {
             name="password"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.password
-                  ? 'border-red-500 focus:border-red-500'
-                  : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                  }`}
+                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                  errors.password
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                }`}
                 placeholder="Password"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 onBlur={onBlur}

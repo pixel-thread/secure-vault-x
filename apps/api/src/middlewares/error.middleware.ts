@@ -10,9 +10,12 @@ import {
 import { errorResponse } from "../utils/helper/response";
 
 export const errorHandler = (err: Error, c: Context) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log(JSON.stringify(err, null, 2));
+  }
+
   // Handle Unauthorized (401)
   if (err instanceof UnauthorizedError) {
-    console.log(err);
     return errorResponse(c, {
       status: 401,
       message: "Unauthorized",

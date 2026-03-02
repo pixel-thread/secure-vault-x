@@ -383,4 +383,10 @@ export class AuthService {
 
     return user;
   }
+  static async logout(userId: string) {
+    await prisma.refreshToken.updateMany({
+      where: { userId },
+      data: { revoked: true },
+    });
+  }
 }
