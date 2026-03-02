@@ -12,7 +12,15 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["NODE_ENV", "NODE_OPTIONS", "EXPECTED_ORIGIN"]
+      "env": [
+        "RP_ID",
+        "RP_NAME",
+        "JWT_SECRET",
+        "NODE_ENV",
+        "NODE_OPTIONS",
+        "EXPECTED_ORIGIN",
+        "NODE_ENV"
+      ]
     }
   }
 }
