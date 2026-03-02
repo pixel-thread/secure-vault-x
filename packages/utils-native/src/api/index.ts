@@ -4,7 +4,7 @@ import { AUTH_ENDPOINT } from "@securevault/constants";
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL;
 const axiosInstance = axios.create({
-  baseURL: baseURL?.endsWith("/api") ? baseURL.slice(0, -4) : baseURL,
+  baseURL: process.env.EXPO_PUBLIC_API_URL,
 });
 
 /* -------------------------------------------------- */
@@ -91,7 +91,7 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const refreshToken = tokenManager.getRefreshToken();
+      const refreshToken = await tokenManager.getRefreshToken();
 
       // Use standard axios instance for the refresh call
       const url = `${process.env.EXPO_PUBLIC_API_URL}${AUTH_ENDPOINT.POST_REFRESH}`;

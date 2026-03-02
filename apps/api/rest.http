@@ -2,6 +2,8 @@
 @email = jyrwaboys@gmail.com
 @password = Password123!
 @otpCode = 383234 
+@accessToken=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIyY2VjYTRlNi1hN2E5LTQ3MTEtODg2Zi05NDljZDY2MDQ2OTEiLCJlbWFpbCI6Imp5cndhYm95c0BnbWFpbC5jb20iLCJpc3MiOiJzZWN1cmV2YXVsdC1hcGkiLCJhdWQiOiJzZWN1cmV2YXVsdC1jbGllbnQiLCJpYXQiOjE3NzI0Njc1MTgsImV4cCI6MTc3MjQ2ODQxOH0.iLYq5nVXzR_8zFcKy9glQpkspyLJEKaO5x26VPqrwDo
+@refreshToken=8809fad70120cdea496ac40d3603f3140ad8bbed420d4aea349d7f9a8411a5b0888504215fdf4fe0
 
 ### Health Check
 GET {{baseUrl}}/api/health

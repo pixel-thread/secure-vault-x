@@ -15,11 +15,15 @@ export class VaultController {
     const userId = c.get("userId") as string;
     const { encryptedData, version } = await c.req.json();
 
-    const result = await VaultService.syncVault(
-      userId,
-      encryptedData,
-      version,
-    );
+    const result = await VaultService.syncVault(userId, encryptedData, version);
     return sendResponse(c, { data: result });
+  }
+
+  static async addSecret(c: Context) {
+    const userId = c.get("userId") as string;
+    const { encryptedData } = await c.req.json();
+
+    await VaultService.addSecret(userId, encryptedData);
+    return sendResponse(c, { message: "Secret added successfully" });
   }
 }

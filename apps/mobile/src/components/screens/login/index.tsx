@@ -22,7 +22,7 @@ type ApiRes = {
 };
 
 export default function LoginScreen() {
-  const { setAuth } = useAuthStore();
+  const { setIsAuthenticated } = useAuthStore();
   const {
     control,
     handleSubmit,
@@ -45,7 +45,7 @@ export default function LoginScreen() {
         const loginData = data?.data as any;
         if (loginData?.refreshToken && loginData?.accessToken) {
           await tokenManager.setBothTokens(loginData?.accessToken, loginData?.refreshToken);
-          setAuth(loginData.accessToken);
+          setIsAuthenticated(true);
           toast.success('Welcome back!', {
             description: 'You have been successfully logged in.',
           });
@@ -96,8 +96,8 @@ export default function LoginScreen() {
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.email
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
                   }`}
                 placeholder="Email Address"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
@@ -124,8 +124,8 @@ export default function LoginScreen() {
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.password
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
                   }`}
                 placeholder="Password"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}

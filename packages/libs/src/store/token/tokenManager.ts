@@ -14,11 +14,15 @@ class TokenManager {
   }
 
   // Getters
-  public getAccessToken(): string | null {
+  public async getAccessToken(): Promise<string | null> {
+    if (this.accessToken) return this.accessToken;
+    this.accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
     return this.accessToken;
   }
 
-  public getRefreshToken(): string | null {
+  public async getRefreshToken(): Promise<string | null> {
+    if (this.refreshToken) return this.refreshToken;
+    this.refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
     return this.refreshToken;
   }
 

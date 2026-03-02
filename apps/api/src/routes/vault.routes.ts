@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { syncVaultSchema } from "@securevault/validators";
+import { addSecretSchema, syncVaultSchema } from "@securevault/validators";
 import { VAULT_ENDPOINT } from "@securevault/constants";
 import { VaultController } from "../controllers/vault.controller";
 import { protect } from "../middlewares/auth.middleware";
@@ -12,10 +12,17 @@ vaultRouter.use("/api/vault", protect);
 vaultRouter.use("/api/vault/*", protect);
 
 vaultRouter.get(VAULT_ENDPOINT.GET_VAULT, VaultController.getVault);
+
 vaultRouter.post(
   VAULT_ENDPOINT.POST_SYNC_VAULT,
   zValidator("json", syncVaultSchema),
   VaultController.syncVault,
+);
+
+vaultRouter.post(
+  VAULT_ENDPOINT.POST_ADD_SECRET,
+  zValidator("json", addSecretSchema),
+  VaultController.addSecret,
 );
 
 export { vaultRouter };

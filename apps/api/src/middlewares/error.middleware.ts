@@ -81,13 +81,7 @@ export const errorHandler = (err: Error, c: Context) => {
     return errorResponse(c, {
       status: 400,
       message: "Request validation failed",
-      error: {
-        issues: err.issues.map((i) => ({
-          field: i.path.join("."),
-          message: i.message,
-          code: i.code,
-        })),
-      },
+      error: err.issues,
     });
   }
 

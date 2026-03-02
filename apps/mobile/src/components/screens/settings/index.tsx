@@ -16,7 +16,10 @@ export default function SettingsScreen() {
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const { mutate } = useMutation({
-    mutationFn: () => http.post<null>(AUTH_ENDPOINT.POST_LOGOUT),
+    mutationFn: (token: string) =>
+      http.post<null>(AUTH_ENDPOINT.POST_LOGOUT, {
+        refreshToken: token,
+      }),
     onSuccess: async (data) => {
       if (data.success) {
         await tokenManager.removeAllTokens();
@@ -27,12 +30,16 @@ export default function SettingsScreen() {
         setIsLoading(false);
         router.push('/auth');
       }
+
+      return data;
     },
   });
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLoading(true);
-    mutate();
+    const refreshToken = await tokenManager.getRefreshToken();
+    if (!refreshToken) return;
+    mutate(refreshToken);
   };
 
   const handlePurge = async () => {

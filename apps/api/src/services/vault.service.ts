@@ -3,9 +3,12 @@ import { BadRequestError, ConflictError } from "../utils/errors/common";
 
 export class VaultService {
   static async getVault(userId: string) {
-    const vault = await prisma.vault.findFirst({ where: { userId } });
-    if (!vault) return { encryptedData: null, version: 0 };
-    return { encryptedData: vault.encryptedData, version: vault.version };
+    const vaults = await prisma.vault.findMany({ where: { userId } });
+    if (vaults.length === 0) return { encryptedData: null, version: 0 };
+    return vaults.map((vault) => ({
+      encryptedData: vault.encryptedData,
+      version: vault.version,
+    }));
   }
 
   static async syncVault(
@@ -23,7 +26,7 @@ export class VaultService {
       if (version <= existingVault.version) {
         throw new ConflictError(
           "Conflict: Client version is behind server. Current Version: " +
-          existingVault.version,
+            existingVault.version,
         );
       }
       const updated = await prisma.vault.update({
@@ -38,5 +41,15 @@ export class VaultService {
     });
 
     return { status: "success", version: newVault.version };
+  }
+
+  static async addSecret(userId: string, encryptedData: string) {
+    const vault = await prisma.vault.findFirst({ where: { userId } });
+
+    if (!vault) throw new BadRequestError("Vault not found");
+
+    return await prisma.vault.create({
+      data: { encryptedData, userId: vault.userId },
+    });
   }
 }

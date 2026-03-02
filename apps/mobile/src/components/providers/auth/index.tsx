@@ -29,11 +29,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     async function init() {
       try {
         await tokenManager.init();
-        const access = tokenManager.getAccessToken();
-        const refresh = tokenManager.getRefreshToken();
-
-        if (access && refresh) {
+        const access = await tokenManager.getAccessToken();
+        const refreshToken = await tokenManager.getRefreshToken();
+        if (access && refreshToken) {
           setIsAuthenticated(true);
+          if (!isPending) {
+            mutate();
+          }
         } else {
           setIsLoading(false);
         }
@@ -44,7 +46,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
 
     init();
-  }, []); // Only on mount
+  }, [setIsLoading, mutate, setIsAuthenticated]); // Only on mount
 
   useEffect(() => {
     if (isAuthenticated) {

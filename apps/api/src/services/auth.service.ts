@@ -383,9 +383,18 @@ export class AuthService {
 
     return user;
   }
-  static async logout(userId: string) {
-    await prisma.refreshToken.updateMany({
-      where: { userId },
+
+  static async logout(token: string) {
+    const hash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { tokenHash: hash, revoked: false },
+    });
+
+    if (!storedToken) throw new UnauthorizedError("UnAuthorized");
+
+    return await prisma.refreshToken.update({
+      where: { tokenHash: hash },
       data: { revoked: true },
     });
   }

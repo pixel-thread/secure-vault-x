@@ -2,7 +2,11 @@ import { http } from "../http";
 
 type ErrorType = "ERROR" | "INFO" | "WARN" | "LOG";
 
-const sendLogToServer = async (type: ErrorType, message: string, content: string) => {
+const sendLogToServer = async (
+  type: ErrorType,
+  message: string,
+  content: string,
+) => {
   const logEntry = {
     type,
     message,
@@ -25,7 +29,8 @@ const formatData = (type: ErrorType, ...args: any[]): string => {
   const timestamp = new Date().toISOString();
   let content: string;
   if (args.length === 1) {
-    content = typeof args[0] === "string" ? args[0] : JSON.stringify(args[0], null, 3);
+    content =
+      typeof args[0] === "string" ? args[0] : JSON.stringify(args[0], null, 3);
   } else {
     const [message, data] = args;
     content =
@@ -37,8 +42,7 @@ const formatData = (type: ErrorType, ...args: any[]): string => {
 };
 
 const logMethod = async (type: ErrorType, ...args: any[]): Promise<void> => {
-  const isDebug = process.env.NODE_ENV === "development" && process.env.DEBUG_MODE;
-  if (isDebug) {
+  if (process.env.NODE_ENV === "development") {
     console.log(formatData(type, ...args));
   }
 

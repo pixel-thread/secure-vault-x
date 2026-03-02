@@ -80,7 +80,6 @@ export class AuthController {
   // ==========================
   static async refreshTokens(c: Context) {
     const { refreshToken } = await c.req.json();
-
     if (!refreshToken) throw new UnauthorizedError("Unauthorized");
 
     const tokens = (await AuthService.refreshTokens(refreshToken)) as any;
@@ -96,8 +95,8 @@ export class AuthController {
   }
 
   static async logout(c: Context) {
-    const userId = c.get("userId");
-    const result = await AuthService.logout(userId);
-    return successResponse(c, { data: result });
+    const { refreshToken } = await c.req.json();
+    await AuthService.logout(refreshToken);
+    return successResponse(c, { message: "Logout successful" });
   }
 }

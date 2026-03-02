@@ -15,12 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import Header from '../../Header';
 import { useState } from 'react';
 import { useAuthStore } from '../../../store/auth';
-import { encryptData, decryptData } from '@securevault/crypto';
 import { useColorScheme } from 'nativewind';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { http } from '@securevault/utils-native';
 import { AddPasswordForm } from './AddPasswordForm';
-import { AddBankCardForm } from './AddBankCardForm';
+import { VAULT_ENDPOINT } from '@securevault/constants';
 
 export type SecretType = 'password' | 'card';
 
@@ -47,8 +46,6 @@ interface CardSecret extends BaseSecret {
 }
 
 export type VaultSecret = PasswordSecret | CardSecret;
-
-const API_VAULT = 'http://localhost:3000/vault';
 
 const VaultItemIcon = ({ item }: { item: VaultSecret }) => {
   const [imgError, setImgError] = useState(false);
@@ -114,118 +111,27 @@ const mockVault: VaultSecret[] = [
 ];
 
 export default function VaultScreen() {
-  const queryClient = useQueryClient();
-  const { jwtToken, mek } = useAuthStore();
   const [version, setVersion] = useState(0);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedSecret, setSelectedSecret] = useState<VaultSecret | null>(null);
-  const [selectedType, setSelectedType] = useState<SecretType>('password');
 
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
   const {
-    data: vault = [],
+    data: vaults = [],
     isLoading,
     isFetching,
     refetch: syncVault,
   } = useQuery({
     queryKey: ['vault'],
-    queryFn: async () => {
-      if (!mek) return mockVault;
-
-      const response = await http.get<any>(API_VAULT);
-
-      if (response.success) {
-        const data = response.data;
-        if (data.encryptedData) {
-          const envelope = JSON.parse(data.encryptedData);
-          if (envelope.e && envelope.iv) {
-            const decryptedString = await decryptData(envelope.e, envelope.iv, mek);
-            setVersion(data.version);
-            const parsed = JSON.parse(decryptedString) as VaultSecret[];
-            return parsed.length > 0 ? parsed : mockVault;
-          }
-        } else {
-          return mockVault;
-        }
-      }
-      return mockVault; // Fallback to mock on error or null
-    },
-    enabled: !!jwtToken && !!mek,
-    initialData: mockVault,
+    queryFn: () => http.get<any>(VAULT_ENDPOINT.GET_VAULT),
+    // enabled: !!mek,
+    select: (data) => data?.data,
   });
-
   const loading = isLoading || isFetching;
-
-  const addSecretMutation = useMutation({
-    mutationFn: async (newVaultState: VaultSecret[]) => {
-      if (!jwtToken || !mek) return newVaultState;
-
-      const plaintext = JSON.stringify(newVaultState);
-      const envelope = await encryptData(plaintext, mek);
-
-      const payload = {
-        encryptedData: JSON.stringify({ e: envelope.encryptedData, iv: envelope.iv }),
-        version: version + 1,
-      };
-
-      const res = await http.post<any>(API_VAULT, payload);
-
-      if (!res.success) {
-        throw new Error(res.message || 'Failed to push vault up');
-      }
-
-      const data = res.data;
-      return { version: data.version, vaultState: newVaultState };
-    },
-    onSuccess: (data) => {
-      if (!data || !('version' in data)) return;
-      setVersion(data.version);
-      queryClient.setQueryData(['vault'], data.vaultState);
-    },
-    onError: (err) => {
-      console.warn('Save Conflict', err.message);
-    },
-  });
-
-  const handleAddNewItem = async (data: any) => {
-    let newItem: VaultSecret;
-
-    if (selectedType === 'password') {
-      newItem = {
-        id: Date.now().toString(),
-        type: 'password',
-        serviceName: data.serviceName,
-        website: data.url,
-        username: data.username,
-        secretInfo: data.password,
-        note: data.note,
-      };
-    } else {
-      newItem = {
-        id: Date.now().toString(),
-        type: 'card',
-        serviceName: data.serviceName,
-        cardholderName: data.cardName,
-        cardNumber: data.cardNumber,
-        expirationDate: data.exp,
-        cvv: data.cvv,
-        note: data.note,
-      };
-    }
-
-    const newVaultState = [newItem, ...vault];
-
-    // Optimistic UI Update
-    queryClient.setQueryData(['vault'], newVaultState);
-    setModalVisible(false);
-
-    // Call mutation
-    addSecretMutation.mutate(newVaultState);
-  };
 
   return (
     <View className="flex-1 bg-white dark:bg-[#09090b]">
@@ -246,7 +152,7 @@ export default function VaultScreen() {
       />
 
       <FlatList
-        data={vault}
+        data={vaults}
         keyExtractor={(item) => item.id}
         contentContainerClassName="px-6 py-6 pb-32"
         className="flex-1"
@@ -271,8 +177,7 @@ export default function VaultScreen() {
             onPress={() => {
               setSelectedSecret(item);
               setDetailModalVisible(true);
-            }}
-          >
+            }}>
             <VaultItemIcon item={item} />
             <View className="flex-1">
               {item.type === 'password' ? (
@@ -290,7 +195,7 @@ export default function VaultScreen() {
                     {item.serviceName}
                   </Text>
                   <Text className="font-mono text-sm font-medium tracking-widest text-zinc-500 dark:text-zinc-400">
-                    •••• {item.cardNumber.slice(-4)}
+                    // •••• {item.services}
                   </Text>
                 </>
               )}
@@ -301,8 +206,7 @@ export default function VaultScreen() {
                 const textToCopy = item.type === 'password' ? item.secretInfo : item.cardNumber;
                 Clipboard.setStringAsync(textToCopy);
                 Alert.alert('Copied', 'Copied to clipboard!');
-              }}
-            >
+              }}>
               <Ionicons name="copy-outline" size={20} color={isDarkMode ? '#a1a1aa' : '#71717a'} />
             </TouchableOpacity>
           </TouchableOpacity>
@@ -311,10 +215,7 @@ export default function VaultScreen() {
 
       <TouchableOpacity
         className="absolute bottom-8 right-8 h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 active:scale-95"
-        onPress={() => {
-          setSelectedType('password');
-          setModalVisible(true);
-        }}>
+        onPress={() => setModalVisible(true)}>
         <Ionicons name="add" size={32} color="#022c22" />
       </TouchableOpacity>
 
@@ -330,72 +231,12 @@ export default function VaultScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Type Selector Toggle */}
-            <View className="mb-6 flex-row rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900/50">
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  borderRadius: 8,
-                  paddingVertical: 8,
-                  backgroundColor:
-                    selectedType === 'password' ? (isDarkMode ? '#27272a' : '#fff') : 'transparent',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: selectedType === 'password' ? 0.1 : 0,
-                  shadowRadius: 1,
-                  elevation: selectedType === 'password' ? 2 : 0,
-                }}
-                onPress={() => setSelectedType('password')}>
-                <Text
-                  style={{
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                    color:
-                      selectedType === 'password'
-                        ? isDarkMode
-                          ? '#ffffff'
-                          : '#09090b'
-                        : '#71717a',
-                  }}>
-                  Password
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  borderRadius: 8,
-                  paddingVertical: 8,
-                  backgroundColor:
-                    selectedType === 'card' ? (isDarkMode ? '#27272a' : '#fff') : 'transparent',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: selectedType === 'card' ? 0.1 : 0,
-                  shadowRadius: 1,
-                  elevation: selectedType === 'card' ? 2 : 0,
-                }}
-                onPress={() => setSelectedType('card')}>
-                <Text
-                  style={{
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                    color:
-                      selectedType === 'card' ? (isDarkMode ? '#ffffff' : '#09090b') : '#71717a',
-                  }}>
-                  Bank Card
-                </Text>
-              </TouchableOpacity>
-            </View>
-
             <ScrollView
               className="mb-6"
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ gap: 20 }}>
-              {selectedType === 'password' ? (
-                <AddPasswordForm onSubmit={handleAddNewItem} />
-              ) : (
-                <AddBankCardForm onSubmit={handleAddNewItem} />
-              )}
+              <AddPasswordForm />
             </ScrollView>
           </View>
         </View>
@@ -561,26 +402,26 @@ export default function VaultScreen() {
                   ) : null}
 
                   <TouchableOpacity
-                    className="mt-2 mb-4 w-full flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 py-4 shadow-xl active:scale-[0.98] dark:border-red-500/20 dark:bg-red-500/10"
+                    className="mb-4 mt-2 w-full flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 py-4 shadow-xl active:scale-[0.98] dark:border-red-500/20 dark:bg-red-500/10"
                     onPress={() => {
-                      Alert.alert(
-                        'Delete Secret',
-                        'Are you sure you want to delete this item? This action cannot be undone.',
-                        [
-                          { text: 'Cancel', style: 'cancel' },
-                          {
-                            text: 'Delete',
-                            style: 'destructive',
-                            onPress: () => {
-                              const newVaultState = vault.filter((s) => s.id !== selectedSecret.id);
-                              queryClient.setQueryData(['vault'], newVaultState);
-                              addSecretMutation.mutate(newVaultState);
-                              setDetailModalVisible(false);
-                              setSelectedSecret(null);
-                            },
-                          },
-                        ]
-                      );
+                      // Alert.alert(
+                      //   'Delete Secret',
+                      //   'Are you sure you want to delete this item? This action cannot be undone.',
+                      //   [
+                      //     { text: 'Cancel', style: 'cancel' },
+                      //     {
+                      //       text: 'Delete',
+                      //       style: 'destructive',
+                      //       onPress: () => {
+                      //         const newVaultState = vault.filter((s) => s.id !== selectedSecret.id);
+                      //         queryClient.setQueryData(['vault'], newVaultState);
+                      //         addSecretMutation.mutate(newVaultState);
+                      //         setDetailModalVisible(false);
+                      //         setSelectedSecret(null);
+                      //       },
+                      //     },
+                      //   ]
+                      // );
                     }}>
                     <Ionicons name="trash-outline" size={20} color="#ef4444" />
                     <Text className="ml-2 text-lg font-bold text-red-500">
