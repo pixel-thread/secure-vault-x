@@ -16,6 +16,7 @@ interface ResponseProps<T> {
  * @param c Hono Context
  * @param props Response properties (success, message, data, status, meta, token)
  */
+
 export const sendResponse = <T>(
   c: Context,
   {
@@ -24,6 +25,7 @@ export const sendResponse = <T>(
     data = null,
     status = 200,
     meta,
+    error,
   }: ResponseProps<T>,
 ) => {
   return c.json(
@@ -31,6 +33,7 @@ export const sendResponse = <T>(
       success,
       message,
       data,
+      error,
       meta,
       timeStamp: new Date().toISOString(),
     },
