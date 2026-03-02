@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:3000
-@email = test2@example.com
+@email = test@example.com
 @password = Password123!
-@otpCode = 897828 
+@otpCode = 383234 
 
 ### Health Check
 GET {{baseUrl}}/api/health

@@ -1,0 +1,12 @@
+{
+ "watch": [
+  "src",
+  "../../packages"
+ ],
+ "ext": "ts,json",
+ "ignore": [
+  "src/**/*.test.ts",
+  "../../packages/**/*.test.ts"
+ ],
+ "exec": "tsx src/index.ts"
+}
