@@ -11,6 +11,8 @@ It provides:
 - Secure Enclave / Keystore–protected key hierarchy
 - Offline-first mobile architecture
 - Multi-device encrypted synchronization
+- Two-Factor Authentication (email OTP)
+- Trusted Device Management
 - Refresh token rotation with reuse detection
 
 The backend must never be capable of decrypting vault data.
@@ -163,6 +165,8 @@ WebAuthn provides:
 ## User
 - id (uuid)
 - email
+- mfaEnabled
+- passwordHash (optional fallback)
 - createdAt
 
 ## UserEncryption
@@ -185,6 +189,7 @@ WebAuthn provides:
 - userId
 - deviceName
 - encryptedMEK
+- isTrusted
 - createdAt
 
 ## Vault
@@ -246,11 +251,13 @@ Vault remains encrypted at rest.
 
 # 10. Mobile Security Controls
 
-- Biometric unlock required
+- Biometric unlock required / explicitly gated
 - Auto-lock after inactivity (5 minutes)
 - Clear MEK from memory on background
 - Prevent screenshots where possible
 - Clipboard auto-clear (30 seconds)
+- Local Enclave Purge (destructive wipe of encryption keys)
+- Vault Export (decrypted JSON localized export)
 - No sensitive logging
 
 ---
@@ -262,6 +269,8 @@ Vault remains encrypted at rest.
 - CSP headers
 - Structured logging
 - Centralized error handling
+- Device Trust Binding (`X-Device-Id` enforcement for multi-device management)
+- Optional 2FA (Email OTP verification)
 - No secrets committed
 - Dockerized deployment
 

@@ -124,6 +124,19 @@ User tricked into submitting credentials.
 Mitigation:
 - WebAuthn prevents credential replay
 - No password transmitted
+- OTP / 2FA usage limits unauthorized access without verified channel
+
+---
+
+## 4.7 Untrusted Device Access
+
+Threat:
+An attacker manages to register a device or exploit a vulnerable previously registered device.
+
+Mitigation:
+- Strict explicit trust model: First registered device is auto-trusted. New devices must be formally trusted by an existing trusted device.
+- Un-trusted devices cannot perform administrative operations (removing other devices, modifying keys).
+- The `X-Device-Id` bounding on requests enforces these bounds at the API level.
 
 ---
 
@@ -153,6 +166,7 @@ Requirements:
 ## 6. Authentication Security
 
 - WebAuthn passwordless login
+- Two-Factor Authentication (Email OTP verification layer)
 - Public/private key cryptography
 - Challenge-response verification
 - Replay attack prevention

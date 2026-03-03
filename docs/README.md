@@ -16,6 +16,9 @@ It features:
 - 📱 Secure Enclave / Android Keystore key protection
 - 🔄 Multi-device encrypted synchronization
 - 📶 Offline-first mobile architecture
+- 🛡 Two-Factor Authentication (Email OTP)
+- 📌 Trusted Device Management
+- ⬇️ Secure Vault Export (Decrypted offline backup)
 - 🔁 Refresh token rotation with reuse detection
 - 🛡 Strong threat-modeled security architecture
 
@@ -175,10 +178,12 @@ The mobile app:
 # 🗄 Database Models
 
 User  
+UserEncryption  
 WebAuthnCredential  
 Device  
 Vault  
 RefreshToken  
+OtpVerification  
 
 See `/docs/ARCHITECTURE.md` for detailed schema.
 
