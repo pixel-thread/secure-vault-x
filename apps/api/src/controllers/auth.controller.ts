@@ -115,4 +115,17 @@ export class AuthController {
     const encryptionData = await AuthService.setEncryptionSalt(userId, salt);
     return successResponse(c, { data: encryptionData });
   }
+
+  // ==========================
+  // MFA Toggle
+  // ==========================
+  static async toggleMfa(c: Context) {
+    const userId = c.get("userId");
+    const { enabled } = await c.req.json();
+    const result = await AuthService.toggleMfa(userId, enabled);
+    return successResponse(c, {
+      data: result,
+      message: enabled ? "Two-factor authentication enabled" : "Two-factor authentication disabled",
+    });
+  }
 }

@@ -10,6 +10,7 @@ import {
   verifyOtpSchema,
   refreshTokensSchema,
   setEncryptionSaltSchema,
+  toggleMfaSchema,
 } from "@securevault/validators";
 import { AUTH_ENDPOINT } from "@securevault/constants";
 import { AuthController } from "../controllers/auth.controller";
@@ -87,6 +88,14 @@ authRouter.post(
   protect,
   zValidator("json", setEncryptionSaltSchema),
   AuthController.setEncryptionSalt,
+);
+
+// MFA Toggle
+authRouter.post(
+  AUTH_ENDPOINT.POST_MFA_TOGGLE,
+  protect,
+  zValidator("json", toggleMfaSchema),
+  AuthController.toggleMfa,
 );
 
 export { authRouter };

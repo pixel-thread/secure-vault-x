@@ -3,6 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useColorScheme } from 'nativewind';
 import { Modal, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { toast } from 'sonner-native';
 
 type Props = {
   open: boolean;
@@ -64,7 +65,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                           className="p-1"
                           onPress={() => {
                             Clipboard.setStringAsync(selectedSecret.username);
-                            Alert.alert('Copied', 'Username copied!');
+                            toast.success('Username copied');
                           }}>
                           <Ionicons name="copy-outline" size={22} color="#10b981" />
                         </TouchableOpacity>
@@ -75,19 +76,17 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                       <Text className="mb-1 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                         Password
                       </Text>
-                      <View className="flex-row items-center rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                      <TouchableOpacity
+                        className="flex-row items-center rounded-2xl border border-zinc-200 bg-zinc-50 p-4 active:bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-900/50 dark:active:bg-zinc-800/60"
+                        onPress={() => {
+                          Clipboard.setStringAsync(selectedSecret.secretInfo);
+                          toast.success('Password copied');
+                        }}>
                         <Text className="flex-1 text-xl tracking-[0.2em] text-zinc-900 dark:text-white">
                           ••••••••••••
                         </Text>
-                        <TouchableOpacity
-                          className="p-1"
-                          onPress={() => {
-                            Clipboard.setStringAsync(selectedSecret.secretInfo);
-                            Alert.alert('Copied', 'Password copied!');
-                          }}>
-                          <Ionicons name="copy-outline" size={22} color="#10b981" />
-                        </TouchableOpacity>
-                      </View>
+                        <Ionicons name="copy-outline" size={22} color="#10b981" />
+                      </TouchableOpacity>
                     </View>
                   </>
                 ) : (
@@ -104,7 +103,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                           className="p-1"
                           onPress={() => {
                             Clipboard.setStringAsync(selectedSecret.cardholderName);
-                            Alert.alert('Copied', 'Name copied!');
+                            toast.success('Name copied');
                           }}>
                           <Ionicons name="copy-outline" size={22} color="#10b981" />
                         </TouchableOpacity>
@@ -123,7 +122,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                           className="p-1"
                           onPress={() => {
                             Clipboard.setStringAsync(selectedSecret.cardNumber);
-                            Alert.alert('Copied', 'Card number copied!');
+                            toast.success('Card number copied');
                           }}>
                           <Ionicons name="copy-outline" size={22} color="#10b981" />
                         </TouchableOpacity>
@@ -151,7 +150,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                             className="p-1"
                             onPress={() => {
                               Clipboard.setStringAsync(selectedSecret.cvv);
-                              Alert.alert('Copied', 'CVV copied!');
+                              toast.success('CVV copied');
                             }}>
                             <Ionicons name="copy-outline" size={22} color="#10b981" />
                           </TouchableOpacity>
@@ -183,7 +182,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                         {
                           text: 'Delete',
                           style: 'destructive',
-                          onPress: () => {},
+                          onPress: () => { },
                         },
                       ]
                     );

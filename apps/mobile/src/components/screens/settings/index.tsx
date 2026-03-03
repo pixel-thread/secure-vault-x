@@ -1,37 +1,64 @@
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../../store/auth';
 import { useColorScheme } from 'nativewind';
 import Header from '../../Header';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
-import { AUTH_ENDPOINT } from '@securevault/constants';
+import { AUTH_ENDPOINT, DEVICE_ENDPOINT, VAULT_ENDPOINT } from '@securevault/constants';
 import { http } from '@securevault/utils-native';
 import { tokenManager } from '@securevault/libs';
+import { decryptData } from '@securevault/crypto';
+import * as SecureStore from 'expo-secure-store';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { logger } from '@securevault/utils';
+import { useState, useEffect, useCallback } from 'react';
+import { isBiometricAvailable } from '../../../utils/biometricLock';
+
+interface DeviceItem {
+  id: string;
+  deviceName: string;
+  createdAt: string;
+}
 
 export default function SettingsScreen() {
-  const { logout, setIsLoading } = useAuthStore();
+  const { logout, setIsLoading, user } = useAuthStore();
   const purgeLocalEnclave = useAuthStore((state) => state.purgeLocalEnclave);
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const { mutate } = useMutation({
+  const queryClient = useQueryClient();
+
+  // Biometric state
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+
+  // MFA state
+  const [mfaEnabled, setMfaEnabled] = useState(user?.isMfaEnable ?? false);
+
+  // Check biometric availability & stored preference on mount
+  useEffect(() => {
+    (async () => {
+      const available = await isBiometricAvailable();
+      setBiometricAvailable(available);
+      const stored = await SecureStore.getItemAsync('SV_BIOMETRIC_ENABLED');
+      setBiometricEnabled(stored === 'true');
+    })();
+  }, []);
+
+  // ── Logout ──
+  const { mutate: logoutMutate } = useMutation({
     mutationFn: (token: string) =>
-      http.post<null>(AUTH_ENDPOINT.POST_LOGOUT, {
-        refreshToken: token,
-      }),
+      http.post<null>(AUTH_ENDPOINT.POST_LOGOUT, { refreshToken: token }),
     onSuccess: async (data) => {
       if (data.success) {
         await tokenManager.removeAllTokens();
-        toast.success('Logout successfully', {
-          description: data.message,
-        });
+        toast.success('Signed out successfully');
         logout();
         setIsLoading(false);
         router.push('/auth');
       }
-
-      return data;
     },
   });
 
@@ -39,13 +66,166 @@ export default function SettingsScreen() {
     setIsLoading(true);
     const refreshToken = await tokenManager.getRefreshToken();
     if (!refreshToken) return;
-    mutate(refreshToken);
+    logoutMutate(refreshToken);
   };
 
-  const handlePurge = async () => {
-    await purgeLocalEnclave();
-    router.replace('/');
-  };
+  // ── Purge ──
+  const handlePurge = useCallback(() => {
+    Alert.alert(
+      'Purge Local Enclave',
+      'This will permanently destroy your local encryption keys. You will be logged out and must re-authenticate to access your vault. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Purge',
+          style: 'destructive',
+          onPress: async () => {
+            await purgeLocalEnclave();
+            toast.success('Local enclave purged');
+            router.replace('/');
+          },
+        },
+      ]
+    );
+  }, [purgeLocalEnclave]);
+
+  // ── Export Vault ──
+  const handleExportVault = useCallback(async () => {
+    try {
+      const response = await http.get<any[]>(VAULT_ENDPOINT.GET_VAULT);
+      const entries = response?.data ?? [];
+
+      if (!Array.isArray(entries) || entries.length === 0) {
+        toast.error('Vault is empty — nothing to export');
+        return;
+      }
+
+      const mek = await SecureStore.getItemAsync('SV_MEK');
+      if (!mek) {
+        toast.error('MEK not found — cannot decrypt vault');
+        return;
+      }
+
+      const decrypted: any[] = [];
+      for (const entry of entries) {
+        if (!entry.encryptedData || !entry.iv) continue;
+        try {
+          const payload = await decryptData<any>(entry.encryptedData, entry.iv, mek);
+          decrypted.push(payload);
+        } catch {
+          logger.error('Skipped undecryptable entry during export');
+        }
+      }
+
+      if (decrypted.length === 0) {
+        toast.error('No entries could be decrypted');
+        return;
+      }
+
+      const json = JSON.stringify(decrypted, null, 2);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const exportFile = new File(Paths.document, `securevault-export-${timestamp}.json`);
+      exportFile.create();
+      exportFile.write(json);
+
+      const isSharingAvailable = await Sharing.isAvailableAsync();
+      if (isSharingAvailable) {
+        await Sharing.shareAsync(exportFile.uri, {
+          mimeType: 'application/json',
+          dialogTitle: 'Export Vault',
+        });
+      } else {
+        toast.success(`Exported to ${exportFile.uri}`);
+      }
+    } catch (err) {
+      logger.error('Export vault failed', err);
+      toast.error('Failed to export vault');
+    }
+  }, []);
+
+  // ── Biometric Toggle ──
+  const handleBiometricToggle = useCallback(
+    async (value: boolean) => {
+      if (value && !biometricAvailable) {
+        toast.error('Biometric authentication is not available on this device');
+        return;
+      }
+      await SecureStore.setItemAsync('SV_BIOMETRIC_ENABLED', value ? 'true' : 'false');
+      setBiometricEnabled(value);
+      toast.success(value ? 'Biometric lock enabled' : 'Biometric lock disabled');
+    },
+    [biometricAvailable]
+  );
+
+  // ── MFA Toggle ──
+  const { mutate: toggleMfaMutate, isPending: mfaPending } = useMutation({
+    mutationFn: (enabled: boolean) =>
+      http.post<{ mfaEnabled: boolean }>(AUTH_ENDPOINT.POST_MFA_TOGGLE, { enabled }),
+    onSuccess: (data) => {
+      if (data.success && data.data) {
+        setMfaEnabled(data.data.mfaEnabled);
+        toast.success(
+          data.data.mfaEnabled
+            ? 'Two-factor authentication enabled'
+            : 'Two-factor authentication disabled'
+        );
+      }
+    },
+    onError: () => toast.error('Failed to toggle MFA'),
+  });
+
+  const handleMfaToggle = useCallback(
+    (value: boolean) => {
+      Alert.alert(
+        value ? 'Enable 2FA' : 'Disable 2FA',
+        value
+          ? 'You will be required to enter an OTP code sent to your email on each login.'
+          : 'Are you sure? Your account will be less secure without 2FA.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: value ? 'Enable' : 'Disable',
+            style: value ? 'default' : 'destructive',
+            onPress: () => toggleMfaMutate(value),
+          },
+        ]
+      );
+    },
+    [toggleMfaMutate]
+  );
+
+  // ── Devices ──
+  const { data: devices = [] } = useQuery<DeviceItem[]>({
+    queryKey: ['devices'],
+    queryFn: async () => {
+      const res = await http.get<DeviceItem[]>(DEVICE_ENDPOINT.GET_DEVICES);
+      return res?.data ?? [];
+    },
+  });
+
+  const { mutate: removeDeviceMutate } = useMutation({
+    mutationFn: (deviceId: string) =>
+      http.delete(DEVICE_ENDPOINT.DELETE_DEVICE.replace(':id', deviceId)),
+    onSuccess: () => {
+      toast.success('Device removed');
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+    },
+    onError: () => toast.error('Failed to remove device'),
+  });
+
+  const handleRemoveDevice = useCallback(
+    (deviceId: string, deviceName: string) => {
+      Alert.alert('Remove Device', `Remove "${deviceName}" from trusted devices?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => removeDeviceMutate(deviceId),
+        },
+      ]);
+    },
+    [removeDeviceMutate]
+  );
 
   return (
     <View className="flex-1 bg-white dark:bg-[#09090b]">
@@ -55,6 +235,7 @@ export default function SettingsScreen() {
         className="flex-1 p-6"
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}>
+        {/* App Appearance */}
         <Text className="mb-3 ml-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">
           App Appearance
         </Text>
@@ -79,26 +260,40 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Security Controls */}
         <Text className="mb-3 ml-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">
           Security Controls
         </Text>
         <View className="mb-8 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
-          <TouchableOpacity className="flex-row items-center border-b border-zinc-100 p-5 active:bg-zinc-200 dark:border-zinc-800/50 dark:active:bg-zinc-800/60">
-            <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
-              <Ionicons
-                name="hardware-chip-outline"
-                size={22}
-                color={isDarkMode ? '#10b981' : '#059669'}
+          {/* Biometric Lock */}
+          {biometricAvailable && (
+            <View className="flex-row items-center border-b border-zinc-100 p-5 dark:border-zinc-800/50">
+              <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
+                <Ionicons
+                  name="finger-print-outline"
+                  size={22}
+                  color={isDarkMode ? '#10b981' : '#059669'}
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-lg font-bold text-zinc-900 dark:text-white">
+                  Biometric Lock
+                </Text>
+                <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Require on app launch
+                </Text>
+              </View>
+              <Switch
+                value={biometricEnabled}
+                onValueChange={handleBiometricToggle}
+                trackColor={{ false: '#3f3f46', true: '#059669' }}
+                thumbColor="#fff"
               />
             </View>
-            <View className="flex-1">
-              <Text className="text-lg font-bold text-zinc-900 dark:text-white">Hardware Keys</Text>
-              <Text className="text-sm text-zinc-500 dark:text-zinc-400">Manage NFC/USB Keys</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#71717a" />
-          </TouchableOpacity>
+          )}
 
-          <TouchableOpacity className="flex-row items-center p-5 active:bg-zinc-200 dark:active:bg-zinc-800/60">
+          {/* MFA Toggle */}
+          <View className="flex-row items-center p-5">
             <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
               <Ionicons
                 name="shield-checkmark-outline"
@@ -108,59 +303,74 @@ export default function SettingsScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-lg font-bold text-zinc-900 dark:text-white">
-                Security Preferences
+                Two-Factor Auth
               </Text>
               <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                Biometrics & Auto-lock
+                {mfaEnabled ? 'Enabled — OTP on login' : 'Disabled'}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#71717a" />
-          </TouchableOpacity>
+            <Switch
+              value={mfaEnabled}
+              onValueChange={handleMfaToggle}
+              disabled={mfaPending}
+              trackColor={{ false: '#3f3f46', true: '#059669' }}
+              thumbColor="#fff"
+            />
+          </View>
         </View>
 
+        {/* Trusted Devices */}
         <Text className="mb-3 ml-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">
-          Sync & Devices
+          Trusted Devices
         </Text>
         <View className="mb-8 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
-          <TouchableOpacity className="flex-row items-center border-b border-zinc-100 p-5 active:bg-zinc-200 dark:border-zinc-800/50 dark:active:bg-zinc-800/60">
-            <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
-              <Ionicons
-                name="phone-portrait-outline"
-                size={22}
-                color={isDarkMode ? '#10b981' : '#059669'}
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="text-lg font-bold text-zinc-900 dark:text-white">
-                Trusted Devices
-              </Text>
+          {devices.length === 0 ? (
+            <View className="items-center p-6">
               <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                Manage paired devices
+                No devices registered
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#71717a" />
-          </TouchableOpacity>
+          ) : (
+            devices.map((device, index) => (
+              <View
+                key={device.id}
+                className={`flex-row items-center p-5 ${index < devices.length - 1
+                  ? 'border-b border-zinc-100 dark:border-zinc-800/50'
+                  : ''
+                  }`}>
+                <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
+                  <Ionicons
+                    name="phone-portrait-outline"
+                    size={22}
+                    color={isDarkMode ? '#10b981' : '#059669'}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-lg font-bold text-zinc-900 dark:text-white">
+                    {device.deviceName}
+                  </Text>
+                  <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Added {new Date(device.createdAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  className="h-10 w-10 items-center justify-center rounded-full bg-red-100 active:bg-red-200 dark:bg-red-500/10 dark:active:bg-red-500/20"
+                  onPress={() => handleRemoveDevice(device.id, device.deviceName)}>
+                  <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
 
-          <TouchableOpacity className="flex-row items-center border-b border-zinc-100 p-5 active:bg-zinc-200 dark:border-zinc-800/50 dark:active:bg-zinc-800/60">
-            <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
-              <Ionicons
-                name="server-outline"
-                size={22}
-                color={isDarkMode ? '#10b981' : '#059669'}
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="text-lg font-bold text-zinc-900 dark:text-white">
-                Sync Configuration
-              </Text>
-              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                Server endpoints & polling
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#71717a" />
-          </TouchableOpacity>
-
-          <TouchableOpacity className="flex-row items-center p-5 active:bg-zinc-200 dark:active:bg-zinc-800/60">
+        {/* Export & Sync */}
+        <Text className="mb-3 ml-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+          Data Management
+        </Text>
+        <View className="mb-8 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
+          <TouchableOpacity
+            className="flex-row items-center p-5 active:bg-zinc-200 dark:active:bg-zinc-800/60"
+            onPress={handleExportVault}>
             <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
               <Ionicons
                 name="download-outline"
@@ -171,13 +381,14 @@ export default function SettingsScreen() {
             <View className="flex-1">
               <Text className="text-lg font-bold text-zinc-900 dark:text-white">Export Vault</Text>
               <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                Download encrypted backup
+                Download decrypted JSON
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#71717a" />
           </TouchableOpacity>
         </View>
 
+        {/* Danger Zone */}
         <Text className="mb-3 ml-2 text-sm font-semibold uppercase tracking-wider text-red-500/80">
           Danger Zone
         </Text>
@@ -199,6 +410,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Sign Out */}
         <TouchableOpacity
           className="mb-6 mt-auto w-full flex-row items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 py-4 shadow-sm active:bg-zinc-200 dark:border-zinc-800/80 dark:bg-zinc-900/80 dark:active:bg-zinc-800"
           onPress={handleLogout}>

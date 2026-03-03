@@ -10,6 +10,7 @@ import { HEALTH_ENDPOINT } from "@securevault/constants";
 
 import { authRouter } from "./routes/auth.routes";
 import { vaultRouter } from "./routes/vault.routes";
+import { deviceRouter } from "./routes/device.routes";
 
 const app = new Hono();
 
@@ -30,6 +31,7 @@ app.get(HEALTH_ENDPOINT.GET_STATUS, (c) =>
 // Mount Domains
 app.route("/", authRouter);
 app.route("/", vaultRouter);
+app.route("/", deviceRouter);
 
 // Start Server
 const port = 3000;

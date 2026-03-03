@@ -46,3 +46,19 @@ export const refreshTokensSchema = z.object({
 export const setEncryptionSaltSchema = z.object({
   salt: z.string().min(1, "Salt is required"),
 });
+
+// ==========================================
+// DEVICE SCHEMAS
+// ==========================================
+
+export const registerDeviceSchema = z.object({
+  deviceName: z.string().min(1, "Device name is required").max(100),
+});
+
+// ==========================================
+// MFA SCHEMAS
+// ==========================================
+
+export const toggleMfaSchema = z.object({
+  enabled: z.boolean(),
+});

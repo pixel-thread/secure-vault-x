@@ -1,8 +1,9 @@
-import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { VaultItemIcon } from './VaultIcon';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
+import { toast } from 'sonner-native';
 
 export const VaultItem = ({
   item,
@@ -45,7 +46,7 @@ export const VaultItem = ({
         onPress={() => {
           const textToCopy = item.type === 'password' ? item.secretInfo : item.cardNumber;
           Clipboard.setStringAsync(textToCopy);
-          Alert.alert('Copied', 'Copied to clipboard!');
+          toast.success('Copied to clipboard');
         }}>
         <Ionicons name="copy-outline" size={20} color={isDarkMode ? '#a1a1aa' : '#71717a'} />
       </TouchableOpacity>

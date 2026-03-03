@@ -423,4 +423,16 @@ export class AuthService {
 
     return { salt: encryptionData.salt };
   }
+
+  // ==========================================
+  // 6. MFA TOGGLE
+  // ==========================================
+  static async toggleMfa(userId: string, enabled: boolean) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { mfaEnabled: enabled },
+    });
+
+    return { mfaEnabled: user.mfaEnabled };
+  }
 }

@@ -13,6 +13,7 @@ type AuthEndpointKeys =
   | "POST_PASSWORD_REGISTER"
   | "POST_PASSWORD_LOGIN"
   | "POST_MFA_VERIFY"
+  | "POST_MFA_TOGGLE"
   | "POST_LOGOUT"
   | "POST_REFRESH"
   | "GET_ENCRYPTION_SALT"
@@ -29,6 +30,7 @@ export const AUTH_ENDPOINT: EndpointT<AuthEndpointKeys> = {
   POST_PASSWORD_REGISTER: "/api/auth/password/register",
   POST_PASSWORD_LOGIN: "/api/auth/password/login",
   POST_MFA_VERIFY: "/api/auth/mfa/verify",
+  POST_MFA_TOGGLE: "/api/auth/mfa/toggle",
   POST_REFRESH: "/api/auth/refresh",
   GET_ME: "/api/auth/me",
   POST_LOGOUT: "/api/auth/logout",
