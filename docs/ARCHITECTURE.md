@@ -29,6 +29,7 @@ securevault-x/
 ├── apps/  
 │ ├── api/ # Hono backend  
 │ ├── mobile/ # Expo React Native app  
+│ ├── web/ # Next.js web app  
 │  
 ├── packages/  
 │ ├── crypto/ # Shared encryption logic  
