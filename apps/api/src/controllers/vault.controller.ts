@@ -21,9 +21,11 @@ export class VaultController {
 
   static async addSecret(c: Context) {
     const userId = c.get("userId") as string;
-    const { encryptedData } = await c.req.json();
+    const { encryptedData, iv } = await c.req.json();
 
-    await VaultService.addSecret(userId, encryptedData);
+    const data = { encryptedData, iv };
+
+    await VaultService.addSecret(userId, data);
     return sendResponse(c, { message: "Secret added successfully" });
   }
 }

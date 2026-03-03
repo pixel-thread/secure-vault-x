@@ -81,12 +81,12 @@ export default function VaultScreen(): React.ReactNode {
         if (data.encryptedData) {
           const envelope = JSON.parse(data.encryptedData);
           if (envelope.e && envelope.iv) {
-            const decryptedString = await decryptData(
+            const decryptedData = await decryptData<VaultSecret[]>(
               envelope.e,
               envelope.iv,
               mek,
             );
-            setVault(JSON.parse(decryptedString));
+            setVault(decryptedData);
             setVersion(data.version);
           }
         } else {
@@ -181,8 +181,7 @@ export default function VaultScreen(): React.ReactNode {
     if (!jwtToken || !mek) return;
 
     try {
-      const plaintext = JSON.stringify(newVaultState);
-      const envelope = await encryptData(plaintext, mek);
+      const envelope = await encryptData(newVaultState, mek);
 
       const payload = {
         encryptedData: JSON.stringify({

@@ -35,7 +35,7 @@ export const VaultItem = ({
               {item.serviceName}
             </Text>
             <Text className="font-mono text-sm font-medium tracking-widest text-zinc-500 dark:text-zinc-400">
-              •••• {item.services}
+              •••• {item.cardNumber?.slice(-4)}
             </Text>
           </>
         )}

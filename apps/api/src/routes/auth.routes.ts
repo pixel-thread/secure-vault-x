@@ -9,6 +9,7 @@ import {
   passwordLoginSchema,
   verifyOtpSchema,
   refreshTokensSchema,
+  setEncryptionSaltSchema,
 } from "@securevault/validators";
 import { AUTH_ENDPOINT } from "@securevault/constants";
 import { AuthController } from "../controllers/auth.controller";
@@ -72,6 +73,20 @@ authRouter.post(
 
   zValidator("json", refreshTokensSchema),
   AuthController.logout,
+);
+
+// Encryption Data
+authRouter.get(
+  AUTH_ENDPOINT.GET_ENCRYPTION_SALT,
+  protect,
+  AuthController.getEncryptionSalt,
+);
+
+authRouter.post(
+  AUTH_ENDPOINT.POST_ENCRYPTION_SALT,
+  protect,
+  zValidator("json", setEncryptionSaltSchema),
+  AuthController.setEncryptionSalt,
 );
 
 export { authRouter };

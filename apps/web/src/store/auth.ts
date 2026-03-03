@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { generateMEK } from "@securevault/crypto";
+import { generateRandomKey } from "@securevault/crypto";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (typeof window !== "undefined") {
       dkek = localStorage.getItem("SV_DKEK");
       if (!dkek) {
-        dkek = await generateMEK(); // Use Crypto lib to generate secure key
+        dkek = await generateRandomKey(); // Use Crypto lib to generate secure key
         localStorage.setItem("SV_DKEK", dkek);
         console.log("New DKEK generated and bound to Browser LocalStorage");
       }
@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     // 3. For the purposes of this demo, we generate a mock MEK loaded in memory representing
     // the decrypted MEK pulled from the server's encrypted envelope payload using the DKEK.
-    const mek = await generateMEK();
+    const mek = await generateRandomKey();
 
     // 4. Set reactive state
     set({

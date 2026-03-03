@@ -398,4 +398,29 @@ export class AuthService {
       data: { revoked: true },
     });
   }
+
+  // ==========================================
+  // 5. ENCRYPTION SALT MANAGEMENT
+  // ==========================================
+  static async getEncryptionSalt(userId: string) {
+    const encryptionData = await prisma.userEncryption.findUnique({
+      where: { userId },
+    });
+
+    if (!encryptionData) {
+      return { salt: null };
+    }
+
+    return { salt: encryptionData.salt };
+  }
+
+  static async setEncryptionSalt(userId: string, salt: string) {
+    const encryptionData = await prisma.userEncryption.upsert({
+      where: { userId },
+      update: { salt },
+      create: { userId, salt },
+    });
+
+    return { salt: encryptionData.salt };
+  }
 }

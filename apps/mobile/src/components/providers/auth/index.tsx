@@ -5,12 +5,13 @@ import { UserT } from '@securevault/types';
 import { logger } from '@securevault/utils';
 import { http } from '@securevault/utils-native';
 import { useMutation } from '@tanstack/react-query';
+import * as SecureStore from 'expo-secure-store';
 import React, { useEffect } from 'react';
 
 type Props = { children: React.ReactNode };
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
-  const { setIsLoading, isLoading, setUser, isAuthenticated, setIsAuthenticated } = useAuthStore();
+  const { setIsLoading, isLoading, setUser, isAuthenticated, setIsAuthenticated, setHasMek } = useAuthStore();
 
   const { isPending, mutate } = useMutation({
     mutationFn: () => http.get<UserT>(AUTH_ENDPOINT.GET_ME),
@@ -31,6 +32,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         await tokenManager.init();
         const access = await tokenManager.getAccessToken();
         const refreshToken = await tokenManager.getRefreshToken();
+
+        // Check MEK
+        const mek = await SecureStore.getItemAsync('SV_MEK');
+        if (mek) {
+          setHasMek(true);
+        } else {
+          setHasMek(false);
+        }
+
         if (access && refreshToken) {
           setIsAuthenticated(true);
           if (!isPending) {
@@ -46,7 +56,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
 
     init();
-  }, [setIsLoading, mutate, setIsAuthenticated]); // Only on mount
+  }, [setIsLoading, mutate, setIsAuthenticated, setHasMek]); // Only on mount
 
   useEffect(() => {
     if (isAuthenticated) {

@@ -99,4 +99,20 @@ export class AuthController {
     await AuthService.logout(refreshToken);
     return successResponse(c, { message: "Logout successful" });
   }
+
+  // ==========================
+  // Encryption Salt
+  // ==========================
+  static async getEncryptionSalt(c: Context) {
+    const userId = c.get("userId");
+    const encryptionData = await AuthService.getEncryptionSalt(userId);
+    return successResponse(c, { data: encryptionData });
+  }
+
+  static async setEncryptionSalt(c: Context) {
+    const userId = c.get("userId");
+    const { salt } = await c.req.json();
+    const encryptionData = await AuthService.setEncryptionSalt(userId, salt);
+    return successResponse(c, { data: encryptionData });
+  }
 }

@@ -6,9 +6,8 @@ export class VaultService {
     const vaults = await prisma.vault.findMany({ where: { userId } });
     if (vaults.length === 0) return { encryptedData: null, version: 0 };
     return vaults.map((vault) => ({
-      id: vault.id,
       encryptedData: vault.encryptedData,
-      version: vault.version,
+      iv: vault.iv,
     }));
   }
 
@@ -44,13 +43,13 @@ export class VaultService {
     return { status: "success", version: newVault.version };
   }
 
-  static async addSecret(userId: string, encryptedData: string) {
-    const vault = await prisma.vault.findFirst({ where: { userId } });
-
-    if (!vault) throw new BadRequestError("Vault not found");
-
+  static async addSecret(
+    userId: string,
+    data: { encryptedData: string; iv: string },
+  ) {
+    const { encryptedData, iv } = data;
     return await prisma.vault.create({
-      data: { encryptedData, userId: vault.userId },
+      data: { encryptedData, userId, iv },
     });
   }
 }

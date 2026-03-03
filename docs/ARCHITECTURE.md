@@ -101,11 +101,11 @@ DKEK is stored in:
 - 128-bit authentication tag
 - IV never reused
 
-### Key Derivation (Optional Password Fallback)
-- PBKDF2
-- 310,000 iterations
-- SHA-256
-- 256-bit output
+### Key Derivation
+- Argon2id
+- Randomly generated 16-byte salt (stored in UserEncryption model)
+- 3 iterations, 64 MB memory, 1 degree of parallelism
+- 256-bit output used as MEK
 
 ### Randomness
 - Cryptographically secure random generator only
@@ -164,6 +164,13 @@ WebAuthn provides:
 - id (uuid)
 - email
 - createdAt
+
+## UserEncryption
+- id (uuid)
+- userId
+- salt (Base64 encoded string for Argon2 MEK derivation)
+- createdAt
+- updatedAt
 
 ## WebAuthnCredential
 - id

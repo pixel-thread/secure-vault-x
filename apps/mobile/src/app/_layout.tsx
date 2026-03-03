@@ -29,7 +29,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
+      <SafeAreaProvider className="bg-white dark:bg-[#09090b]">
         <Wrapper>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />

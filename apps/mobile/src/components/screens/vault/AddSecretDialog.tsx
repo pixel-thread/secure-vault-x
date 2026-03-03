@@ -28,7 +28,7 @@ export const AddSecretDialog = ({ open: modalVisible, onValueChange: setModalVis
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ gap: 20 }}>
-            <AddPasswordForm />
+            <AddPasswordForm onSuccess={() => setModalVisible(false)} />
           </ScrollView>
         </View>
       </View>

@@ -42,3 +42,7 @@ export const verifyOtpSchema = z.object({
 export const refreshTokensSchema = z.object({
   refreshToken: z.string().min(3, "Invalid length for refresh token"),
 });
+
+export const setEncryptionSaltSchema = z.object({
+  salt: z.string().min(1, "Salt is required"),
+});

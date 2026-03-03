@@ -13,7 +13,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "buffer": "^6.0.3"
+    "@noble/hashes": "^1.8.0",
+    "buffer": "^6.0.3",
+    "hash-wasm": "^4.12.0"
   },
   "devDependencies": {
     "@securevault/eslint-config": "workspace:*",

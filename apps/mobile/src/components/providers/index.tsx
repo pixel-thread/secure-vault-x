@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import Redirect from '../common/Redirect';
 import { TQueryProvider } from './query';
 import { AuthProvider } from './auth';
+import { CryptoProvider } from './crypto';
 
 type Props = {
   children: React.ReactNode;
@@ -10,11 +11,13 @@ type Props = {
 export const Wrapper = ({ children }: Props) => {
   return (
     <TQueryProvider>
-      <Suspense>
-        <AuthProvider>
-          <Redirect>{children}</Redirect>
-        </AuthProvider>
-      </Suspense>
+      <CryptoProvider>
+        <Suspense>
+          <AuthProvider>
+            <Redirect>{children}</Redirect>
+          </AuthProvider>
+        </Suspense>
+      </CryptoProvider>
     </TQueryProvider>
   );
 };

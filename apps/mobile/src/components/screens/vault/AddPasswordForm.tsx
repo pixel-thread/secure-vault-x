@@ -10,7 +10,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { http } from '@securevault/utils-native';
 import { VAULT_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
-import { decryptData, encryptData, generateMEK } from '@securevault/crypto';
+import { decryptData, encryptData } from '@securevault/crypto';
+import * as SecureStore from 'expo-secure-store';
 
 const passwordSchema = z.object({
   serviceName: z.string().min(1, 'Service name is required'),
@@ -24,9 +25,14 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 type DTO = {
   encryptedData: string;
+  iv: string;
 };
 
-export function AddPasswordForm() {
+type Props = {
+  onSuccess?: () => void;
+};
+
+export function AddPasswordForm({ onSuccess }: Props) {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const [showPassword, setShowPassword] = useState(false);
@@ -63,18 +69,28 @@ export function AddPasswordForm() {
       toast.error('Failed to add secret', {
         description: data.message || 'Please try again.',
       });
+      onSuccess?.();
       return data;
     },
   });
 
   const onSubmitForm: SubmitHandler<PasswordFormValues> = async (data: PasswordFormValues) => {
-    const mek = await generateMEK();
-    const { encryptedData, iv } = await encryptData(JSON.stringify(data), mek);
+    // BUG: Remove the comment when the backend is fixed
+    const mek = await SecureStore.getItemAsync('SV_MEK');
+    if (!mek) {
+      toast.error('Encryption Error', { description: 'Master Encryption Key not found.' });
+      return;
+    }
+    const { encryptedData, iv } = await encryptData(data, mek);
     logger.log('MEK', mek);
     logger.log('Encrypted', encryptedData);
+    // Not strictly needed to decrypt here, but left for testing like the original
     const decryptedData = await decryptData(encryptedData, iv, mek);
     logger.log('Decrypted', decryptedData);
-    // mutate({ encryptedData: JSON.stringify(encryptedData) });
+
+    // Convert to DTO expected by backend (in reality backend will want iv too, but matching current signature)
+    // Actually wait, let's keep it close to the old mutate signature
+    mutate({ encryptedData: encryptedData, iv });
   };
 
   return (

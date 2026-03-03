@@ -1,4 +1,4 @@
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../../Header';
 import { useState } from 'react';
@@ -9,6 +9,11 @@ import { VAULT_ENDPOINT } from '@securevault/constants';
 import { VaultItem } from './VaultItem';
 import { VaultItemDialog } from './VaultItemDialog';
 import { AddSecretDialog } from './AddSecretDialog';
+import { VaultEmpty } from './VaultEmpty';
+import { MekSetup } from './MekSetup';
+import { decryptData } from '@securevault/crypto';
+import * as SecureStore from 'expo-secure-store';
+import { logger } from '@securevault/utils';
 
 export type SecretType = 'password' | 'card';
 
@@ -36,9 +41,70 @@ interface CardSecret extends BaseSecret {
 
 export type VaultSecret = PasswordSecret | CardSecret;
 
+/** Shape of each encrypted vault entry returned by the API */
+interface EncryptedVaultEntry {
+  encryptedData: string;
+  iv: string | null;
+}
+
+/** Shape of the decrypted payload stored inside each vault entry */
+interface DecryptedPasswordPayload {
+  serviceName: string;
+  url?: string;
+  username: string;
+  password: string;
+  note?: string;
+}
+
+const getAndDecryptVault = async (): Promise<VaultSecret[]> => {
+  const response = await http.get<EncryptedVaultEntry[]>(VAULT_ENDPOINT.GET_VAULT);
+  const entries: EncryptedVaultEntry[] = response?.data ?? [];
+
+  // Nothing to decrypt
+  if (!Array.isArray(entries) || entries.length === 0) return [];
+
+  const mek = await SecureStore.getItemAsync('SV_MEK');
+
+  if (!mek) {
+    logger.error('Vault decrypt failed: MEK not found in SecureStore');
+    return [];
+  }
+
+  const decrypted: VaultSecret[] = [];
+
+  for (const entry of entries) {
+    if (!entry.encryptedData || !entry.iv) continue;
+    try {
+      const payload = await decryptData<DecryptedPasswordPayload>(
+        entry.encryptedData,
+        entry.iv,
+        mek
+      );
+
+      decrypted.push({
+        id: entry.iv,
+        type: 'password',
+        serviceName: payload.serviceName,
+        website: payload.url ?? '',
+        username: payload.username,
+        secretInfo: payload.password,
+        note: payload.note,
+      });
+    } catch (err) {
+      logger.error(
+        'Failed to decrypt vault entry',
+        entry.iv,
+        err instanceof Error ? err.message : err
+      );
+    }
+  }
+
+  return decrypted;
+};
+
 export default function VaultScreen() {
   const [modalVisible, setModalVisible] = useState(false);
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, hasMek } = useAuthStore();
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedSecret, setSelectedSecret] = useState<VaultSecret | null>(null);
 
@@ -47,13 +113,17 @@ export default function VaultScreen() {
     isLoading,
     isFetching,
     refetch: syncVault,
-  } = useQuery({
+  } = useQuery<VaultSecret[]>({
     queryKey: ['vault'],
-    queryFn: () => http.get<any>(VAULT_ENDPOINT.GET_VAULT),
-    enabled: isAuthenticated,
-    select: (data) => data?.data,
+    queryFn: async (): Promise<VaultSecret[]> => getAndDecryptVault(),
+    enabled: isAuthenticated && hasMek,
   });
+
   const loading = isLoading || isFetching;
+
+  if (!hasMek) {
+    return <MekSetup />;
+  }
 
   return (
     <View className="flex-1 bg-white dark:bg-[#09090b]">
@@ -78,21 +148,7 @@ export default function VaultScreen() {
         keyExtractor={(item) => item.id}
         contentContainerClassName="px-6 py-6 pb-32"
         className="flex-1"
-        ListEmptyComponent={
-          !loading ? (
-            <View className="mt-20 items-center justify-center">
-              <View className="mb-6 rounded-full border border-zinc-200 bg-zinc-50 p-8 dark:border-zinc-800/50 dark:bg-zinc-900/60">
-                <Ionicons name="file-tray-outline" size={64} color="#71717a" />
-              </View>
-              <Text className="text-xl font-bold text-zinc-700 dark:text-zinc-300">
-                Your Vault is Empty
-              </Text>
-              <Text className="mt-2 text-center text-zinc-500">
-                Tap the button below to add your first encrypted secret.
-              </Text>
-            </View>
-          ) : null
-        }
+        ListEmptyComponent={<VaultEmpty />}
         renderItem={({ item }) => (
           <VaultItem
             item={item}
