@@ -19,7 +19,26 @@ export class DeviceController {
  static async removeDevice(c: Context) {
   const userId = c.get("userId") as string;
   const deviceId = c.req.param("id");
-  const result = await DeviceService.removeDevice(userId, deviceId);
+
+  // In a real app this would come from a verified token/cookie tied to the current device
+  // For this implementation, we accept it from headers or body for the trusted logic check
+  const actingDeviceId = c.req.header("X-Device-Id");
+
+  const result = await DeviceService.removeDevice(userId, deviceId, actingDeviceId);
+  return sendResponse(c, { data: result });
+ }
+
+ static async updateTrustStatus(c: Context) {
+  const userId = c.get("userId") as string;
+  const targetDeviceId = c.req.param("id");
+  const { isTrusted } = await c.req.json();
+  const actingDeviceId = c.req.header("X-Device-Id");
+
+  if (!actingDeviceId) {
+   throw new Error("actingDeviceId (X-Device-Id header) is required to change trust status.");
+  }
+
+  const result = await DeviceService.updateTrustStatus(userId, targetDeviceId, isTrusted, actingDeviceId);
   return sendResponse(c, { data: result });
  }
 }

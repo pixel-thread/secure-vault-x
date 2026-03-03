@@ -20,6 +20,7 @@ import { isBiometricAvailable } from '../../../utils/biometricLock';
 interface DeviceItem {
   id: string;
   deviceName: string;
+  isTrusted: boolean;
   createdAt: string;
 }
 
@@ -195,7 +196,7 @@ export default function SettingsScreen() {
   );
 
   // ── Devices ──
-  const { data: devices = [] } = useQuery<DeviceItem[]>({
+  const { data: devices = [], refetch: refetchDevices } = useQuery<DeviceItem[]>({
     queryKey: ['devices'],
     queryFn: async () => {
       const res = await http.get<DeviceItem[]>(DEVICE_ENDPOINT.GET_DEVICES);
@@ -203,14 +204,27 @@ export default function SettingsScreen() {
     },
   });
 
+  const getActingDeviceId = async () => {
+    // In a real app, this should securely identify the CURRENT device from SecureStore
+    // For this example, we'll try to find the earliest trusted device as a fallback
+    const id = await SecureStore.getItemAsync('SV_DEVICE_ID');
+    if (id) return id;
+    const trusted = devices.find(d => d.isTrusted);
+    return trusted?.id ?? '';
+  };
+
   const { mutate: removeDeviceMutate } = useMutation({
-    mutationFn: (deviceId: string) =>
-      http.delete(DEVICE_ENDPOINT.DELETE_DEVICE.replace(':id', deviceId)),
+    mutationFn: async (deviceId: string) => {
+      const actingId = await getActingDeviceId();
+      return http.delete(DEVICE_ENDPOINT.DELETE_DEVICE.replace(':id', deviceId), {
+        headers: { 'X-Device-Id': actingId },
+      });
+    },
     onSuccess: () => {
       toast.success('Device removed');
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      refetchDevices();
     },
-    onError: () => toast.error('Failed to remove device'),
+    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to remove device'),
   });
 
   const handleRemoveDevice = useCallback(
@@ -225,6 +239,42 @@ export default function SettingsScreen() {
       ]);
     },
     [removeDeviceMutate]
+  );
+
+  const { mutate: toggleTrustMutate } = useMutation({
+    mutationFn: async ({ deviceId, isTrusted }: { deviceId: string; isTrusted: boolean }) => {
+      const actingId = await getActingDeviceId();
+      return http.put(
+        DEVICE_ENDPOINT.PUT_TRUST_DEVICE.replace(':id', deviceId),
+        { isTrusted },
+        { headers: { 'X-Device-Id': actingId } }
+      );
+    },
+    onSuccess: () => {
+      toast.success('Device trust status updated');
+      refetchDevices();
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to update trust status'),
+  });
+
+  const handleToggleTrust = useCallback(
+    (deviceId: string, deviceName: string, isTrusted: boolean) => {
+      Alert.alert(
+        isTrusted ? 'Trust Device' : 'Untrust Device',
+        isTrusted
+          ? `Mark "${deviceName}" as a trusted device? It will be able to manage other devices.`
+          : `Remove trust from "${deviceName}"? It will lose device management capabilities.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: isTrusted ? 'Trust' : 'Untrust',
+            style: isTrusted ? 'default' : 'destructive',
+            onPress: () => toggleTrustMutate({ deviceId, isTrusted }),
+          },
+        ]
+      );
+    },
+    [toggleTrustMutate]
   );
 
   return (
@@ -338,11 +388,15 @@ export default function SettingsScreen() {
                   ? 'border-b border-zinc-100 dark:border-zinc-800/50'
                   : ''
                   }`}>
-                <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
+                <View
+                  className={`mr-4 h-10 w-10 items-center justify-center rounded-xl ${device.isTrusted
+                    ? 'bg-emerald-100 dark:bg-emerald-500/20'
+                    : 'bg-zinc-200 dark:bg-zinc-800/80'
+                    }`}>
                   <Ionicons
-                    name="phone-portrait-outline"
+                    name={device.isTrusted ? 'shield-checkmark-outline' : 'phone-portrait-outline'}
                     size={22}
-                    color={isDarkMode ? '#10b981' : '#059669'}
+                    color={device.isTrusted ? '#10b981' : (isDarkMode ? '#a1a1aa' : '#71717a')}
                   />
                 </View>
                 <View className="flex-1">
@@ -350,14 +404,29 @@ export default function SettingsScreen() {
                     {device.deviceName}
                   </Text>
                   <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Added {new Date(device.createdAt).toLocaleDateString()}
+                    {device.isTrusted ? 'Trusted • ' : 'Untrusted • '}
+                    {new Date(device.createdAt).toLocaleDateString()}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  className="h-10 w-10 items-center justify-center rounded-full bg-red-100 active:bg-red-200 dark:bg-red-500/10 dark:active:bg-red-500/20"
-                  onPress={() => handleRemoveDevice(device.id, device.deviceName)}>
-                  <Ionicons name="trash-outline" size={18} color="#ef4444" />
-                </TouchableOpacity>
+                <View className="flex-row items-center gap-2">
+                  <TouchableOpacity
+                    className={`h-10 w-10 items-center justify-center rounded-full ${device.isTrusted
+                      ? 'bg-amber-100 active:bg-amber-200 dark:bg-amber-500/10 dark:active:bg-amber-500/20'
+                      : 'bg-emerald-100 active:bg-emerald-200 dark:bg-emerald-500/10 dark:active:bg-emerald-500/20'
+                      }`}
+                    onPress={() => handleToggleTrust(device.id, device.deviceName, !device.isTrusted)}>
+                    <Ionicons
+                      name={device.isTrusted ? 'shield-half-outline' : 'shield-checkmark-outline'}
+                      size={18}
+                      color={device.isTrusted ? '#f59e0b' : '#10b981'}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="h-10 w-10 items-center justify-center rounded-full bg-red-100 active:bg-red-200 dark:bg-red-500/10 dark:active:bg-red-500/20"
+                    onPress={() => handleRemoveDevice(device.id, device.deviceName)}>
+                    <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
             ))
           )}

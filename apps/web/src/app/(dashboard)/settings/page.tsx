@@ -19,6 +19,7 @@ const API_BASE = "http://localhost:3000";
 interface DeviceItem {
  id: string;
  deviceName: string;
+ isTrusted: boolean;
  createdAt: string;
 }
 
@@ -41,14 +42,17 @@ export default function SettingsScreen(): React.ReactNode {
   if (!jwtToken) return;
 
   // Fetch devices
-  fetch(`${API_BASE}/api/devices`, {
-   headers: { Authorization: `Bearer ${jwtToken}` },
-  })
-   .then((res) => res.json())
-   .then((data) => {
-    if (data.success && data.data) setDevices(data.data);
+  const fetchDevices = () => {
+   fetch(`${API_BASE}/api/devices`, {
+    headers: { Authorization: `Bearer ${jwtToken}` },
    })
-   .catch(console.error);
+    .then((res) => res.json())
+    .then((data) => {
+     if (data.success && data.data) setDevices(data.data);
+    })
+    .catch(console.error);
+  };
+  fetchDevices();
 
   // Fetch user for MFA status
   fetch(`${API_BASE}/api/auth/me`, {
@@ -171,6 +175,15 @@ export default function SettingsScreen(): React.ReactNode {
   }
  }, [jwtToken, mfaEnabled]);
 
+ const getActingDeviceId = (): string => {
+  // Try to find the local device ID from localStorage
+  const stored = localStorage.getItem("SV_DEVICE_ID");
+  if (stored) return stored;
+  // Fallback to first trusted device for this prototype
+  const trusted = devices.find((d) => d.isTrusted);
+  return trusted?.id ?? "";
+ };
+
  // ── Remove Device ──
  const handleRemoveDevice = useCallback(
   async (deviceId: string, deviceName: string) => {
@@ -178,19 +191,61 @@ export default function SettingsScreen(): React.ReactNode {
    if (!confirm(`Remove "${deviceName}" from trusted devices?`)) return;
 
    try {
+    const actingId = getActingDeviceId();
     const res = await fetch(`${API_BASE}/api/devices/${deviceId}`, {
      method: "DELETE",
-     headers: { Authorization: `Bearer ${jwtToken}` },
+     headers: {
+      Authorization: `Bearer ${jwtToken}`,
+      "X-Device-Id": actingId,
+     },
     });
     const data = await res.json();
     if (data.success) {
      setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+    } else {
+     alert(data.error?.message || "Failed to remove device");
     }
    } catch {
     alert("Failed to remove device");
    }
   },
-  [jwtToken],
+  [jwtToken, devices],
+ );
+
+ // ── Toggle Trust ──
+ const handleToggleTrust = useCallback(
+  async (deviceId: string, deviceName: string, isTrusted: boolean) => {
+   if (!jwtToken) return;
+   const msg = isTrusted
+    ? `Mark "${deviceName}" as a trusted device? It will be able to manage other devices.`
+    : `Remove trust from "${deviceName}"? It will lose device management capabilities.`;
+
+   if (!confirm(msg)) return;
+
+   try {
+    const actingId = getActingDeviceId();
+    const res = await fetch(`${API_BASE}/api/devices/${deviceId}/trust`, {
+     method: "PUT",
+     headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwtToken}`,
+      "X-Device-Id": actingId,
+     },
+     body: JSON.stringify({ isTrusted }),
+    });
+    const data = await res.json();
+    if (data.success) {
+     setDevices((prev) =>
+      prev.map((d) => (d.id === deviceId ? { ...d, isTrusted } : d)),
+     );
+    } else {
+     alert(data.error?.message || "Failed to update trust status");
+    }
+   } catch {
+    alert("Failed to update trust status");
+   }
+  },
+  [jwtToken, devices],
  );
 
  return (
@@ -255,30 +310,58 @@ export default function SettingsScreen(): React.ReactNode {
         <div
          key={device.id}
          className={`flex items-center p-5 transition-colors hover:bg-zinc-800/60 ${index < devices.length - 1
-           ? "border-b border-zinc-800/50"
-           : ""
+          ? "border-b border-zinc-800/50"
+          : ""
           }`}
         >
-         <div className="mr-4 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800/80">
-          <Smartphone size={22} className="text-emerald-500" />
+         <div
+          className={`mr-4 flex h-10 w-10 items-center justify-center rounded-xl ${device.isTrusted
+           ? "bg-emerald-500/20"
+           : "bg-zinc-800/80"
+           }`}
+         >
+          {device.isTrusted ? (
+           <ShieldCheck size={22} className="text-emerald-500" />
+          ) : (
+           <Smartphone size={22} className="text-zinc-400" />
+          )}
          </div>
          <div className="flex-1">
           <h3 className="text-lg font-bold text-white">
            {device.deviceName}
           </h3>
           <p className="text-sm text-zinc-400">
-           Added{" "}
+           {device.isTrusted ? "Trusted • " : "Untrusted • "}
            {new Date(device.createdAt).toLocaleDateString()}
           </p>
          </div>
-         <button
-          onClick={() =>
-           handleRemoveDevice(device.id, device.deviceName)
-          }
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 transition-colors hover:bg-red-500/20"
-         >
-          <Trash2 size={18} className="text-red-500" />
-         </button>
+         <div className="flex items-center gap-2">
+          <button
+           onClick={() =>
+            handleToggleTrust(
+             device.id,
+             device.deviceName,
+             !device.isTrusted,
+            )
+           }
+           className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${device.isTrusted
+            ? "bg-amber-500/10 hover:bg-amber-500/20 text-amber-500"
+            : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500"
+            }`}
+           title={device.isTrusted ? "Untrust Device" : "Trust Device"}
+          >
+           <ShieldCheck size={18} />
+          </button>
+          <button
+           onClick={() =>
+            handleRemoveDevice(device.id, device.deviceName)
+           }
+           className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-500 transition-colors hover:bg-red-500/20"
+           title="Remove Device"
+          >
+           <Trash2 size={18} />
+          </button>
+         </div>
         </div>
        ))
       )}

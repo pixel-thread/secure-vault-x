@@ -55,6 +55,10 @@ export const registerDeviceSchema = z.object({
   deviceName: z.string().min(1, "Device name is required").max(100),
 });
 
+export const toggleTrustDeviceSchema = z.object({
+  isTrusted: z.boolean(),
+});
+
 // ==========================================
 // MFA SCHEMAS
 // ==========================================
