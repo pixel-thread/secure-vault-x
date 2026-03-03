@@ -11,12 +11,14 @@
   "build": "tsc",
   "lint": "eslint ."
  },
- "dependencies": {
-  "expo-secure-store": "~15.0.8"
+ "peerDependencies": {
+  "expo-secure-store": "*"
  },
+ "dependencies": {},
  "devDependencies": {
   "@securevault/eslint-config": "workspace:*",
   "@securevault/typescript-config": "workspace:*",
+  "expo-secure-store": "~15.0.8",
   "typescript": "^5.3.3"
  }
 }

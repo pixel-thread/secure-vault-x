@@ -27,3 +27,6 @@ android
 .env*
 .turbo
 generated
+
+expo-env.d.ts
+.apk
