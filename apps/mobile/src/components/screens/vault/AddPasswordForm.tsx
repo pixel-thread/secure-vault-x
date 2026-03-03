@@ -4,13 +4,13 @@ import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Ionicons } from '@expo/vector-icons';
-import { generatePassword } from '@securevault/utils';
+import { generatePassword, logger } from '@securevault/utils';
 import { useColorScheme } from 'nativewind';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { http } from '@securevault/utils-native';
 import { VAULT_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
-import { encryptData } from '@securevault/crypto';
+import { decryptData, encryptData, generateMEK } from '@securevault/crypto';
 
 const passwordSchema = z.object({
   serviceName: z.string().min(1, 'Service name is required'),
@@ -59,6 +59,7 @@ export function AddPasswordForm() {
         return data;
       }
 
+      logger.log('Vault Res', data);
       toast.error('Failed to add secret', {
         description: data.message || 'Please try again.',
       });
@@ -66,15 +67,14 @@ export function AddPasswordForm() {
     },
   });
 
-  const onSubmitForm: SubmitHandler<PasswordFormValues> = (data: PasswordFormValues) => {
-    const isDev = process.env.NODE_ENV === 'development';
-    const encryptedData: any = isDev
-      ? JSON.stringify(data)
-      : encryptData(JSON.stringify(data), 'test');
-
-    mutate({
-      encryptedData: encryptedData,
-    });
+  const onSubmitForm: SubmitHandler<PasswordFormValues> = async (data: PasswordFormValues) => {
+    const mek = await generateMEK();
+    const { encryptedData, iv } = await encryptData(JSON.stringify(data), mek);
+    logger.log('MEK', mek);
+    logger.log('Encrypted', encryptedData);
+    const decryptedData = await decryptData(encryptedData, iv, mek);
+    logger.log('Decrypted', decryptedData);
+    // mutate({ encryptedData: JSON.stringify(encryptedData) });
   };
 
   return (

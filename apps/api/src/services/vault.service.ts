@@ -6,6 +6,7 @@ export class VaultService {
     const vaults = await prisma.vault.findMany({ where: { userId } });
     if (vaults.length === 0) return { encryptedData: null, version: 0 };
     return vaults.map((vault) => ({
+      id: vault.id,
       encryptedData: vault.encryptedData,
       version: vault.version,
     }));

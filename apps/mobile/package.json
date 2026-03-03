@@ -20,6 +20,7 @@
     "@react-navigation/native": "^7.1.6",
     "@securevault/constants": "workspace:^",
     "@securevault/crypto": "workspace:^",
+    "@securevault/database": "workspace:^",
     "@securevault/libs": "workspace:^",
     "@securevault/types": "workspace:^",
     "@securevault/ui-native": "workspace:^",

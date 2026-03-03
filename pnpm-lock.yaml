@@ -134,6 +134,9 @@ importers:
       '@securevault/crypto':
         specifier: workspace:^
         version: link:../../packages/crypto
+      '@securevault/database':
+        specifier: workspace:^
+        version: link:../../packages/prisma
       '@securevault/libs':
         specifier: workspace:^
         version: link:../../packages/libs

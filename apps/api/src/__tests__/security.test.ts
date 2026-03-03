@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { test, expect, describe, beforeAll, afterAll } from "bun:test"; // Assuming Bun or compatible test runner for now since Jest wasn't installed
+import { test, expect, describe, beforeAll, afterAll } from "vitest"; // Use vitest
 // In a real environment, you'd use 'supertest' or `app.request` natively supported by Hono.
 import { authRouter } from "../routes/auth.routes";
 import { vaultRouter } from "../routes/vault.routes";
@@ -17,7 +17,7 @@ describe("API Security Tests (OWASP Top 10)", () => {
   test("GET /api/auth/me should fail without token", async () => {
    const res = await app.request("/api/auth/me");
    expect(res.status).toBe(401);
-   const data = await res.json();
+   const data = (await res.json()) as any;
    expect(data.error.code).toBe("unauthorized");
   });
 
@@ -34,12 +34,11 @@ describe("API Security Tests (OWASP Top 10)", () => {
   });
 
   test("Invalid JSON payload should be handled nicely", async () => {
-   const req = new Request("http://localhost/api/auth/password/login", {
+   const res = await app.request("/api/auth/password/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: "{ bad json",
    });
-   const res = await app.request(req);
    expect(res.status).toBe(400); // Handled by zod or body parser gracefully
   });
  });
@@ -52,7 +51,7 @@ describe("API Security Tests (OWASP Top 10)", () => {
     body: JSON.stringify({ email: "test@example.com", password: "" })
    });
    expect(res.status).toBe(400);
-   const data = await res.json();
+   const data = (await res.json()) as any;
    expect(data.error.code).toBe("validation_error");
   });
  });
