@@ -4,7 +4,7 @@ import { useColorScheme } from 'nativewind';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner-native';
 import { DeviceStoreManager } from '../../../store/device';
-import { isBiometricAvailable } from '../../../utils/biometricLock';
+import { isBiometricAvailable, authenticateWithBiometric } from '../../../utils/biometricLock';
 import { useAuthStore } from '../../../store/auth';
 import { useMutation } from '@tanstack/react-query';
 import { http } from '@securevault/utils-native';
@@ -34,6 +34,16 @@ export default function SecurityControlsSection() {
         toast.error('Biometric authentication is not available on this device');
         return;
       }
+
+      // If disabling, require authentication first
+      if (!value) {
+        const success = await authenticateWithBiometric();
+        if (!success) {
+          toast.error('Authentication failed — biometric lock remained enabled');
+          return;
+        }
+      }
+
       await DeviceStoreManager.setBiometricEnabled(value);
       setBiometricEnabled(value);
       toast.success(value ? 'Biometric lock enabled' : 'Biometric lock disabled');

@@ -2,7 +2,10 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { tokenManager } from "@securevault/libs";
 import { AUTH_ENDPOINT } from "@securevault/constants";
 
-const baseURL = process.env.EXPO_PUBLIC_API_URL;
+const baseURL = process.env.EXPO_PUBLIC_API_URL?.replace("http://", "https://");
+if (baseURL && !baseURL.startsWith("https://") && process.env.NODE_ENV === "production") {
+  throw new Error("Security Error: Insecure API URL provided in production.");
+}
 const axiosInstance = axios.create({ baseURL });
 /* -------------------------------------------------- */
 /* State Management */
