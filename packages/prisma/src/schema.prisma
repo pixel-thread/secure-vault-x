@@ -44,14 +44,19 @@ model WebAuthnCredential {
 }
 
 model Device {
-  id           String   @id @default(uuid())
-  userId       String
-  deviceName   String
-  encryptedMEK String
-  isTrusted    Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id               String   @id @default(uuid())
+  userId           String
+  deviceIdentifier String? // Hardware UUID or persistent device ID
+  deviceName       String
+  publicKey        String? // Base64 encoded ECDSA P-256 SPKI public key
+  encryptedMEK     String
+  isTrusted        Boolean  @default(false)
+  createdAt        DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@unique([userId, deviceIdentifier])
 }
 
 model Vault {
@@ -71,11 +76,13 @@ model Vault {
 model RefreshToken {
   id        String   @id @default(uuid())
   userId    String
+  deviceId  String?
   tokenHash String   @unique // Hashed token
   expiresAt DateTime
   revoked   Boolean  @default(false)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 }
 
 model OtpVerification {
@@ -84,6 +91,8 @@ model OtpVerification {
   code      String
   type      String // e.g. "EMAIL_LOGIN"
   expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  revokedAt DateTime?
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

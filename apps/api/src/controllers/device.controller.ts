@@ -11,8 +11,15 @@ export class DeviceController {
 
   static async registerDevice(c: Context) {
     const userId = c.get("userId") as string;
-    const { deviceName } = await c.req.json();
-    const device = await DeviceService.registerDevice(userId, deviceName);
+    const sessionId = c.get("sessionId") as string | undefined;
+    const { deviceName, publicKey, deviceIdentifier } = await c.req.json();
+    const device = await DeviceService.registerDevice(
+      userId,
+      deviceName,
+      publicKey,
+      sessionId,
+      deviceIdentifier
+    );
     return sendResponse(c, { data: device, status: 201 });
   }
 
@@ -25,11 +32,15 @@ export class DeviceController {
     // For this implementation, we accept it from headers or body for the trusted logic check
     // TODO: This is insecure
     const actingDeviceId = c.req.header("X-Device-Id");
+    const signature = c.req.header("X-Device-Signature");
+    const timestamp = c.req.header("X-Timestamp");
 
     const result = await DeviceService.removeDevice(
       userId,
       deviceId,
       actingDeviceId,
+      signature,
+      timestamp,
     );
     return sendResponse(c, { data: result });
   }
@@ -39,10 +50,12 @@ export class DeviceController {
     const targetDeviceId = c.req.param("id");
     const { isTrusted } = await c.req.json();
     const actingDeviceId = c.req.header("X-Device-Id");
+    const signature = c.req.header("X-Device-Signature");
+    const timestamp = c.req.header("X-Timestamp");
 
-    if (!actingDeviceId) {
+    if (!actingDeviceId || !signature || !timestamp) {
       throw new Error(
-        "actingDeviceId (X-Device-Id header) is required to change trust status.",
+        "Cryptographic headers (X-Device-Id, X-Device-Signature, X-Timestamp) are required to change trust status.",
       );
     }
 
@@ -51,6 +64,8 @@ export class DeviceController {
       targetDeviceId,
       isTrusted,
       actingDeviceId,
+      signature,
+      timestamp,
     );
     return sendResponse(c, { data: result });
   }

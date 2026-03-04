@@ -3,10 +3,7 @@ import { tokenManager } from "@securevault/libs";
 import { AUTH_ENDPOINT } from "@securevault/constants";
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL;
-const axiosInstance = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
-});
-
+const axiosInstance = axios.create({ baseURL });
 /* -------------------------------------------------- */
 /* State Management */
 /* -------------------------------------------------- */
@@ -95,7 +92,6 @@ axiosInstance.interceptors.response.use(
 
       // Use standard axios instance for the refresh call
       const url = `${process.env.EXPO_PUBLIC_API_URL}${AUTH_ENDPOINT.POST_REFRESH}`;
-
       const res = await axios.post(url, { refreshToken });
 
       const payload: any = res.data;
@@ -111,6 +107,7 @@ axiosInstance.interceptors.response.use(
       processQueue(null, access_token);
 
       originalRequest.headers.Authorization = `Bearer ${access_token}`;
+
       return axiosInstance(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);

@@ -11,6 +11,7 @@ export const generateRegistrationOptionsSchema = z.object({
 export const verifyRegistrationResponseSchema = z.object({
   email: z.string().email(),
   deviceName: z.string().optional(),
+  publicKey: z.string().optional(),
   encryptedMEK: z.string().optional(),
   registrationResponse: z.any(), // Passes through to simplewebauthn
 });
@@ -39,6 +40,10 @@ export const verifyOtpSchema = z.object({
   code: z.string().length(6, "OTP must be exactly 6 digits"),
 });
 
+export const revokeOtpSchema = z.object({
+  otpId: z.string().uuid("Invalid OTP ID"),
+});
+
 export const refreshTokensSchema = z.object({
   refreshToken: z.string().min(3, "Invalid length for refresh token"),
 });
@@ -53,6 +58,8 @@ export const setEncryptionSaltSchema = z.object({
 
 export const registerDeviceSchema = z.object({
   deviceName: z.string().min(1, "Device name is required").max(100),
+  deviceIdentifier: z.string().optional(),
+  publicKey: z.string().optional(),
 });
 
 export const toggleTrustDeviceSchema = z.object({

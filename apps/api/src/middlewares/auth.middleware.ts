@@ -30,5 +30,6 @@ export const protect = async (c: Context, next: Next) => {
     audience: "securevault-client",
   });
   c.set("userId", payload.userId);
+  c.set("sessionId", payload.sessionId);
   await next();
 }

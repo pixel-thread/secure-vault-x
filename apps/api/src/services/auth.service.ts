@@ -73,6 +73,7 @@ export class AuthService {
     email: string,
     registrationResponse: any,
     deviceName?: string,
+    publicKey?: string,
     encryptedMEK?: string,
   ) {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -116,17 +117,20 @@ export class AuthService {
       });
 
       // Register Initial device & MEK payload
-      await prisma.device.create({
+      const device = await prisma.device.create({
         data: {
           userId: user.id,
           deviceName: deviceName || "New Device",
+          publicKey: publicKey || null,
           encryptedMEK: encryptedMEK || "pending_sync",
+          isTrusted: true, // Auto-trust first device mathematically established in DeviceService, but we know this is the first here mostly. Wait, let's explicitly calculate it or just set it since it's via registration.
         },
       });
 
       challengeStore.delete(user.id);
 
-      return { status: "success" };
+      // We need to issue a token tied to this device ID
+      return this.generateTokens(user.id, user.email, device.id);
     }
     throw new BadRequestError("Verification failed");
   }
@@ -282,7 +286,7 @@ export class AuthService {
 
     // Fetch the latest OTP attempt
     const otpRecord = await prisma.otpVerification.findFirst({
-      where: { userId: user.id, type: "EMAIL_LOGIN" },
+      where: { userId: user.id, type: "EMAIL_LOGIN", isRevoked: false },
       orderBy: { createdAt: "desc" },
     });
 
@@ -293,13 +297,47 @@ export class AuthService {
 
     if (otpRecord.code !== code) throw new BadRequestError("Invalid OTP");
 
-    // Validated, burn the OTP so it can't be reused
-    await prisma.otpVerification.deleteMany({
-      where: { userId: user.id, type: "EMAIL_LOGIN" },
+    // Validated, burn all pending OTPs so they can't be reused
+    await prisma.otpVerification.updateMany({
+      where: { userId: user.id, type: "EMAIL_LOGIN", isRevoked: false },
+      data: { isRevoked: true, revokedAt: new Date() },
     });
 
     // Issue Tokens
     return await this.generateTokens(user.id, user.email);
+  }
+
+  static async getPendingOtp(userId: string) {
+    return prisma.otpVerification.findMany({
+      where: {
+        userId,
+        type: "EMAIL_LOGIN",
+        isRevoked: false,
+        expiresAt: { gt: new Date() }, // Only grab active ones
+      },
+      select: {
+        id: true,
+        code: true,
+        expiresAt: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  static async revokeOtp(userId: string, otpId: string) {
+    const otpRecord = await prisma.otpVerification.findUnique({
+      where: { id: otpId },
+    });
+
+    if (!otpRecord) throw new NotFoundError("OTP not found");
+    if (otpRecord.userId !== userId)
+      throw new UnauthorizedError("Unauthorized");
+
+    return prisma.otpVerification.update({
+      where: { id: otpId },
+      data: { isRevoked: true, revokedAt: new Date() },
+    });
   }
 
   // ==========================================
@@ -339,13 +377,36 @@ export class AuthService {
     return await this.generateTokens(
       storedToken.user.id,
       storedToken.user.email,
+      storedToken.deviceId || undefined,
     );
   }
 
   // Helper
-  private static async generateTokens(userId: string, email: string) {
+  private static async generateTokens(
+    userId: string,
+    email: string,
+    deviceId?: string,
+  ) {
+    // Generate Refresh Token (7 days) first so we can use its ID as the session ID
+    const rawRefreshToken = crypto.randomBytes(40).toString("hex");
+    const hash = crypto
+      .createHash("sha256")
+      .update(rawRefreshToken)
+      .digest("hex");
+
+    const refreshTokenObj = await prisma.refreshToken.create({
+      data: {
+        userId,
+        deviceId: deviceId || null,
+        tokenHash: hash,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    const sessionId = refreshTokenObj.id;
+
     // Generate Access Token (15 mins)
-    const accessToken = await new SignJWT({ userId, email })
+    const accessToken = await new SignJWT({ userId, email, sessionId })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuer("securevault-api")
       .setAudience("securevault-client")
@@ -353,22 +414,11 @@ export class AuthService {
       .setExpirationTime("15m")
       .sign(JWT_SECRET);
 
-    // Generate Refresh Token (7 days)
-    const rawRefreshToken = crypto.randomBytes(40).toString("hex");
-    const hash = crypto
-      .createHash("sha256")
-      .update(rawRefreshToken)
-      .digest("hex");
-
-    await prisma.refreshToken.create({
-      data: {
-        userId,
-        tokenHash: hash,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
-
-    return { accessToken, refreshToken: rawRefreshToken };
+    return {
+      accessToken,
+      refreshToken: rawRefreshToken,
+      sessionId,
+    };
   }
 
   static async getMe(userId: string) {

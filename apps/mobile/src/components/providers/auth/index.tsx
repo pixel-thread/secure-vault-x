@@ -14,7 +14,8 @@ import { authenticateWithBiometric } from '@/src/utils/biometricLock';
 type Props = { children: React.ReactNode };
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
-  const { setIsLoading, isLoading, setUser, isAuthenticated, setIsAuthenticated, setHasMek } = useAuthStore();
+  const { setIsLoading, isLoading, setUser, isAuthenticated, setIsAuthenticated, setHasMek } =
+    useAuthStore();
   const [biometricPassed, setBiometricPassed] = useState(false);
   const [biometricRequired, setBiometricRequired] = useState(false);
 
@@ -41,22 +42,28 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   useEffect(() => {
     async function init() {
       try {
-        // Check biometric requirement first
-        const biometricEnabled = await SecureStore.getItemAsync('SV_BIOMETRIC_ENABLED');
-        if (biometricEnabled === 'true') {
-          setBiometricRequired(true);
-          // Prompt immediately
-          const success = await authenticateWithBiometric();
-          if (success) {
-            setBiometricPassed(true);
-          }
-        } else {
-          setBiometricPassed(true); // No biometric required
-        }
-
         await tokenManager.init();
         const access = await tokenManager.getAccessToken();
         const refreshToken = await tokenManager.getRefreshToken();
+
+        const hasTokens = !!(access && refreshToken);
+
+        // Check biometric requirement only if we have an active session
+        if (hasTokens) {
+          const biometricEnabled = await SecureStore.getItemAsync('SV_BIOMETRIC_ENABLED');
+          if (biometricEnabled === 'true') {
+            setBiometricRequired(true);
+            // Prompt immediately
+            const success = await authenticateWithBiometric();
+            if (success) {
+              setBiometricPassed(true);
+            }
+          } else {
+            setBiometricPassed(true); // No biometric required
+          }
+        } else {
+          setBiometricPassed(true); // Not logged in, no biometric needed
+        }
 
         // Check MEK
         const mek = await SecureStore.getItemAsync('SV_MEK');

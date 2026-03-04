@@ -26,7 +26,8 @@ export const errorHandler = (err: Error, c: Context) => {
     err.name === "JWSSignatureVerificationFailed" ||
     err.name === "JWTExpired" ||
     err.name === "JWTClaimValidationFailed" ||
-    err.name === "JWTInvalid"
+    err.name === "JWTInvalid" ||
+    err.name === "JWSInvalid"
   ) {
     return errorResponse(c, {
       status: 401,
@@ -37,7 +38,6 @@ export const errorHandler = (err: Error, c: Context) => {
   }
 
   if (err instanceof UnauthorizedError) {
-    console.log(err);
     return errorResponse(c, {
       status: 401,
       message: "Unauthorized",
@@ -97,7 +97,6 @@ export const errorHandler = (err: Error, c: Context) => {
   }
 
   // Generic Internal Error (500)
-  // console.error(`[Error Handler]: ${err.stack || err.message}`);
 
   return errorResponse(c, {
     status: 500,

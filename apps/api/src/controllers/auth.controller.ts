@@ -1,4 +1,5 @@
 import { Context } from "hono";
+import { prisma } from "@securevault/database";
 import { AuthService } from "../services/auth.service";
 import { successResponse } from "../utils/helper/response";
 import { UnauthorizedError } from "../utils/errors/unauthorize";
@@ -75,6 +76,42 @@ export class AuthController {
     });
   }
 
+  static async getPendingOtp(c: Context) {
+    const userId = c.get("userId");
+
+    // Ensure the device making the request is trusted
+    const sessionId = c.get("sessionId");
+
+    if (!sessionId) {
+      throw new UnauthorizedError("Session ID missing");
+    }
+
+    const session = await prisma.refreshToken.findUnique({
+      where: { id: sessionId },
+      include: { device: true },
+    });
+
+    if (!session?.device?.isTrusted) {
+      // If the device is not trusted, return an empty array for now
+      // BUG: it throw random 401 error
+      // throw new UnauthorizedError("Device is not trusted");
+      return successResponse(c, { data: [] });
+    }
+
+    const otps = await AuthService.getPendingOtp(userId);
+    return successResponse(c, { data: otps });
+  }
+
+  static async revokeOtp(c: Context) {
+    const userId = c.get("userId");
+    const { otpId } = await c.req.json();
+    const result = await AuthService.revokeOtp(userId, otpId);
+    return successResponse(c, {
+      data: result,
+      message: "OTP successfully revoked",
+    });
+  }
+
   // ==========================
   // Refresh Token
   // ==========================
@@ -125,7 +162,9 @@ export class AuthController {
     const result = await AuthService.toggleMfa(userId, enabled);
     return successResponse(c, {
       data: result,
-      message: enabled ? "Two-factor authentication enabled" : "Two-factor authentication disabled",
+      message: enabled
+        ? "Two-factor authentication enabled"
+        : "Two-factor authentication disabled",
     });
   }
 }

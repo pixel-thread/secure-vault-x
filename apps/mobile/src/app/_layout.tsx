@@ -31,9 +31,21 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider className="bg-white dark:bg-[#09090b]">
         <Wrapper>
-          <Stack>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
             <Stack.Screen name="auth/index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="auth/mfa"
+              options={{
+                presentation: 'modal',
+                title: 'Two-Factor Authentication',
+                headerShown: false,
+              }}
+            />
             <Stack.Screen
               name="auth/signup/index"
               options={{

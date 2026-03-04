@@ -14,6 +14,8 @@ type AuthEndpointKeys =
   | "POST_PASSWORD_LOGIN"
   | "POST_MFA_VERIFY"
   | "POST_MFA_TOGGLE"
+  | "GET_MFA_PENDING"
+  | "POST_MFA_REVOKE"
   | "POST_LOGOUT"
   | "POST_REFRESH"
   | "GET_ENCRYPTION_SALT"
@@ -31,6 +33,8 @@ export const AUTH_ENDPOINT: EndpointT<AuthEndpointKeys> = {
   POST_PASSWORD_LOGIN: "/api/auth/password/login",
   POST_MFA_VERIFY: "/api/auth/mfa/verify",
   POST_MFA_TOGGLE: "/api/auth/mfa/toggle",
+  GET_MFA_PENDING: "/api/auth/mfa/pending",
+  POST_MFA_REVOKE: "/api/auth/mfa/revoke",
   POST_REFRESH: "/api/auth/refresh",
   GET_ME: "/api/auth/me",
   POST_LOGOUT: "/api/auth/logout",

@@ -127,3 +127,95 @@ export async function decryptData<T>(
  const decryptedString = new TextDecoder().decode(decryptedBuffer);
  return JSON.parse(decryptedString) as T;
 }
+
+/**
+ * ── DEVICE ECDSA SIGNATURES ──
+ * Generate an ECDSA P-256 key pair to be used for Device-bound API requests.
+ */
+export async function generateDeviceKeyPair(): Promise<{
+ publicKey: string;
+ privateKey: string;
+}> {
+ const cryptoApi = getCryptoApi();
+ const keyPair = await cryptoApi.subtle.generateKey(
+  {
+   name: "ECDSA",
+   namedCurve: "P-256",
+  },
+  true,
+  ["sign", "verify"],
+ );
+
+ const exportedPubKey = await cryptoApi.subtle.exportKey(
+  "spki",
+  keyPair.publicKey,
+ );
+ const exportedPrivKey = await cryptoApi.subtle.exportKey(
+  "pkcs8",
+  keyPair.privateKey,
+ );
+
+ return {
+  publicKey: Buffer.from(exportedPubKey).toString("base64"),
+  privateKey: Buffer.from(exportedPrivKey).toString("base64"),
+ };
+}
+
+/**
+ * Sign a payload string using a device's Base64 PKCS#8 Private Key.
+ * Returns a Base64 encoded signature.
+ */
+export async function signDevicePayload(
+ payload: string,
+ base64PrivateKey: string,
+): Promise<string> {
+ const cryptoApi = getCryptoApi();
+ const pkBuffer = Buffer.from(base64PrivateKey, "base64");
+ const privateKeyObj = await cryptoApi.subtle.importKey(
+  "pkcs8",
+  pkBuffer,
+  { name: "ECDSA", namedCurve: "P-256" },
+  false,
+  ["sign"],
+ );
+
+ const dataBuffer = new TextEncoder().encode(payload);
+ const signatureBuffer = await cryptoApi.subtle.sign(
+  { name: "ECDSA", hash: { name: "SHA-256" } },
+  privateKeyObj,
+  dataBuffer,
+ );
+
+ return Buffer.from(signatureBuffer).toString("base64");
+}
+
+/**
+ * Verify a payload signature using a device's Base64 SPKI Public Key.
+ * Run primarily on the Backend.
+ */
+export async function verifyDeviceSignature(
+ payload: string,
+ base64Signature: string,
+ base64PublicKey: string,
+): Promise<boolean> {
+ const cryptoApi = getCryptoApi();
+ const pubKeyBuffer = Buffer.from(base64PublicKey, "base64");
+ const sigBuffer = Buffer.from(base64Signature, "base64");
+
+ const publicKeyObj = await cryptoApi.subtle.importKey(
+  "spki",
+  pubKeyBuffer,
+  { name: "ECDSA", namedCurve: "P-256" },
+  false,
+  ["verify"],
+ );
+
+ const dataBuffer = new TextEncoder().encode(payload);
+
+ return await cryptoApi.subtle.verify(
+  { name: "ECDSA", hash: { name: "SHA-256" } },
+  publicKeyObj,
+  sigBuffer,
+  dataBuffer,
+ );
+}

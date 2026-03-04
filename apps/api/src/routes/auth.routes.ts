@@ -8,6 +8,7 @@ import {
   passwordRegisterSchema,
   passwordLoginSchema,
   verifyOtpSchema,
+  revokeOtpSchema,
   refreshTokensSchema,
   setEncryptionSaltSchema,
   toggleMfaSchema,
@@ -67,11 +68,23 @@ authRouter.post(
   AuthController.refreshTokens,
 );
 
+authRouter.get(
+  AUTH_ENDPOINT.GET_MFA_PENDING,
+  protect,
+  AuthController.getPendingOtp,
+);
+
+authRouter.post(
+  AUTH_ENDPOINT.POST_MFA_REVOKE,
+  protect,
+  zValidator("json", revokeOtpSchema),
+  AuthController.revokeOtp,
+);
+
 authRouter.get(AUTH_ENDPOINT.GET_ME, protect, AuthController.getMe);
 
 authRouter.post(
   AUTH_ENDPOINT.POST_LOGOUT,
-
   zValidator("json", refreshTokensSchema),
   AuthController.logout,
 );

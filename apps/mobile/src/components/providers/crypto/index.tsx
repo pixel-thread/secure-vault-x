@@ -1,5 +1,6 @@
 import React from 'react';
 import { isExpoGo } from '@/src/utils/helper/checkIsExpo';
+import { logger } from '@securevault/utils';
 
 const isExpo = isExpoGo();
 
@@ -12,12 +13,12 @@ if (!isExpo) {
 
     // 2. Install the polyfills
     install();
-    console.log('✅ react-native-quick-crypto installed.');
+    logger.log('✅ react-native-quick-crypto installed.');
   } catch (error) {
-    console.warn('⚠️ Failed to install react-native-quick-crypto:', error);
+    logger.error('Failed to install react-native-quick-crypto:', error);
   }
 } else {
-  console.log('ℹ️ Running in Expo Go. Skipping quick-crypto native installation.');
+  logger.log('ℹ️ Running in Expo Go. Skipping quick-crypto native installation.');
 }
 
 export const CryptoProvider = ({ children }: { children: React.ReactNode }) => {
