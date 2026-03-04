@@ -4,13 +4,11 @@ import { UnauthorizedError } from "../utils/errors/unauthorize";
 
 const JWT_SECRET_STRING = process.env.JWT_SECRET;
 
-if (!JWT_SECRET_STRING && process.env.NODE_ENV === "production") {
-  throw new Error("JWT_SECRET must be set in production");
+if (!JWT_SECRET_STRING) {
+  throw new Error("JWT_SECRET must be set in all environments");
 }
 
-const JWT_SECRET = new TextEncoder().encode(
-  JWT_SECRET_STRING || "dev-only-secret-key-12345",
-);
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
 
 export const protect = async (c: Context, next: Next) => {
   const authHeader = c.req.header("Authorization");

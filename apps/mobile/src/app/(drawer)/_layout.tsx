@@ -1,3 +1,4 @@
+import { HeaderComponent } from '@/src/components/common/StackHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { Drawer } from 'expo-router/drawer';
 import { useColorScheme } from 'nativewind';
@@ -9,6 +10,7 @@ const DrawerLayout = () => {
   return (
     <Drawer
       screenOptions={{
+        headerShown: true,
         headerStyle: { backgroundColor: isDarkMode ? '#09090b' : '#fff' },
         headerTintColor: isDarkMode ? '#fff' : '#000',
         drawerStyle: { backgroundColor: isDarkMode ? '#09090b' : '#fff' },
@@ -19,6 +21,7 @@ const DrawerLayout = () => {
       <Drawer.Screen
         name="(tabs)"
         options={{
+          headerShown: true,
           headerTitle: 'SecureVault X',
           drawerLabel: 'My Vault',
           drawerIcon: ({ size, color }) => (

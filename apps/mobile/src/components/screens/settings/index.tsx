@@ -1,5 +1,5 @@
 import { View, ScrollView } from 'react-native';
-import Header from '../../Header';
+import Header from '../../common/Header';
 import { useState } from 'react';
 import AppAppearanceSection from './AppAppearanceSection';
 import SecurityControlsSection from './SecurityControlsSection';
@@ -25,7 +25,7 @@ export default function SettingsScreen() {
         <PendingOtpsSection isCurrentDeviceTrusted={isCurrentDeviceTrusted} />
         <TrustedDevicesSection
           onDevicesLoad={(devices, currentDeviceId) => {
-            const current = devices.find((d) => d.id === currentDeviceId);
+            const current = devices.find((d) => d.deviceIdentifier === currentDeviceId);
             setIsCurrentDeviceTrusted(!!current?.isTrusted);
           }}
         />

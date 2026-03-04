@@ -1,6 +1,6 @@
 import { View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Header from '../../Header';
+import Header from '../../common/Header';
 import { useState } from 'react';
 import { useAuthStore } from '../../../store/auth';
 import { useQuery } from '@tanstack/react-query';

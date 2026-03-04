@@ -19,12 +19,10 @@ const RP_ID = process.env.RP_ID || "localhost";
 const RP_NAME = process.env.RP_NAME || "Secure-Vault X";
 const EXPECTED_ORIGIN = process.env.EXPECTED_ORIGIN || "http://localhost:3000";
 const JWT_SECRET_STRING = process.env.JWT_SECRET;
-if (!JWT_SECRET_STRING && process.env.NODE_ENV === "production") {
-  throw new Error("JWT_SECRET must be set in production");
+if (!JWT_SECRET_STRING) {
+  throw new Error("JWT_SECRET must be set in all environments");
 }
-const JWT_SECRET = new TextEncoder().encode(
-  JWT_SECRET_STRING || "dev-only-secret-key-12345",
-);
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
 
 // In-Memory store for WebAuthn Challenge states (in production, use Redis)
 export const challengeStore = new Map<

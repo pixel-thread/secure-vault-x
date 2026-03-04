@@ -5,11 +5,7 @@ import { authRouter } from "../routes/auth.routes";
 import { vaultRouter } from "../routes/vault.routes";
 import { errorHandler } from "../middlewares/error.middleware";
 
-// Setup Test App
-const app = new Hono();
-app.onError(errorHandler);
-app.route("/api/auth", authRouter);
-app.route("/api/vault", vaultRouter);
+import { app } from "../index";
 
 describe("API Security Tests (OWASP Top 10)", () => {
 
@@ -18,7 +14,8 @@ describe("API Security Tests (OWASP Top 10)", () => {
    const res = await app.request("/api/auth/me");
    expect(res.status).toBe(401);
    const data = (await res.json()) as any;
-   expect(data.error.code).toBe("unauthorized");
+   expect(data.success).toBe(false);
+   expect(data.message).toBe("Unauthorized");
   });
 
   test("GET /api/vault should fail without token", async () => {
@@ -39,7 +36,7 @@ describe("API Security Tests (OWASP Top 10)", () => {
     headers: { "Content-Type": "application/json" },
     body: "{ bad json",
    });
-   expect(res.status).toBe(400); // Handled by zod or body parser gracefully
+   expect(res.status).toBe(400);
   });
  });
 
@@ -52,7 +49,8 @@ describe("API Security Tests (OWASP Top 10)", () => {
    });
    expect(res.status).toBe(400);
    const data = (await res.json()) as any;
-   expect(data.error.code).toBe("validation_error");
+   expect(data.success).toBe(false);
+   expect(data.message).toBe("Request validation failed");
   });
  });
 

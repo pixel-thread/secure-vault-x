@@ -10,6 +10,8 @@ import {
 import { errorResponse } from "../utils/helper/response";
 
 export const errorHandler = (err: Error, c: Context) => {
+  console.log(`[ErrorHandler] Captured error: ${err.name} - ${err.message}`);
+
   if (process.env.NODE_ENV === "development") {
     console.log(JSON.stringify(err, null, 2));
   }
@@ -96,11 +98,22 @@ export const errorHandler = (err: Error, c: Context) => {
     });
   }
 
+  // Handle SyntaxError (e.g. malformed JSON)
+  if (err instanceof SyntaxError || err.name === "SyntaxError") {
+    return errorResponse(c, {
+      status: 400,
+      message: "Malformed JSON payload or invalid syntax",
+    });
+  }
+
   // Generic Internal Error (500)
 
   return errorResponse(c, {
     status: 500,
-    message: err.message || "An unexpected error occurred",
+    message:
+      process.env.NODE_ENV === "production"
+        ? "An unexpected error occurred"
+        : err.message || "An unexpected error occurred",
     error:
       process.env.NODE_ENV === "development" ? { detail: err.message } : null,
   });

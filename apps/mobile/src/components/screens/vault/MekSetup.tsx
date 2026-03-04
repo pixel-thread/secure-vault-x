@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
 import { logger } from '@securevault/utils';
+import { CustomHeader, StackHeader } from '../../common/StackHeader';
 
 export function MekSetup() {
   const { colorScheme } = useColorScheme();
@@ -93,7 +94,7 @@ export function MekSetup() {
         <View className="items-center justify-center rounded-full bg-emerald-100 p-6 dark:bg-emerald-900/30">
           <Ionicons name="lock-closed" size={48} color="#10b981" />
         </View>
-        <Text className="text-center text-2xl font-bold text-zinc-900 dark:text-white">
+        <Text className="text-center text-2xl font-bold text-black dark:text-white">
           Vault Encryption Setup
         </Text>
         <Text className="text-center text-base text-zinc-500 dark:text-zinc-400">
@@ -109,7 +110,7 @@ export function MekSetup() {
           </Text>
           <View className="flex-row items-center rounded-2xl border border-zinc-200 bg-zinc-50 pr-2 dark:border-zinc-800 dark:bg-zinc-900/50">
             <TextInput
-              className="flex-1 px-5 py-4 text-zinc-900 focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
+              className="flex-1 px-5 py-4 text-black focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
               placeholder="Enter your Master Password"
               placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
               value={password}
@@ -135,11 +136,11 @@ export function MekSetup() {
           onPress={handleSetup}
           disabled={isLoading || password.length < 8}>
           {isLoading ? (
-            <ActivityIndicator color="#022c22" />
+            <ActivityIndicator color="#ffffff" />
           ) : (
             <>
-              <Ionicons name="key" size={20} color="#022c22" />
-              <Text className="ml-2 text-lg font-bold text-[#022c22]">Generate MEK</Text>
+              <Ionicons name="key" size={20} color="#ffffff" />
+              <Text className="ml-2 text-lg font-bold text-white">Generate MEK</Text>
             </>
           )}
         </TouchableOpacity>

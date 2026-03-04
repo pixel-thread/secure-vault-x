@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from 'react-native';
-import Header from '../../Header';
+import Header from '../../common/Header';
 
 const Divider = () => <View className="my-6 h-px w-full bg-zinc-200 dark:bg-zinc-800" />;
 
@@ -8,24 +8,32 @@ const Heading1 = ({ children }: { children: React.ReactNode }) => (
 );
 
 const Heading2 = ({ children }: { children: React.ReactNode }) => (
-  <Text className="mb-2 mt-6 text-xl font-semibold text-zinc-800 dark:text-zinc-100">{children}</Text>
+  <Text className="mb-2 mt-6 text-xl font-semibold text-zinc-800 dark:text-zinc-100">
+    {children}
+  </Text>
 );
 
 const Paragraph = ({ children }: { children: React.ReactNode }) => (
-  <Text className="mb-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">{children}</Text>
+  <Text className="mb-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
+    {children}
+  </Text>
 );
 
 const ListItem = ({ children }: { children: React.ReactNode }) => (
   <View className="mb-2 flex-row pl-2">
     <Text className="mr-2 text-base text-zinc-600 dark:text-zinc-400">•</Text>
-    <Text className="flex-1 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">{children}</Text>
+    <Text className="flex-1 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
+      {children}
+    </Text>
   </View>
 );
 
 const NumberedListItem = ({ number, children }: { number: number; children: React.ReactNode }) => (
   <View className="mb-2 flex-row pl-2">
     <Text className="mr-2 font-semibold text-zinc-600 dark:text-zinc-400">{number}.</Text>
-    <Text className="flex-1 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">{children}</Text>
+    <Text className="flex-1 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
+      {children}
+    </Text>
   </View>
 );
 
@@ -51,8 +59,10 @@ export default function ReadmeScreen() {
         </Paragraph>
         <Paragraph>
           The core philosophy is{' '}
-          <Text className="font-bold text-zinc-900 dark:text-white">Security through Architecture, not patching</Text>.
-          The system is designed so that even a full backend database compromise does not expose
+          <Text className="font-bold text-zinc-900 dark:text-white">
+            Security through Architecture, not patching
+          </Text>
+          . The system is designed so that even a full backend database compromise does not expose
           your vault contents.
         </Paragraph>
         <View className="mb-4">
@@ -72,20 +82,20 @@ export default function ReadmeScreen() {
         </Paragraph>
         <View className="mb-4">
           <ListItem>
-            <Text className="font-bold text-zinc-900 dark:text-white">Frontend</Text>: React Native, Expo, NativeWind
-            (Tailwind CSS for Native)
+            <Text className="font-bold text-zinc-900 dark:text-white">Frontend</Text>: React Native,
+            Expo, NativeWind (Tailwind CSS for Native)
           </ListItem>
           <ListItem>
-            <Text className="font-bold text-zinc-900 dark:text-white">Backend API</Text>: Hono, TypeScript, PostgreSQL
-            (via Prisma)
+            <Text className="font-bold text-zinc-900 dark:text-white">Backend API</Text>: Hono,
+            TypeScript, PostgreSQL (via Prisma)
           </ListItem>
           <ListItem>
-            <Text className="font-bold text-zinc-900 dark:text-white">Authentication</Text>: Passwordless WebAuthn
-            (Passkeys)
+            <Text className="font-bold text-zinc-900 dark:text-white">Authentication</Text>:
+            Passwordless WebAuthn (Passkeys)
           </ListItem>
           <ListItem>
-            <Text className="font-bold text-zinc-900 dark:text-white">Shared Packages</Text>: Monorepo standardizing
-            Types, Configs, and Cryptography across the stack.
+            <Text className="font-bold text-zinc-900 dark:text-white">Shared Packages</Text>:
+            Monorepo standardizing Types, Configs, and Cryptography across the stack.
           </ListItem>
         </View>
 
@@ -109,10 +119,14 @@ export default function ReadmeScreen() {
         {/* Cryptographic Design */}
         <Heading1>🔐 Cryptographic Design</Heading1>
         <Heading2>Key Hierarchy</Heading2>
-        <View className="mb-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-4">
-          <Text className="font-mono text-sm text-emerald-600 dark:text-emerald-400">Master Encryption Key (MEK)</Text>
+        <View className="mb-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <Text className="font-mono text-sm text-emerald-600 dark:text-emerald-400">
+            Master Encryption Key (MEK)
+          </Text>
           <Text className="my-1 font-mono text-sm text-zinc-400 dark:text-zinc-500">↓</Text>
-          <Text className="font-mono text-sm text-zinc-600 dark:text-zinc-300">AES-256-GCM vault encryption</Text>
+          <Text className="font-mono text-sm text-zinc-600 dark:text-zinc-300">
+            AES-256-GCM vault encryption
+          </Text>
         </View>
         <Paragraph>
           The MEK is heavily guarded and encrypted via native Device hardware before being stored:
@@ -122,15 +136,17 @@ export default function ReadmeScreen() {
             <Text className="font-bold text-zinc-900 dark:text-white">iOS</Text>: Secure Enclave
           </ListItem>
           <ListItem>
-            <Text className="font-bold text-zinc-900 dark:text-white">Android</Text>: Hardware Keystore
+            <Text className="font-bold text-zinc-900 dark:text-white">Android</Text>: Hardware
+            Keystore
           </ListItem>
         </View>
 
         <Heading2>Encryption Standards</Heading2>
         <Paragraph>
-          All Vault encryption runs on <Text className="font-bold text-zinc-900 dark:text-white">AES-256-GCM</Text>{' '}
-          using unique 12-byte random IVs (No IV Reuse) to ensure Authenticated Encryption. Every
-          piece of randomness utilizes cryptographically secure RNG native APIs.
+          All Vault encryption runs on{' '}
+          <Text className="font-bold text-zinc-900 dark:text-white">AES-256-GCM</Text> using unique
+          12-byte random IVs (No IV Reuse) to ensure Authenticated Encryption. Every piece of
+          randomness utilizes cryptographically secure RNG native APIs.
         </Paragraph>
 
         <Divider />

@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Switch } from 'react-native';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import Header from '../../Header';
+import Header from '../../common/Header';
 import { generatePassword } from '@securevault/utils';
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
@@ -50,60 +50,73 @@ export default function GeneratorScreen() {
           </Text>
         </TouchableOpacity>
 
-        <ScrollView className="gap-y-4" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Length: {length}</Text>
+        <ScrollView
+          className="gap-y-4"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
+              Length: {length}
+            </Text>
             <View className="flex-row items-center">
               <TouchableOpacity
                 onPress={() => setLength(Math.max(8, length - 1))}
-                className="mr-3 rounded-full bg-zinc-200 dark:bg-zinc-800/80 p-2 active:bg-zinc-300 dark:active:bg-zinc-700">
+                className="mr-3 rounded-full bg-zinc-200 p-2 active:bg-zinc-300 dark:bg-zinc-800/80 dark:active:bg-zinc-700">
                 <Ionicons name="remove" size={24} color="#10b981" />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setLength(Math.min(64, length + 1))}
-                className="rounded-full bg-zinc-200 dark:bg-zinc-800/80 p-2 active:bg-zinc-300 dark:active:bg-zinc-700">
+                className="rounded-full bg-zinc-200 p-2 active:bg-zinc-300 dark:bg-zinc-800/80 dark:active:bg-zinc-700">
                 <Ionicons name="add" size={24} color="#10b981" />
               </TouchableOpacity>
             </View>
           </View>
 
-          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Lowercase (a-z)</Text>
+          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
+              Lowercase (a-z)
+            </Text>
             <Switch
               value={useLowercase}
               onValueChange={setUseLowercase}
               trackColor={{ false: isDarkMode ? '#27272a' : '#d4d4d8', true: '#10b981' }}
-              thumbColor={useLowercase ? '#fff' : (isDarkMode ? '#a1a1aa' : '#71717a')}
+              thumbColor={useLowercase ? '#fff' : isDarkMode ? '#a1a1aa' : '#71717a'}
             />
           </View>
 
-          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Uppercase (A-Z)</Text>
+          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
+              Uppercase (A-Z)
+            </Text>
             <Switch
               value={useUppercase}
               onValueChange={setUseUppercase}
               trackColor={{ false: isDarkMode ? '#27272a' : '#d4d4d8', true: '#10b981' }}
-              thumbColor={useUppercase ? '#fff' : (isDarkMode ? '#a1a1aa' : '#71717a')}
+              thumbColor={useUppercase ? '#fff' : isDarkMode ? '#a1a1aa' : '#71717a'}
             />
           </View>
 
-          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Numbers (0-9)</Text>
+          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
+              Numbers (0-9)
+            </Text>
             <Switch
               value={useNumbers}
               onValueChange={setUseNumbers}
               trackColor={{ false: isDarkMode ? '#27272a' : '#d4d4d8', true: '#10b981' }}
-              thumbColor={useNumbers ? '#fff' : (isDarkMode ? '#a1a1aa' : '#71717a')}
+              thumbColor={useNumbers ? '#fff' : isDarkMode ? '#a1a1aa' : '#71717a'}
             />
           </View>
 
-          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Symbols (!@#$)</Text>
+          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
+              Symbols (!@#$)
+            </Text>
             <Switch
               value={useSymbols}
               onValueChange={setUseSymbols}
               trackColor={{ false: isDarkMode ? '#27272a' : '#d4d4d8', true: '#10b981' }}
-              thumbColor={useSymbols ? '#fff' : (isDarkMode ? '#a1a1aa' : '#71717a')}
+              thumbColor={useSymbols ? '#fff' : isDarkMode ? '#a1a1aa' : '#71717a'}
             />
           </View>
 
@@ -115,6 +128,6 @@ export default function GeneratorScreen() {
           </TouchableOpacity>
         </ScrollView>
       </View>
-    </View >
+    </View>
   );
 }

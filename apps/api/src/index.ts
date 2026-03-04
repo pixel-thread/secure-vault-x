@@ -12,7 +12,7 @@ import { authRouter } from "./routes/auth.routes";
 import { vaultRouter } from "./routes/vault.routes";
 import { deviceRouter } from "./routes/device.routes";
 
-const app = new Hono();
+export const app = new Hono();
 
 const EXPECTED_ORIGIN = process.env.EXPECTED_ORIGIN || "http://localhost:3000";
 

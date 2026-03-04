@@ -85,7 +85,7 @@ export default function MfaScreen() {
             router.replace('/(drawer)/(tabs)');
           } catch (err) {
             logger.warn('Could not register device automatically upon MFA login:', err);
-            // Even if device registration fails, we might still want to let them in, 
+            // Even if device registration fails, we might still want to let them in,
             // but they won't be able to manage devices until they re-enroll.
             setIsAuthenticated(true);
             router.replace('/(drawer)/(tabs)');
@@ -107,6 +107,7 @@ export default function MfaScreen() {
   });
 
   const onSubmit = async (data: FormValue) => mutate(data);
+
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View className="flex-1 items-center justify-center bg-white p-8 dark:bg-[#09090b]">
@@ -132,10 +133,11 @@ export default function MfaScreen() {
               name="email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.email
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                    }`}
+                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                    errors.email
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                  }`}
                   placeholder="Email Address"
                   placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                   onBlur={onBlur}
@@ -161,10 +163,11 @@ export default function MfaScreen() {
               name="code"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-center font-mono text-3xl font-bold tracking-[1em] text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.code
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                    }`}
+                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-center font-mono text-3xl font-bold tracking-[1em] text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                    errors.code
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                  }`}
                   placeholder="------"
                   placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                   onBlur={onBlur}

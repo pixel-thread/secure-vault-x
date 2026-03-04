@@ -12,10 +12,11 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: isDarkMode ? '#09090b' : '#fff',
-          borderTopColor: isDarkMode ? '#27272a' : '#e4e4e7'
+          borderTopColor: isDarkMode ? '#27272a' : '#e4e4e7',
         },
         tabBarActiveTintColor: '#10b981',
         tabBarInactiveTintColor: isDarkMode ? '#a1a1aa' : '#71717a',
+        tabBarLabelStyle: { fontSize: 12, fontWeight: 'bold', paddingBottom: 4 },
       }}>
       <Tabs.Screen
         name="index"

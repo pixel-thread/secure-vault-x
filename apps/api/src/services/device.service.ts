@@ -120,13 +120,9 @@ export class DeviceService {
   // ALWAYS require actingDeviceId and signature for removal (unless removing self, optionally)
   // For now, let's strictly require them for all fleet management.
   if (!actingDeviceId || !signature || !timestamp) {
-   // Allow a device to remove itself without a signature if we want,
-   // but for "fleet management" we require it.
-   if (actingDeviceId !== deviceId) {
-    throw new Error(
-     "Only a trusted device with a valid signature can remove other devices.",
-    );
-   }
+   throw new Error(
+    "Only a trusted device with a valid signature can remove other devices.",
+   );
   }
 
   if (actingDeviceId && signature && timestamp) {
@@ -170,7 +166,7 @@ export class DeviceService {
 
   if (!device) throw new NotFoundError("Device not found");
 
-  await prisma.device.delete({ where: { id: deviceId } });
+  await prisma.device.delete({ where: { id: deviceId, userId } });
   return { status: "success" };
  }
 
@@ -234,7 +230,7 @@ export class DeviceService {
   if (!targetDevice) throw new NotFoundError("Target device not found");
 
   return prisma.device.update({
-   where: { id: targetDeviceId },
+   where: { id: targetDeviceId, userId },
    data: { isTrusted },
    select: { id: true, deviceName: true, isTrusted: true, createdAt: true },
   });

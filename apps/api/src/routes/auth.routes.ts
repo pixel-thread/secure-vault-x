@@ -16,55 +16,58 @@ import {
 import { AUTH_ENDPOINT } from "@securevault/constants";
 import { AuthController } from "../controllers/auth.controller";
 import { protect } from "../middlewares/auth.middleware";
+import { errorHandler } from "../middlewares/error.middleware";
+import { validatorHook } from "../utils/helper/validator";
 
 const authRouter = new Hono();
+authRouter.onError(errorHandler);
 
 // Registration WebAuthn Flow
 authRouter.post(
   AUTH_ENDPOINT.POST_REGISTER_GENERATE_OPTIONS,
-  zValidator("json", generateRegistrationOptionsSchema),
+  zValidator("json", generateRegistrationOptionsSchema, validatorHook),
   AuthController.registerGenerateOptions,
 );
 authRouter.post(
   AUTH_ENDPOINT.POST_REGISTER_VERIFY,
-  zValidator("json", verifyRegistrationResponseSchema),
+  zValidator("json", verifyRegistrationResponseSchema, validatorHook),
   AuthController.registerVerify,
 );
 
 // Login WebAuthn Flow
 authRouter.post(
   AUTH_ENDPOINT.POST_LOGIN_GENERATE_OPTIONS,
-  zValidator("json", generateLoginOptionsSchema),
+  zValidator("json", generateLoginOptionsSchema, validatorHook),
   AuthController.loginGenerateOptions,
 );
 authRouter.post(
   AUTH_ENDPOINT.POST_LOGIN_VERIFY,
-  zValidator("json", verifyLoginResponseSchema),
+  zValidator("json", verifyLoginResponseSchema, validatorHook),
   AuthController.loginVerify,
 );
 
 // Email/Password Logins
 authRouter.post(
   AUTH_ENDPOINT.POST_PASSWORD_REGISTER,
-  zValidator("json", passwordRegisterSchema),
+  zValidator("json", passwordRegisterSchema, validatorHook),
   AuthController.registerPassword,
 );
 
 authRouter.post(
   AUTH_ENDPOINT.POST_PASSWORD_LOGIN,
-  zValidator("json", passwordLoginSchema),
+  zValidator("json", passwordLoginSchema, validatorHook),
   AuthController.loginPassword,
 );
 authRouter.post(
   AUTH_ENDPOINT.POST_MFA_VERIFY,
-  zValidator("json", verifyOtpSchema),
+  zValidator("json", verifyOtpSchema, validatorHook),
   AuthController.verifyOtp,
 );
 
 // Token Rotation
 authRouter.post(
   AUTH_ENDPOINT.POST_REFRESH,
-  zValidator("json", refreshTokensSchema),
+  zValidator("json", refreshTokensSchema, validatorHook),
   AuthController.refreshTokens,
 );
 
@@ -77,7 +80,7 @@ authRouter.get(
 authRouter.post(
   AUTH_ENDPOINT.POST_MFA_REVOKE,
   protect,
-  zValidator("json", revokeOtpSchema),
+  zValidator("json", revokeOtpSchema, validatorHook),
   AuthController.revokeOtp,
 );
 
@@ -85,7 +88,7 @@ authRouter.get(AUTH_ENDPOINT.GET_ME, protect, AuthController.getMe);
 
 authRouter.post(
   AUTH_ENDPOINT.POST_LOGOUT,
-  zValidator("json", refreshTokensSchema),
+  zValidator("json", refreshTokensSchema, validatorHook),
   AuthController.logout,
 );
 
@@ -99,7 +102,7 @@ authRouter.get(
 authRouter.post(
   AUTH_ENDPOINT.POST_ENCRYPTION_SALT,
   protect,
-  zValidator("json", setEncryptionSaltSchema),
+  zValidator("json", setEncryptionSaltSchema, validatorHook),
   AuthController.setEncryptionSalt,
 );
 
@@ -107,7 +110,7 @@ authRouter.post(
 authRouter.post(
   AUTH_ENDPOINT.POST_MFA_TOGGLE,
   protect,
-  zValidator("json", toggleMfaSchema),
+  zValidator("json", toggleMfaSchema, validatorHook),
   AuthController.toggleMfa,
 );
 

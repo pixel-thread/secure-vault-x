@@ -26,11 +26,11 @@ export class VaultService {
       if (version <= existingVault.version) {
         throw new ConflictError(
           "Conflict: Client version is behind server. Current Version: " +
-            existingVault.version,
+          existingVault.version,
         );
       }
       const updated = await prisma.vault.update({
-        where: { id: existingVault.id },
+        where: { id: existingVault.id, userId },
         data: { encryptedData, version },
       });
       return { status: "success", version: updated.version };
