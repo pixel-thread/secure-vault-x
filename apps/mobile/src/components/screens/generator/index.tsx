@@ -4,18 +4,36 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import Header from '../../Header';
 import { generatePassword } from '@securevault/utils';
+import * as Clipboard from 'expo-clipboard';
+import { toast } from 'sonner-native';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export default function GeneratorScreen() {
   const [password, setPassword] = useState('Tap Generate');
   const [length, setLength] = useState(32);
+  const [useLowercase, setUseLowercase] = useState(true);
+  const [useUppercase, setUseUppercase] = useState(true);
   const [useNumbers, setUseNumbers] = useState(true);
   const [useSymbols, setUseSymbols] = useState(true);
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
   const generate = () => {
-    const generated = generatePassword(length);
+    const generated = generatePassword(length, {
+      useLowercase,
+      useUppercase,
+      useNumbers,
+      useSymbols,
+    });
     setPassword(generated);
+  };
+
+  const handleCopy = async () => {
+    if (password === 'Tap Generate') return;
+    await Clipboard.setStringAsync(password);
+    toast.success('Copied!', {
+      description: 'Password copied to clipboard',
+    });
   };
 
   return (
@@ -23,13 +41,16 @@ export default function GeneratorScreen() {
       <Header title="Generator" subtitle="Secure Passwords" />
 
       <View className="flex-1 p-6">
-        <View className="mb-8 items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-8 shadow-lg shadow-emerald-500/10">
+        <TouchableOpacity
+          onPress={handleCopy}
+          activeOpacity={0.7}
+          className="mb-8 items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-8 shadow-lg shadow-emerald-500/10">
           <Text className="text-center font-mono text-3xl font-medium tracking-wider text-emerald-600 dark:text-emerald-400">
             {password}
           </Text>
-        </View>
+        </TouchableOpacity>
 
-        <View className="space-y-4">
+        <ScrollView className="gap-y-4" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
             <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Length: {length}</Text>
             <View className="flex-row items-center">
@@ -47,7 +68,27 @@ export default function GeneratorScreen() {
           </View>
 
           <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Include Numbers</Text>
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Lowercase (a-z)</Text>
+            <Switch
+              value={useLowercase}
+              onValueChange={setUseLowercase}
+              trackColor={{ false: isDarkMode ? '#27272a' : '#d4d4d8', true: '#10b981' }}
+              thumbColor={useLowercase ? '#fff' : (isDarkMode ? '#a1a1aa' : '#71717a')}
+            />
+          </View>
+
+          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Uppercase (A-Z)</Text>
+            <Switch
+              value={useUppercase}
+              onValueChange={setUseUppercase}
+              trackColor={{ false: isDarkMode ? '#27272a' : '#d4d4d8', true: '#10b981' }}
+              thumbColor={useUppercase ? '#fff' : (isDarkMode ? '#a1a1aa' : '#71717a')}
+            />
+          </View>
+
+          <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Numbers (0-9)</Text>
             <Switch
               value={useNumbers}
               onValueChange={setUseNumbers}
@@ -57,7 +98,7 @@ export default function GeneratorScreen() {
           </View>
 
           <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/50 p-5 shadow-sm">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Include Symbols</Text>
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Symbols (!@#$)</Text>
             <Switch
               value={useSymbols}
               onValueChange={setUseSymbols}
@@ -72,8 +113,8 @@ export default function GeneratorScreen() {
             <Ionicons name="refresh-outline" size={24} color="#022c22" />
             <Text className="ml-2 text-xl font-bold text-[#022c22]">Generate Password</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
-    </View>
+    </View >
   );
 }
