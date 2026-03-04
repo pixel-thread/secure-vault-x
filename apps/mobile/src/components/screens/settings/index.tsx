@@ -29,7 +29,6 @@ export default function SettingsScreen() {
   const purgeLocalEnclave = useAuthStore((state) => state.purgeLocalEnclave);
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const queryClient = useQueryClient();
 
   // Biometric state
   const [biometricEnabled, setBiometricEnabled] = useState(false);
@@ -209,7 +208,7 @@ export default function SettingsScreen() {
     // For this example, we'll try to find the earliest trusted device as a fallback
     const id = await SecureStore.getItemAsync('SV_DEVICE_ID');
     if (id) return id;
-    const trusted = devices.find(d => d.isTrusted);
+    const trusted = devices.find((d) => d.isTrusted);
     return trusted?.id ?? '';
   };
 
@@ -254,7 +253,8 @@ export default function SettingsScreen() {
       toast.success('Device trust status updated');
       refetchDevices();
     },
-    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to update trust status'),
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.message || 'Failed to update trust status'),
   });
 
   const handleToggleTrust = useCallback(
@@ -384,19 +384,21 @@ export default function SettingsScreen() {
             devices.map((device, index) => (
               <View
                 key={device.id}
-                className={`flex-row items-center p-5 ${index < devices.length - 1
-                  ? 'border-b border-zinc-100 dark:border-zinc-800/50'
-                  : ''
-                  }`}>
+                className={`flex-row items-center p-5 ${
+                  index < devices.length - 1
+                    ? 'border-b border-zinc-100 dark:border-zinc-800/50'
+                    : ''
+                }`}>
                 <View
-                  className={`mr-4 h-10 w-10 items-center justify-center rounded-xl ${device.isTrusted
-                    ? 'bg-emerald-100 dark:bg-emerald-500/20'
-                    : 'bg-zinc-200 dark:bg-zinc-800/80'
-                    }`}>
+                  className={`mr-4 h-10 w-10 items-center justify-center rounded-xl ${
+                    device.isTrusted
+                      ? 'bg-emerald-100 dark:bg-emerald-500/20'
+                      : 'bg-zinc-200 dark:bg-zinc-800/80'
+                  }`}>
                   <Ionicons
                     name={device.isTrusted ? 'shield-checkmark-outline' : 'phone-portrait-outline'}
                     size={22}
-                    color={device.isTrusted ? '#10b981' : (isDarkMode ? '#a1a1aa' : '#71717a')}
+                    color={device.isTrusted ? '#10b981' : isDarkMode ? '#a1a1aa' : '#71717a'}
                   />
                 </View>
                 <View className="flex-1">
@@ -410,11 +412,14 @@ export default function SettingsScreen() {
                 </View>
                 <View className="flex-row items-center gap-2">
                   <TouchableOpacity
-                    className={`h-10 w-10 items-center justify-center rounded-full ${device.isTrusted
-                      ? 'bg-amber-100 active:bg-amber-200 dark:bg-amber-500/10 dark:active:bg-amber-500/20'
-                      : 'bg-emerald-100 active:bg-emerald-200 dark:bg-emerald-500/10 dark:active:bg-emerald-500/20'
-                      }`}
-                    onPress={() => handleToggleTrust(device.id, device.deviceName, !device.isTrusted)}>
+                    className={`h-10 w-10 items-center justify-center rounded-full ${
+                      device.isTrusted
+                        ? 'bg-amber-100 active:bg-amber-200 dark:bg-amber-500/10 dark:active:bg-amber-500/20'
+                        : 'bg-emerald-100 active:bg-emerald-200 dark:bg-emerald-500/10 dark:active:bg-emerald-500/20'
+                    }`}
+                    onPress={() =>
+                      handleToggleTrust(device.id, device.deviceName, !device.isTrusted)
+                    }>
                     <Ionicons
                       name={device.isTrusted ? 'shield-half-outline' : 'shield-checkmark-outline'}
                       size={18}
