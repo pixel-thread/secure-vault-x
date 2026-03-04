@@ -62,30 +62,34 @@ export default function MfaScreen() {
               Device.deviceName ||
               `${Device.modelName || 'SecureVault Mobile'} (${Device.osName || 'Unknown OS'})`;
 
-            // Note: In an MFA flow, the user might already have a session ID, passing the token in header if needed.
-            // Wait, we just got tokens, so http interceptor should use the new accessToken for this DEVICE_ENDPOINT.POST_REGISTER_DEVICE automatically
-            // once we set it in tokenManager.
-            setTimeout(async () => {
-              const devId = await getDeviceIdentifier();
-              const res = await http.post<any>(DEVICE_ENDPOINT.POST_REGISTER_DEVICE, {
-                deviceName: dName,
-                deviceIdentifier: devId,
-                publicKey: keyPair.publicKey,
-              });
+            const devId = await getDeviceIdentifier();
+            const res = await http.post<any>(DEVICE_ENDPOINT.POST_REGISTER_DEVICE, {
+              deviceName: dName,
+              deviceIdentifier: devId,
+              publicKey: keyPair.publicKey,
+            });
 
-              if (res.data?.data?.id) {
-                await SecureStore.setItemAsync('SV_DEVICE_ID', res.data.data.id);
-              }
-            }, 500);
+            if (res.data?.id) {
+              logger.log('[MFA] Registration successful. Device UUID:', res.data.id);
+              await SecureStore.setItemAsync('SV_DEVICE_ID', res.data.id);
+              await SecureStore.setItemAsync('SV_DEVICE_ID_RESERVE', devId); // Store hardware ID as reserve
+            } else {
+              logger.warn('[MFA] Device registration response missing ID:', res.data);
+            }
+
+            // ONLY AFTER registration finishes, we proceed
+            setIsAuthenticated(true);
+            toast.success('Authentication Complete', {
+              description: 'You have been successfully verified.',
+            });
+            router.replace('/(drawer)/(tabs)');
           } catch (err) {
             logger.warn('Could not register device automatically upon MFA login:', err);
+            // Even if device registration fails, we might still want to let them in, 
+            // but they won't be able to manage devices until they re-enroll.
+            setIsAuthenticated(true);
+            router.replace('/(drawer)/(tabs)');
           }
-
-          setIsAuthenticated(true);
-          toast.success('Authentication Complete', {
-            description: 'You have been successfully verified.',
-          });
-          router.replace('/(drawer)/(tabs)');
         }
         return data.data;
       } else {
@@ -128,11 +132,10 @@ export default function MfaScreen() {
               name="email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                    errors.email
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                  }`}
+                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.email
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                    }`}
                   placeholder="Email Address"
                   placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                   onBlur={onBlur}
@@ -158,11 +161,10 @@ export default function MfaScreen() {
               name="code"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-center font-mono text-3xl font-bold tracking-[1em] text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                    errors.code
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                  }`}
+                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-center font-mono text-3xl font-bold tracking-[1em] text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.code
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                    }`}
                   placeholder="------"
                   placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                   onBlur={onBlur}

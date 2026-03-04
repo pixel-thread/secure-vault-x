@@ -22,6 +22,7 @@ export default function SignOutButton() {
    if (data.success) {
     await tokenManager.removeAllTokens();
     await SecureStore.deleteItemAsync('SV_DEVICE_ID');
+    await SecureStore.deleteItemAsync('SV_DEVICE_ID_RESERVE');
     await SecureStore.deleteItemAsync('SV_DEVICE_PRIVATE_KEY');
     toast.success('Signed out successfully');
     logout();

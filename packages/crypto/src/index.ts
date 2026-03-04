@@ -190,6 +190,38 @@ export async function signDevicePayload(
 }
 
 /**
+ * Normalizes an ECDSA P-256 signature from DER to RAW (64-byte) format.
+ * Web Crypto APIs in some environments (e.g. some RN polyfills) produce DER.
+ */
+function derToRaw(der: Buffer): Buffer {
+ let offset = 0;
+ if (der[offset++] !== 0x30) throw new Error("Invalid DER: not a sequence");
+ offset++; // skip sequence length
+
+ const readInteger = () => {
+  if (der[offset++] !== 0x02) throw new Error("Invalid DER: expected integer");
+  const len = der[offset++] || 0;
+  let integer = der.slice(offset, offset + len);
+  offset += len;
+
+  // Normalize to 32 bytes (remove 00 padding or add 00 padding)
+  if (integer.length > 32) {
+   integer = integer.slice(integer.length - 32);
+  } else if (integer.length < 32) {
+   const padded = Buffer.alloc(32, 0);
+   integer.copy(padded, 32 - integer.length);
+   integer = padded;
+  }
+  return integer;
+ };
+
+ const r = readInteger();
+ const s = readInteger();
+
+ return Buffer.concat([r, s]);
+}
+
+/**
  * Verify a payload signature using a device's Base64 SPKI Public Key.
  * Run primarily on the Backend.
  */
@@ -200,7 +232,16 @@ export async function verifyDeviceSignature(
 ): Promise<boolean> {
  const cryptoApi = getCryptoApi();
  const pubKeyBuffer = Buffer.from(base64PublicKey, "base64");
- const sigBuffer = Buffer.from(base64Signature, "base64");
+ let sigBuffer = Buffer.from(base64Signature, "base64");
+
+ // If signature is DER (starts with 0x30), normalize to RAW
+ if (sigBuffer[0] === 0x30 && sigBuffer.length > 64) {
+  try {
+   sigBuffer = derToRaw(sigBuffer) as any;
+  } catch (e) {
+   // Fallback to original, subtle.verify will likely fail
+  }
+ }
 
  const publicKeyObj = await cryptoApi.subtle.importKey(
   "spki",
@@ -219,3 +260,4 @@ export async function verifyDeviceSignature(
   dataBuffer,
  );
 }
+

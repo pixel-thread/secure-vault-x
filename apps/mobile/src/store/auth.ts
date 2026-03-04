@@ -31,6 +31,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     // This permanently bricks local Vault access on this device until re-registered.
     await SecureStore.deleteItemAsync('SV_DKEK');
     await SecureStore.deleteItemAsync('SV_MEK');
+    await SecureStore.deleteItemAsync('SV_DEVICE_ID');
+    await SecureStore.deleteItemAsync('SV_DEVICE_ID_RESERVE');
+    await SecureStore.deleteItemAsync('SV_DEVICE_PRIVATE_KEY');
     set({ isAuthenticated: false, user: null, hasMek: false });
   },
 }));

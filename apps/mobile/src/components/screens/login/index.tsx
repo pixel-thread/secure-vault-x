@@ -79,7 +79,9 @@ export default function LoginScreen() {
             });
 
             if (res.data?.id) {
+              logger.log('[Login] Registration successful. Device UUID:', res.data.id);
               await SecureStore.setItemAsync('SV_DEVICE_ID', res.data.id);
+              await SecureStore.setItemAsync('SV_DEVICE_ID_RESERVE', devId); // Store hardware ID as reserve
             }
           } catch (err) {
             logger.warn('Could not register device automatically upon login:', err);
@@ -135,11 +137,10 @@ export default function LoginScreen() {
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.email
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                }`}
+                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.email
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                  }`}
                 placeholder="Email Address"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 onBlur={onBlur}
@@ -164,11 +165,10 @@ export default function LoginScreen() {
             name="password"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.password
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                }`}
+                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.password
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                  }`}
                 placeholder="Password"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 onBlur={onBlur}

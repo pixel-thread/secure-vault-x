@@ -9,6 +9,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../../store/auth';
 import { signDevicePayload } from '@securevault/crypto';
+import { logger } from '@securevault/utils';
 
 export interface DeviceItem {
   id: string;
@@ -36,10 +37,24 @@ export default function TrustedDevicesSection({
   const [currentDeviceId, setCurrentDeviceId] = useState<string>('');
 
   const getActingDeviceId = async () => {
-    const id = await SecureStore.getItemAsync('SV_DEVICE_ID');
-    if (id) return id;
-    const trusted = devices?.find((d) => d.isTrusted);
-    return trusted?.id ?? '';
+    let id = await SecureStore.getItemAsync('SV_DEVICE_ID');
+
+    // Fallback: If ID is missing, try to find it by hardware identifier in the fetched list
+    if (!id && (devices?.length ?? 0) > 0) {
+      const hwId = (await SecureStore.getItemAsync('SV_DEVICE_ID_RESERVE')) || ''; // We'll store hardware ID as a reserve
+      const hardwareId = hwId || (await require('@/src/utils/deviceId').getDeviceIdentifier());
+
+      const matched = (devices as DeviceItem[] | undefined)?.find(
+        (d) => d.deviceIdentifier === hardwareId
+      );
+      if (matched) {
+        id = matched.id;
+        // Self-heal storage
+        await SecureStore.setItemAsync('SV_DEVICE_ID', id);
+      }
+    }
+
+    return id ?? '';
   };
 
   useEffect(() => {
@@ -61,6 +76,17 @@ export default function TrustedDevicesSection({
       if (privateKey && user?.id) {
         const payload = `${user.id}:${deviceId}:REMOVE:${timestamp}`;
         signature = await signDevicePayload(payload, privateKey);
+      } else {
+        logger.warn('[TrustedDevices] Cannot sign remove request:', {
+          hasPrivateKey: !!privateKey,
+          userId: user?.id,
+        });
+      }
+
+      if (!actingId || !signature || !timestamp) {
+        throw new Error(
+          `Missing required headers for removal: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`
+        );
       }
 
       return http.delete(DEVICE_ENDPOINT.DELETE_DEVICE.replace(':id', deviceId), {
@@ -97,13 +123,32 @@ export default function TrustedDevicesSection({
       const privateKey = await SecureStore.getItemAsync('SV_DEVICE_PRIVATE_KEY');
 
       const timestamp = Date.now().toString();
+
       let signature = '';
+
       if (privateKey && user?.id) {
         const payload = `${user.id}:${deviceId}:${isTrusted}:${timestamp}`;
+        logger.log('[TrustedDevices] Signing trust update payload:', payload);
         signature = await signDevicePayload(payload, privateKey);
+      } else {
+        logger.warn('[TrustedDevices] Cannot sign trust update:', {
+          hasPrivateKey: !!privateKey,
+          hasUserId: !!user?.id,
+        });
       }
-
-      return http.put(
+      logger.log('Here', {
+        deviceId,
+        isTrusted,
+        actingId,
+        signature,
+        timestamp,
+      });
+      if (!actingId || !signature || !timestamp) {
+        throw new Error(
+          `Missing required headers for trust update: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`
+        );
+      }
+      return await http.put(
         DEVICE_ENDPOINT.PUT_TRUST_DEVICE.replace(':id', deviceId),
         { isTrusted },
         {
@@ -115,7 +160,6 @@ export default function TrustedDevicesSection({
       );
     },
     onSuccess: (data) => {
-      console.log(data);
       if (data.success) {
         toast.success(data.message);
         refetchDevices();
@@ -123,8 +167,9 @@ export default function TrustedDevicesSection({
       }
       toast.error(data.message);
     },
-    onError: (err: any) =>
-      toast.error(err?.response?.data?.message || 'Failed to update trust status'),
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to update trust status');
+    },
   });
 
   const handleToggleTrust = useCallback(
