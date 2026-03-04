@@ -18,12 +18,13 @@ export interface DeviceItem {
   deviceIdentifier: string;
   createdAt: string;
 }
+type TrustedDeviceSectionProps = {
+  onDevicesLoad?: (devices: DeviceItem[], currentDeviceId: string) => void;
+}
 
 export default function TrustedDevicesSection({
   onDevicesLoad,
-}: {
-  onDevicesLoad?: (devices: DeviceItem[], currentDeviceId: string) => void;
-}) {
+}: TrustedDeviceSectionProps) {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const { user } = useAuthStore();
@@ -136,13 +137,6 @@ export default function TrustedDevicesSection({
           hasUserId: !!user?.id,
         });
       }
-      logger.log('Here', {
-        deviceId,
-        isTrusted,
-        actingId,
-        signature,
-        timestamp,
-      });
       if (!actingId || !signature || !timestamp) {
         throw new Error(
           `Missing required headers for trust update: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`
@@ -213,15 +207,13 @@ export default function TrustedDevicesSection({
           devices?.map((device, index) => (
             <View
               key={device.id}
-              className={`flex-row items-center p-5 ${
-                index < devices.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800/50' : ''
-              }`}>
-              <View
-                className={`mr-4 h-10 w-10 items-center justify-center rounded-xl ${
-                  device.isTrusted
-                    ? 'bg-emerald-100 dark:bg-emerald-500/20'
-                    : 'bg-zinc-200 dark:bg-zinc-800/80'
+              className={`flex-row items-center p-5 ${index < devices.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800/50' : ''
                 }`}>
+              <View
+                className={`mr-4 h-10 w-10 items-center justify-center rounded-xl ${device.isTrusted
+                  ? 'bg-emerald-100 dark:bg-emerald-500/20'
+                  : 'bg-zinc-200 dark:bg-zinc-800/80'
+                  }`}>
                 <Ionicons
                   name={device.isTrusted ? 'shield-checkmark-outline' : 'phone-portrait-outline'}
                   size={22}
@@ -240,11 +232,10 @@ export default function TrustedDevicesSection({
               </View>
               <View className="flex-row items-center gap-2">
                 <TouchableOpacity
-                  className={`h-10 w-10 items-center justify-center rounded-full ${
-                    device.isTrusted
-                      ? 'bg-amber-100 active:bg-amber-200 dark:bg-amber-500/10 dark:active:bg-amber-500/20'
-                      : 'bg-emerald-100 active:bg-emerald-200 dark:bg-emerald-500/10 dark:active:bg-emerald-500/20'
-                  }`}
+                  className={`h-10 w-10 items-center justify-center rounded-full ${device.isTrusted
+                    ? 'bg-amber-100 active:bg-amber-200 dark:bg-amber-500/10 dark:active:bg-amber-500/20'
+                    : 'bg-emerald-100 active:bg-emerald-200 dark:bg-emerald-500/10 dark:active:bg-emerald-500/20'
+                    }`}
                   onPress={() =>
                     handleToggleTrust(device.id, device.deviceName, !device.isTrusted)
                   }>
