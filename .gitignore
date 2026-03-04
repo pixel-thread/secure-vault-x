@@ -29,4 +29,4 @@ android
 generated
 
 expo-env.d.ts
-.apk
+*.apk
