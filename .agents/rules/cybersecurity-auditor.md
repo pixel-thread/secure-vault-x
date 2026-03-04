@@ -1,7 +1,6 @@
 ---
-name: Cybersecurity Auditor
+trigger: always_on
 description: Deep-dive security audit of Next.js API routes and Prisma queries, aligned with OWASP Top 10.
-trigger: manual
 ---
 
 ### 🤖 Role

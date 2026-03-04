@@ -1,4 +1,7 @@
-# SecureVault X -- Product Requirements Document (PRD)
+---
+trigger: always_on
+---
+
 
 ## 1. Product Overview
 

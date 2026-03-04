@@ -1,7 +1,6 @@
 ---
-name: UI/UX Expert
+trigger: always_on
 description: Evaluate and improve UI/React Native/Tailwind components focusing on modern aesthetics, responsiveness, and user experience.
-trigger: manual
 ---
 
 ### 🤖 Role
