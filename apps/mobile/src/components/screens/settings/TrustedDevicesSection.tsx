@@ -5,9 +5,9 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { DEVICE_ENDPOINT } from '@securevault/constants';
 import { http } from '@securevault/utils-native';
 import { toast } from 'sonner-native';
-import * as SecureStore from 'expo-secure-store';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../../store/auth';
+import { DeviceStoreManager } from '../../../store/device';
 import { signDevicePayload } from '@securevault/crypto';
 import { logger } from '@securevault/utils';
 
@@ -38,11 +38,11 @@ export default function TrustedDevicesSection({
   const [currentDeviceId, setCurrentDeviceId] = useState<string>('');
 
   const getActingDeviceId = async () => {
-    let id = await SecureStore.getItemAsync('SV_DEVICE_ID');
+    let id = await DeviceStoreManager.getDeviceId();
 
     // Fallback: If ID is missing, try to find it by hardware identifier in the fetched list
     if (!id && (devices?.length ?? 0) > 0) {
-      const hwId = (await SecureStore.getItemAsync('SV_DEVICE_ID_RESERVE')) || ''; // We'll store hardware ID as a reserve
+      const hwId = (await DeviceStoreManager.getDeviceIdReserve()) || ''; // We'll store hardware ID as a reserve
       const hardwareId = hwId || (await require('@/src/utils/deviceId').getDeviceIdentifier());
 
       const matched = (devices as DeviceItem[] | undefined)?.find(
@@ -51,7 +51,7 @@ export default function TrustedDevicesSection({
       if (matched) {
         id = matched.id;
         // Self-heal storage
-        await SecureStore.setItemAsync('SV_DEVICE_ID', id);
+        await DeviceStoreManager.setDeviceId(id);
       }
     }
 
@@ -70,7 +70,7 @@ export default function TrustedDevicesSection({
   const { mutate: removeDeviceMutate } = useMutation({
     mutationFn: async (deviceId: string) => {
       const actingId = await getActingDeviceId();
-      const privateKey = await SecureStore.getItemAsync('SV_DEVICE_PRIVATE_KEY');
+      const privateKey = await DeviceStoreManager.getDevicePrivateKey();
 
       const timestamp = Date.now().toString();
       let signature = '';
@@ -121,7 +121,7 @@ export default function TrustedDevicesSection({
   const { mutate: toggleTrustMutate } = useMutation({
     mutationFn: async ({ deviceId, isTrusted }: { deviceId: string; isTrusted: boolean }) => {
       const actingId = await getActingDeviceId();
-      const privateKey = await SecureStore.getItemAsync('SV_DEVICE_PRIVATE_KEY');
+      const privateKey = await DeviceStoreManager.getDevicePrivateKey();
 
       const timestamp = Date.now().toString();
 

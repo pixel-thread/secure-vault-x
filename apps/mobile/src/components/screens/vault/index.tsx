@@ -12,7 +12,7 @@ import { AddSecretDialog } from './AddSecretDialog';
 import { VaultEmpty } from './VaultEmpty';
 import { MekSetup } from './MekSetup';
 import { decryptData } from '@securevault/crypto';
-import * as SecureStore from 'expo-secure-store';
+import { DeviceStoreManager } from '../../../store/device';
 import { logger } from '@securevault/utils';
 
 export type SecretType = 'password' | 'card';
@@ -63,7 +63,7 @@ const getAndDecryptVault = async (): Promise<VaultSecret[]> => {
   // Nothing to decrypt
   if (!Array.isArray(entries) || entries.length === 0) return [];
 
-  const mek = await SecureStore.getItemAsync('SV_MEK');
+  const mek = await DeviceStoreManager.getMek();
 
   if (!mek) {
     logger.error('Vault decrypt failed: MEK not found in SecureStore');

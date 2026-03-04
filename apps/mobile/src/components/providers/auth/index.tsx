@@ -5,11 +5,11 @@ import { UserT } from '@securevault/types';
 import { logger } from '@securevault/utils';
 import { http } from '@securevault/utils-native';
 import { useMutation } from '@tanstack/react-query';
-import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { authenticateWithBiometric } from '@/src/utils/biometricLock';
+import { DeviceStoreManager } from '@/src/store/device';
 
 type Props = { children: React.ReactNode };
 
@@ -50,8 +50,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         // Check biometric requirement only if we have an active session
         if (hasTokens) {
-          const biometricEnabled = await SecureStore.getItemAsync('SV_BIOMETRIC_ENABLED');
-          if (biometricEnabled === 'true') {
+          const biometricEnabled = await DeviceStoreManager.getBiometricEnabled();
+          if (biometricEnabled) {
             setBiometricRequired(true);
             // Prompt immediately
             const success = await authenticateWithBiometric();
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }
 
         // Check MEK
-        const mek = await SecureStore.getItemAsync('SV_MEK');
+        const mek = await DeviceStoreManager.getMek();
         if (mek) {
           setHasMek(true);
         } else {

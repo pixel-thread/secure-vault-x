@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
 import { UserT } from '@securevault/types';
+import { DeviceStoreManager } from './device';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -29,11 +29,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   purgeLocalEnclave: async () => {
     // Physically destroy the DKEK backing the device trust.
     // This permanently bricks local Vault access on this device until re-registered.
-    await SecureStore.deleteItemAsync('SV_DKEK');
-    await SecureStore.deleteItemAsync('SV_MEK');
-    await SecureStore.deleteItemAsync('SV_DEVICE_ID');
-    await SecureStore.deleteItemAsync('SV_DEVICE_ID_RESERVE');
-    await SecureStore.deleteItemAsync('SV_DEVICE_PRIVATE_KEY');
+    await DeviceStoreManager.clearAll();
     set({ isAuthenticated: false, user: null, hasMek: false });
   },
 }));
