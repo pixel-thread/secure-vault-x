@@ -28,7 +28,9 @@ export const errorHandler = (err: Error, c: Context) => {
     err.name === "JWTExpired" ||
     err.name === "JWTClaimValidationFailed" ||
     err.name === "JWTInvalid" ||
-    err.name === "JWSInvalid"
+    err.name === "JWSInvalid" ||
+    err.name === "JOSEAlgNotAllowed" ||
+    (err instanceof TypeError && err.message.includes("Key for the none algorithm"))
   ) {
     return errorResponse(c, {
       status: 401,
@@ -91,7 +93,11 @@ export const errorHandler = (err: Error, c: Context) => {
   }
 
   // Handle SyntaxError (e.g. malformed JSON)
-  if (err instanceof SyntaxError || err.name === "SyntaxError") {
+  if (
+    err instanceof SyntaxError ||
+    err.name === "SyntaxError" ||
+    err.message?.includes("Malformed JSON in request body")
+  ) {
     return errorResponse(c, {
       status: 400,
       message: "Malformed JSON payload or invalid syntax",

@@ -6,7 +6,8 @@
     "dev": "nodemon",
     "build": "tsc",
     "lint": "eslint .",
-    "generate": "echo \"Nothing to generate for API\""
+    "generate": "echo \"Nothing to generate for API\"",
+    "test": "vitest"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
@@ -38,3 +39,4 @@
     "vitest": "^4.0.18"
   }
 }
+
