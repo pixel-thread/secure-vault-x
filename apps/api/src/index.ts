@@ -15,11 +15,22 @@ import { deviceRouter } from "./routes/device.routes";
 export const app = new Hono();
 
 const EXPECTED_ORIGIN = process.env.EXPECTED_ORIGIN || "http://localhost:3000";
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : [EXPECTED_ORIGIN];
 
 // Global Middleware
 app.use("*", logger());
 app.use("*", secureHeaders());
-app.use("*", cors({ origin: EXPECTED_ORIGIN, credentials: true }));
+app.use("*", cors({
+  origin: (origin) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV === "development") {
+      return origin;
+    }
+    return ALLOWED_ORIGINS[0]; // Fallback to first allowed origin
+  },
+  credentials: true
+}));
 app.use("/api/*", rateLimiter);
 app.onError(errorHandler);
 

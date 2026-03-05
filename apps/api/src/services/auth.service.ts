@@ -8,6 +8,7 @@ import {
 import crypto from "node:crypto";
 import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
+import { redis } from "./redis.service";
 import { UnauthorizedError } from "../utils/errors/unauthorize";
 import {
   BadRequestError,
@@ -24,11 +25,10 @@ if (!JWT_SECRET_STRING) {
 }
 const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
 
-// In-Memory store for WebAuthn Challenge states (in production, use Redis)
-const challengeStore = new Map<
-  string,
-  { challenge: string; expiresAt: number }
->();
+// CHALLENGE STORAGE transitioned to Redis for scalability and persistence.
+// Key format: `challenge:${userId}`
+const CHALLENGE_PREFIX = "challenge:";
+const CHALLENGE_EXPIRY = 5 * 60; // 5 minutes in seconds
 
 export class AuthService {
   // ==========================================
@@ -58,11 +58,13 @@ export class AuthService {
       },
     });
 
-    // Store challenge tied to user explicitly with 5-minute expiry
-    challengeStore.set(user.id, {
-      challenge: options.challenge,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-    });
+    // Store challenge tied to user explicitly with 5-minute expiry in Redis
+    await redis.set(
+      `${CHALLENGE_PREFIX}${user.id}`,
+      options.challenge,
+      "EX",
+      CHALLENGE_EXPIRY,
+    );
 
     return options;
   }
@@ -77,14 +79,8 @@ export class AuthService {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new NotFoundError("User not found");
 
-    const expectedChallengeObj = challengeStore.get(user.id);
-    if (!expectedChallengeObj) throw new BadRequestError("Challenge expired");
-    if (Date.now() > expectedChallengeObj.expiresAt) {
-      challengeStore.delete(user.id);
-      throw new BadRequestError("Challenge expired");
-    }
-
-    const expectedChallenge = expectedChallengeObj.challenge;
+    const expectedChallenge = await redis.get(`${CHALLENGE_PREFIX}${user.id}`);
+    if (!expectedChallenge) throw new BadRequestError("Challenge expired or not found");
 
     const verification = await verifyRegistrationResponse({
       response: registrationResponse,
@@ -120,12 +116,12 @@ export class AuthService {
           userId: user.id,
           deviceName: deviceName || "New Device",
           publicKey: publicKey || null,
-          encryptedMEK: encryptedMEK || "pending_sync",
+          encryptedMEK: encryptedMEK || null,
           isTrusted: true, // Auto-trust first device mathematically established in DeviceService, but we know this is the first here mostly. Wait, let's explicitly calculate it or just set it since it's via registration.
         },
       });
 
-      challengeStore.delete(user.id);
+      await redis.del(`${CHALLENGE_PREFIX}${user.id}`);
 
       // We need to issue a token tied to this device ID
       return this.generateTokens(user.id, user.email, device.id);
@@ -156,10 +152,12 @@ export class AuthService {
       userVerification: "preferred",
     });
 
-    challengeStore.set(user.id, {
-      challenge: options.challenge,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-    });
+    await redis.set(
+      `${CHALLENGE_PREFIX}${user.id}`,
+      options.challenge,
+      "EX",
+      CHALLENGE_EXPIRY,
+    );
 
     return options;
   }
@@ -171,14 +169,8 @@ export class AuthService {
     });
     if (!user) throw new NotFoundError("User not found");
 
-    const expectedChallengeObj = challengeStore.get(user.id);
-    if (!expectedChallengeObj) throw new BadRequestError("Challenge expired");
-    if (Date.now() > expectedChallengeObj.expiresAt) {
-      challengeStore.delete(user.id);
-      throw new BadRequestError("Challenge expired");
-    }
-
-    const expectedChallenge = expectedChallengeObj.challenge;
+    const expectedChallenge = await redis.get(`${CHALLENGE_PREFIX}${user.id}`);
+    if (!expectedChallenge) throw new BadRequestError("Challenge expired or not found");
 
     const authenticator = user.credentials.find(
       (c: any) => c.credentialId === authenticationResponse.id,
@@ -204,7 +196,7 @@ export class AuthService {
         where: { id: authenticator.id },
         data: { counter: BigInt(verification.authenticationInfo.newCounter) },
       });
-      challengeStore.delete(user.id);
+      await redis.del(`${CHALLENGE_PREFIX}${user.id}`);
 
       // Issue Tokens
       return await this.generateTokens(user.id, user.email);
@@ -422,8 +414,20 @@ export class AuthService {
   static async getMe(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        devices: true,
+      select: {
+        id: true,
+        email: true,
+        mfaEnabled: true,
+        createdAt: true,
+        devices: {
+          select: {
+            id: true,
+            deviceName: true,
+            isTrusted: true,
+            createdAt: true,
+            deviceIdentifier: true,
+          },
+        },
       },
     });
 

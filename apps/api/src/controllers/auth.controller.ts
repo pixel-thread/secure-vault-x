@@ -3,6 +3,7 @@ import { prisma } from "@securevault/database";
 import { AuthService } from "../services/auth.service";
 import { successResponse } from "../utils/helper/response";
 import { UnauthorizedError } from "../utils/errors/unauthorize";
+import { AuditLogger } from "../services/audit.service";
 
 export class AuthController {
   // Registration Flow
@@ -20,14 +21,24 @@ export class AuthController {
   }
 
   static async registerVerify(c: Context) {
-    const { email, registrationResponse, deviceName, encryptedMEK } =
+    const { email, registrationResponse, deviceName, encryptedMEK, publicKey } =
       await c.req.json();
     const result = await AuthService.verifyRegistrationResponse(
       email,
       registrationResponse,
       deviceName,
+      publicKey,
       encryptedMEK,
     );
+
+    await AuditLogger.log({
+      userId: result.sessionId, // Using session for ID until user.id is verified in result
+      action: "DEVICE_REGISTER",
+      ip: c.req.header("x-forwarded-for") || "unknown",
+      userAgent: c.req.header("user-agent"),
+      metadata: { email, deviceName }
+    });
+
     return successResponse(c, { data: result });
   }
 
@@ -44,6 +55,15 @@ export class AuthController {
       email,
       authenticationResponse,
     )) as any;
+
+    await AuditLogger.log({
+      userId: tokens.userId,
+      action: "LOGIN_SUCCESS",
+      ip: c.req.header("x-forwarded-for") || "unknown",
+      userAgent: c.req.header("user-agent"),
+      metadata: { email, method: "webauthn" }
+    });
+
     return successResponse(c, { data: tokens });
   }
 
@@ -62,6 +82,24 @@ export class AuthController {
   static async loginPassword(c: Context) {
     const { email, password } = await c.req.json();
     const result = (await AuthService.loginPassword(email, password)) as any;
+
+    if (result.requiresMfa) {
+      await AuditLogger.log({
+        action: "OTP_GENERATE",
+        ip: c.req.header("x-forwarded-for") || "unknown",
+        userAgent: c.req.header("user-agent"),
+        metadata: { email }
+      });
+    } else if (result.accessToken) {
+      await AuditLogger.log({
+        userId: result.userId,
+        action: "LOGIN_SUCCESS",
+        ip: c.req.header("x-forwarded-for") || "unknown",
+        userAgent: c.req.header("user-agent"),
+        metadata: { email, method: "password" }
+      });
+    }
+
     return successResponse(c, {
       data: result,
       message: result.message || "Login successful",
@@ -71,6 +109,15 @@ export class AuthController {
   static async verifyOtp(c: Context) {
     const { email, code } = await c.req.json();
     const tokens = (await AuthService.verifyOtp(email, code)) as any;
+
+    await AuditLogger.log({
+      userId: tokens.userId,
+      action: "OTP_VERIFY",
+      ip: c.req.header("x-forwarded-for") || "unknown",
+      userAgent: c.req.header("user-agent"),
+      metadata: { email }
+    });
+
     return successResponse(c, {
       data: tokens,
     });
@@ -160,6 +207,15 @@ export class AuthController {
     const userId = c.get("userId");
     const { enabled } = await c.req.json();
     const result = await AuthService.toggleMfa(userId, enabled);
+
+    await AuditLogger.log({
+      userId,
+      action: "MFA_TOGGLE",
+      ip: c.req.header("x-forwarded-for") || "unknown",
+      userAgent: c.req.header("user-agent"),
+      metadata: { enabled }
+    });
+
     return successResponse(c, {
       data: result,
       message: enabled

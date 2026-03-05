@@ -13,7 +13,7 @@ export const verifyRegistrationResponseSchema = z.object({
   deviceName: z.string().optional(),
   publicKey: z.string().optional(),
   encryptedMEK: z.string().optional(),
-  registrationResponse: z.any(), // Passes through to simplewebauthn
+  registrationResponse: z.record(z.any()), // WebAuthn registration response object
 });
 
 export const generateLoginOptionsSchema = z.object({
@@ -22,7 +22,7 @@ export const generateLoginOptionsSchema = z.object({
 
 export const verifyLoginResponseSchema = z.object({
   email: z.string().email(),
-  authenticationResponse: z.any(), // Passes through to simplewebauthn
+  authenticationResponse: z.record(z.any()), // WebAuthn authentication response object
 });
 
 export const passwordRegisterSchema = z.object({

@@ -65,7 +65,7 @@ export function AddPasswordForm({ onSuccess }: Props) {
         return data;
       }
 
-      logger.log('Vault Res', data);
+
       toast.error('Failed to add secret', {
         description: data.message || 'Please try again.',
       });
@@ -82,11 +82,8 @@ export function AddPasswordForm({ onSuccess }: Props) {
       return;
     }
     const { encryptedData, iv } = await encryptData(data, mek);
-    logger.log('MEK', mek);
-    logger.log('Encrypted', encryptedData);
     // Not strictly needed to decrypt here, but left for testing like the original
     const decryptedData = await decryptData(encryptedData, iv, mek);
-    logger.log('Decrypted', decryptedData);
 
     // Convert to DTO expected by backend (in reality backend will want iv too, but matching current signature)
     // Actually wait, let's keep it close to the old mutate signature

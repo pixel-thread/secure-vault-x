@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { VaultService } from "../services/vault.service";
 import { sendResponse } from "../utils/helper/response";
+import { AuditLogger } from "../services/audit.service";
 
 export class VaultController {
   // Sync Down (Fetch latest vault)
@@ -16,6 +17,15 @@ export class VaultController {
     const { encryptedData, version } = await c.req.json();
 
     const result = await VaultService.syncVault(userId, encryptedData, version);
+
+    await AuditLogger.log({
+      userId,
+      action: "VAULT_SYNC",
+      ip: c.req.header("x-forwarded-for") || "unknown",
+      userAgent: c.req.header("user-agent"),
+      metadata: { version }
+    });
+
     return sendResponse(c, { data: result });
   }
 

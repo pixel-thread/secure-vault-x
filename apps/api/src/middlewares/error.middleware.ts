@@ -10,10 +10,9 @@ import {
 import { errorResponse } from "../utils/helper/response";
 
 export const errorHandler = (err: Error, c: Context) => {
-  console.log(`[ErrorHandler] Captured error: ${err.name} - ${err.message}`);
-
-  if (process.env.NODE_ENV === "development") {
-    console.log(JSON.stringify(err, null, 2));
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[ErrorHandler] Captured error: ${err.name} - ${err.message}`);
+    if (err.stack) console.error(err.stack);
   }
 
   // Handle Unauthorized (401)
@@ -36,13 +35,6 @@ export const errorHandler = (err: Error, c: Context) => {
       message: "Unauthorized access or session expired",
       error:
         process.env.NODE_ENV === "development" ? { detail: err.message } : null,
-    });
-  }
-
-  if (err instanceof UnauthorizedError) {
-    return errorResponse(c, {
-      status: 401,
-      message: "Unauthorized",
     });
   }
 

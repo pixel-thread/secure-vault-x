@@ -20,6 +20,7 @@ model User {
   refreshTokens    RefreshToken[]
   otpVerifications OtpVerification[]
   encryption       UserEncryption?
+  auditLogs        AuditLog[]
 }
 
 model UserEncryption {
@@ -49,7 +50,7 @@ model Device {
   deviceIdentifier String? // Hardware UUID or persistent device ID
   deviceName       String
   publicKey        String? // Base64 encoded ECDSA P-256 SPKI public key
-  encryptedMEK     String
+  encryptedMEK     String?
   isTrusted        Boolean  @default(false)
   createdAt        DateTime @default(now())
 
@@ -96,4 +97,16 @@ model OtpVerification {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String   // e.g. "LOGIN_SUCCESS", "MFA_TOGGLE", "VAULT_SYNC"
+  metadata  Json?    // Optional extra data (e.g. device ID, IP)
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }

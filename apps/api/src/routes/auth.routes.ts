@@ -88,6 +88,7 @@ authRouter.get(AUTH_ENDPOINT.GET_ME, protect, AuthController.getMe);
 
 authRouter.post(
   AUTH_ENDPOINT.POST_LOGOUT,
+  protect,
   zValidator("json", refreshTokensSchema, validatorHook),
   AuthController.logout,
 );

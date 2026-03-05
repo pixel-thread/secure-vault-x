@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { DeviceService } from "../services/device.service";
 import { sendResponse } from "../utils/helper/response";
+import { AuditLogger } from "../services/audit.service";
 
 export class DeviceController {
   static async getDevices(c: Context) {
@@ -20,6 +21,15 @@ export class DeviceController {
       sessionId,
       deviceIdentifier
     );
+
+    await AuditLogger.log({
+      userId,
+      action: "DEVICE_REGISTER",
+      ip: c.req.header("x-forwarded-for") || "unknown",
+      userAgent: c.req.header("user-agent"),
+      metadata: { deviceName, deviceId: device.id }
+    });
+
     return sendResponse(c, { data: device, status: 201 });
   }
 
@@ -42,6 +52,15 @@ export class DeviceController {
       signature,
       timestamp,
     );
+
+    await AuditLogger.log({
+      userId,
+      action: "DEVICE_REMOVE",
+      ip: c.req.header("x-forwarded-for") || "unknown",
+      userAgent: c.req.header("user-agent"),
+      metadata: { targetDeviceId: deviceId, actingDeviceId }
+    });
+
     return sendResponse(c, { data: result });
   }
 
@@ -67,6 +86,15 @@ export class DeviceController {
       signature,
       timestamp,
     );
+
+    await AuditLogger.log({
+      userId,
+      action: "DEVICE_TRUST_UPDATE",
+      ip: c.req.header("x-forwarded-for") || "unknown",
+      userAgent: c.req.header("user-agent"),
+      metadata: { targetDeviceId, isTrusted, actingDeviceId }
+    });
+
     return sendResponse(c, { data: result });
   }
 }
