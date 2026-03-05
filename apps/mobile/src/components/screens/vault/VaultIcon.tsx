@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { VaultSecret } from '.';
 import { Image, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { VaultSecretT } from '@/src/type/vault';
+import { logger } from '@securevault/utils';
 
-export const VaultItemIcon = ({ item }: { item: VaultSecret }) => {
+export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   const [imgError, setImgError] = useState(false);
 
   const renderIcon = () => {
@@ -12,6 +13,8 @@ export const VaultItemIcon = ({ item }: { item: VaultSecret }) => {
       try {
         domain = new URL(item.website).hostname;
       } catch (e) {
+        logger.error('Failed to parse URL', e);
+        domain = item.website;
         // Fallback if not a strict URL format
       }
       return (

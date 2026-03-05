@@ -1,3 +1,4 @@
+import { VaultSecretT } from '@/src/type/vault';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
@@ -8,7 +9,7 @@ import { toast } from 'sonner-native';
 type Props = {
   open: boolean;
   onValueChange: (value: boolean) => void;
-  item: any;
+  item: VaultSecretT;
 };
 
 export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: Props) => {
@@ -182,7 +183,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                         {
                           text: 'Delete',
                           style: 'destructive',
-                          onPress: () => { },
+                          onPress: () => {},
                         },
                       ]
                     );

@@ -4,13 +4,14 @@ import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { toast } from 'sonner-native';
+import { VaultSecretT } from '@/src/type/vault';
 
 export const VaultItem = ({
   item,
   onSelectItem,
 }: {
-  item: any;
-  onSelectItem: (item: any) => void;
+  item: VaultSecretT;
+  onSelectItem: (item: VaultSecretT) => void;
 }) => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';

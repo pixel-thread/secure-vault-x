@@ -14,32 +14,7 @@ import { MekSetup } from './MekSetup';
 import { decryptData } from '@securevault/crypto';
 import { DeviceStoreManager } from '../../../store/device';
 import { logger } from '@securevault/utils';
-
-export type SecretType = 'password' | 'card';
-
-interface BaseSecret {
-  id: string;
-  type: SecretType;
-  serviceName: string;
-  note?: string;
-}
-
-interface PasswordSecret extends BaseSecret {
-  type: 'password';
-  website: string;
-  username: string;
-  secretInfo: string;
-}
-
-interface CardSecret extends BaseSecret {
-  type: 'card';
-  cardholderName: string;
-  cardNumber: string;
-  expirationDate: string;
-  cvv: string;
-}
-
-export type VaultSecret = PasswordSecret | CardSecret;
+import { VaultSecretT } from '@/src/type/vault';
 
 /** Shape of each encrypted vault entry returned by the API */
 interface EncryptedVaultEntry {
@@ -56,7 +31,7 @@ interface DecryptedPasswordPayload {
   note?: string;
 }
 
-const getAndDecryptVault = async (): Promise<VaultSecret[]> => {
+const getAndDecryptVault = async (): Promise<VaultSecretT[]> => {
   const response = await http.get<EncryptedVaultEntry[]>(VAULT_ENDPOINT.GET_VAULT);
   const entries: EncryptedVaultEntry[] = response?.data ?? [];
 
@@ -70,7 +45,7 @@ const getAndDecryptVault = async (): Promise<VaultSecret[]> => {
     return [];
   }
 
-  const decrypted: VaultSecret[] = [];
+  const decrypted: VaultSecretT[] = [];
 
   for (const entry of entries) {
     if (!entry.encryptedData || !entry.iv) continue;
@@ -106,16 +81,16 @@ export default function VaultScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const { isAuthenticated, hasMek } = useAuthStore();
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [selectedSecret, setSelectedSecret] = useState<VaultSecret | null>(null);
+  const [selectedSecret, setSelectedSecret] = useState<VaultSecretT | null>(null);
 
   const {
     data: vaults = [],
     isLoading,
     isFetching,
     refetch: syncVault,
-  } = useQuery<VaultSecret[]>({
+  } = useQuery<VaultSecretT[]>({
     queryKey: ['vault'],
-    queryFn: async (): Promise<VaultSecret[]> => getAndDecryptVault(),
+    queryFn: async (): Promise<VaultSecretT[]> => getAndDecryptVault(),
     enabled: isAuthenticated && hasMek,
   });
 
@@ -166,14 +141,16 @@ export default function VaultScreen() {
         <Ionicons name="add" size={32} color="#022c22" />
       </TouchableOpacity>
       <AddSecretDialog open={modalVisible} onValueChange={setModalVisible} />
-      <VaultItemDialog
-        onValueChange={(value) => {
-          setDetailModalVisible(value);
-          setSelectedSecret(null);
-        }}
-        open={detailModalVisible}
-        item={selectedSecret}
-      />
+      {selectedSecret && (
+        <VaultItemDialog
+          onValueChange={(value) => {
+            setDetailModalVisible(value);
+            setSelectedSecret(null);
+          }}
+          open={detailModalVisible}
+          item={selectedSecret}
+        />
+      )}
     </View>
   );
 }
