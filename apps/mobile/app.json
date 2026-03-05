@@ -24,10 +24,10 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/icon-dark.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splashscreen/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -35,16 +35,12 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "icon": {
-        "light": "./assets/icon-light.png",
-        "dark": "./assets/icon-dark.png"
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon-dark.png",
-        "backgroundColor": "#09090b"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
       },
       "package": "com.pixelthread.securevaultx"
     },
@@ -54,6 +50,12 @@
         "projectId": "b09a2c96-90ae-4795-b42f-c88731de08ee"
       }
     },
-    "owner": "pixel-thread"
+    "owner": "pixel-thread",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b09a2c96-90ae-4795-b42f-c88731de08ee"
+    }
   }
 }
