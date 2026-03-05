@@ -25,7 +25,7 @@ if (!JWT_SECRET_STRING) {
 const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
 
 // In-Memory store for WebAuthn Challenge states (in production, use Redis)
-export const challengeStore = new Map<
+const challengeStore = new Map<
   string,
   { challenge: string; expiresAt: number }
 >();

@@ -13,7 +13,7 @@ export class VaultController {
   // Sync Up (Push encrypted vault)
   static async syncVault(c: Context) {
     const userId = c.get("userId") as string;
-    const { encryptedData, version } = c.req.valid("json" as any);
+    const { encryptedData, version } = await c.req.json();
 
     const result = await VaultService.syncVault(userId, encryptedData, version);
     return sendResponse(c, { data: result });
@@ -21,7 +21,7 @@ export class VaultController {
 
   static async addSecret(c: Context) {
     const userId = c.get("userId") as string;
-    const { encryptedData, iv } = c.req.valid("json" as any);
+    const { encryptedData, iv } = await c.req.json();
 
     const data = { encryptedData, iv };
 

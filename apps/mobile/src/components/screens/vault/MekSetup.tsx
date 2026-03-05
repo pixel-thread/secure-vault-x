@@ -10,7 +10,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
 import { logger } from '@securevault/utils';
-import { CustomHeader, StackHeader } from '../../common/StackHeader';
 
 export function MekSetup() {
   const { colorScheme } = useColorScheme();

@@ -12,14 +12,6 @@ interface UpdateContextType {
 
 const UpdateContext = createContext<UpdateContextType | undefined>(undefined);
 
-export const useUpdates = () => {
- const context = useContext(UpdateContext);
- if (!context) {
-  throw new Error('useUpdates must be used within an UpdateProvider');
- }
- return context;
-};
-
 export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
  const [isChecking, setIsChecking] = useState(false);
  const [isDownloading, setIsDownloading] = useState(false);

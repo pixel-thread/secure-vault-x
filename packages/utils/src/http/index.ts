@@ -1,7 +1,7 @@
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import axiosInstance from "../api";
 
-export interface ApiResponse<T> {
+interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T | null; // 👈 Explicitly allow `null`
@@ -9,7 +9,7 @@ export interface ApiResponse<T> {
   token?: string;
 }
 
-export const handleAxiosError = <T>(error: unknown): ApiResponse<T> => {
+const handleAxiosError = <T>(error: unknown): ApiResponse<T> => {
   let errorMessage = "Something went wrong. Please try again.";
   let errorDetails: string | Record<string, any> = "";
 

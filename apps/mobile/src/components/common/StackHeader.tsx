@@ -110,5 +110,3 @@ export const StackHeader = (props: CustomHeaderProps) => {
     />
   );
 };
-
-export const CustomHeader = StackHeader;

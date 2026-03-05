@@ -2,7 +2,10 @@
  "extends": "@securevault/typescript-config/node.json",
  "compilerOptions": {
   "outDir": "dist",
-  "rootDir": "src"
+  "rootDir": "src",
+  "lib": [
+   "DOM"
+  ]
  },
  "include": [
   "src"

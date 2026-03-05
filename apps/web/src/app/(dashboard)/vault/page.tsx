@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { ShieldCheck, Key, CreditCard, Copy, Plus, X, Eye, EyeOff, RefreshCw, ArchiveRestore } from 'lucide-react';
 import { useAuthStore } from "@/store/auth";
 import { encryptData, decryptData } from "@securevault/crypto";
+import GlassCard from "@/components/ui/GlassCard";
+import GlassButton from "@/components/ui/GlassButton";
 
 export type SecretType = "password" | "card";
 
@@ -217,34 +219,35 @@ export default function VaultScreen(): React.ReactNode {
   };
 
   return (
-    <div className="flex h-full flex-col bg-[#09090b] relative w-full">
-      <div className="z-10 flex items-center justify-between border-b border-zinc-900/80 bg-[#09090b]/90 px-6 pb-6 pt-12 lg:pt-8 w-full">
+    <div className="flex h-full flex-col relative w-full text-white">
+      {/* Header */}
+      <div className="z-10 rounded-lg flex items-center justify-between border-b border-white/5 bg-black/40 px-6 pb-6 pt-12 lg:pt-8 w-full backdrop-blur-md">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">
+          <h1 className="text-3xl font-extrabold tracking-tight">
             My Vault
           </h1>
-          <p className="mt-1 text-sm font-semibold uppercase tracking-wider text-emerald-500">
+          <p className="mt-1 text-sm font-semibold uppercase tracking-wider text-emerald-400">
             End-to-End Encrypted
           </p>
         </div>
-        <button
-          className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-3 shadow-md active:bg-zinc-800 transition-colors hover:bg-zinc-800/60"
+        <GlassButton
+          className="!p-3 shadow-md"
           onClick={syncVault}
         >
           {loading ? (
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent" />
           ) : (
-            <RefreshCw size={24} className="text-emerald-500" />
+            <RefreshCw size={24} className="text-emerald-400" />
           )}
-        </button>
+        </GlassButton>
       </div>
 
-      <div className="flex-1 w-full overflow-y-auto px-4 py-6 md:px-6 lg:px-8 pb-32">
+      <div className="flex-1 w-full overflow-y-auto px-4 py-8 md:px-6 lg:px-8 pb-32">
         {!loading && vault.length === 0 ? (
-          <div className="mt-20 flex flex-col items-center justify-center">
-            <div className="mb-6 rounded-full border border-zinc-800/50 bg-zinc-900/60 p-8">
+          <div className="mt-20 flex flex-col items-center justify-center animate-float">
+            <GlassCard className="mb-6 rounded-full !p-8 border-dashed border-white/20 bg-white/5">
               <ArchiveRestore size={64} className="text-zinc-500" />
-            </div>
+            </GlassCard>
             <h2 className="text-xl font-bold text-zinc-300">
               Your Vault is Empty
             </h2>
@@ -255,15 +258,16 @@ export default function VaultScreen(): React.ReactNode {
         ) : (
           <div className="space-y-4 max-w-4xl mx-auto w-full">
             {vault.map((item) => (
-              <div
+              <GlassCard
                 key={item.id}
-                className="flex items-center rounded-3xl border border-zinc-800/80 bg-zinc-900/40 p-5 transition-colors hover:bg-zinc-800/60 active:bg-zinc-800 w-full"
+                interactive
+                className="flex items-center !p-5 w-full bg-white/[0.03] border-white/10"
               >
-                <div className="mr-5 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
+                <div className="mr-5 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 shadow-inner">
                   {item.type === "password" ? (
-                    <Key size={24} className="text-emerald-500" />
+                    <Key size={24} className="text-emerald-400 drop-shadow-md" />
                   ) : (
-                    <CreditCard size={24} className="text-emerald-500" />
+                    <CreditCard size={24} className="text-emerald-400 drop-shadow-md" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -287,17 +291,17 @@ export default function VaultScreen(): React.ReactNode {
                     </>
                   )}
                 </div>
-                <button className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-zinc-800/80 transition-colors hover:bg-zinc-700">
-                  <Copy size={20} className="text-zinc-400" />
+                <button className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/5 transition-colors hover:bg-white/10 active:scale-95">
+                  <Copy size={20} className="text-zinc-400 hover:text-white" />
                 </button>
-              </div>
+              </GlassCard>
             ))}
           </div>
         )}
       </div>
 
       <button
-        className="fixed bottom-8 right-8 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 transition-transform active:scale-95 hover:bg-emerald-400 z-20"
+        className="fixed bottom-8 right-8 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-transform active:scale-95 hover:bg-emerald-400 z-20 hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]"
         onClick={() => {
           setNewWebsite("https://");
           setNewPassword(generatePassword(32));
@@ -310,22 +314,22 @@ export default function VaultScreen(): React.ReactNode {
 
       {/* Modal View */}
       {modalVisible && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 pt-10 sm:items-center">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-zinc-800 bg-[#09090b] p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm pt-10 sm:items-center animate-in fade-in duration-200">
+          <GlassCard className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-black/40 border-white/20 !p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">Add Secret</h2>
               <button
                 onClick={() => setModalVisible(false)}
-                className="rounded-full bg-zinc-800/80 p-2 hover:bg-zinc-700"
+                className="rounded-full bg-white/5 p-2 hover:bg-white/10 transition-colors"
               >
                 <X size={24} className="text-zinc-400" />
               </button>
             </div>
 
-            <div className="mb-6 flex space-x-2 rounded-xl bg-zinc-900/50 p-1">
+            <div className="mb-6 flex space-x-2 rounded-xl bg-black/40 p-1 border border-white/5">
               <button
                 className={`flex-1 rounded-lg py-2 font-bold transition-colors ${selectedType === "password"
-                  ? "bg-zinc-800 text-white shadow-sm"
+                  ? "bg-white/10 text-white shadow-sm"
                   : "text-zinc-500 hover:text-white"
                   }`}
                 onClick={() => setSelectedType("password")}
@@ -334,7 +338,7 @@ export default function VaultScreen(): React.ReactNode {
               </button>
               <button
                 className={`flex-1 rounded-lg py-2 font-bold transition-colors ${selectedType === "card"
-                  ? "bg-zinc-800 text-white shadow-sm"
+                  ? "bg-white/10 text-white shadow-sm"
                   : "text-zinc-500 hover:text-white"
                   }`}
                 onClick={() => setSelectedType("card")}
@@ -347,34 +351,34 @@ export default function VaultScreen(): React.ReactNode {
               {selectedType === "password" ? (
                 <>
                   <div className="flex flex-col">
-                    <label className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                    <label className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                       Website URL
                     </label>
                     <input
                       type="url"
                       placeholder="https://example.com"
-                      className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-zinc-900"
+                      className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-black/40 transition-colors"
                       value={newWebsite}
                       onChange={(e) => setNewWebsite(e.target.value)}
                     />
                   </div>
                   <div className="flex flex-col">
-                    <label className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                    <label className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                       Username / Email
                     </label>
                     <input
                       type="text"
                       placeholder="john@example.com"
-                      className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-zinc-900"
+                      className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-black/40 transition-colors"
                       value={newUsername}
                       onChange={(e) => setNewUsername(e.target.value)}
                     />
                   </div>
                   <div className="flex flex-col">
-                    <label className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                    <label className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                       Password
                     </label>
-                    <div className="flex items-center rounded-2xl border border-zinc-800 bg-zinc-900/50 pr-2 focus-within:border-emerald-500/50 focus-within:bg-zinc-900">
+                    <div className="flex items-center rounded-2xl border border-white/10 bg-black/20 pr-2 focus-within:border-emerald-500/50 focus-within:bg-black/40 transition-colors">
                       <input
                         type={showPassword ? "text" : "password"}
                         placeholder="Password"
@@ -389,16 +393,16 @@ export default function VaultScreen(): React.ReactNode {
                         onMouseLeave={() => setShowPassword(false)}
                       >
                         {showPassword ? (
-                          <Eye size={22} className="text-emerald-500" />
+                          <Eye size={22} className="text-emerald-400" />
                         ) : (
-                          <EyeOff size={22} className="text-zinc-500" />
+                          <EyeOff size={22} className="text-zinc-500 hover:text-zinc-300" />
                         )}
                       </button>
                       <button
-                        className="p-3 hover:opacity-80"
+                        className="p-3 hover:opacity-80 transition-opacity"
                         onClick={() => setNewPassword(generatePassword(32))}
                       >
-                        <RefreshCw size={22} className="text-zinc-500" />
+                        <RefreshCw size={22} className="text-zinc-500 hover:text-zinc-300" />
                       </button>
                     </div>
                   </div>
@@ -406,50 +410,50 @@ export default function VaultScreen(): React.ReactNode {
               ) : (
                 <>
                   <div className="flex flex-col">
-                    <label className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                    <label className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                       Cardholder Name
                     </label>
                     <input
                       type="text"
                       placeholder="John Doe"
-                      className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-zinc-900"
+                      className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-black/40 transition-colors"
                       value={newCardName}
                       onChange={(e) => setNewCardName(e.target.value)}
                     />
                   </div>
                   <div className="flex flex-col">
-                    <label className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                    <label className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                       Card Number
                     </label>
                     <input
                       type="text"
                       placeholder="4111 2222 3333 4444"
-                      className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-4 font-mono text-white outline-none focus:border-emerald-500/50 focus:bg-zinc-900"
+                      className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 font-mono text-white outline-none focus:border-emerald-500/50 focus:bg-black/40 transition-colors"
                       value={newCardNumber}
                       onChange={(e) => setNewCardNumber(e.target.value)}
                     />
                   </div>
                   <div className="flex gap-4">
                     <div className="flex flex-1 flex-col">
-                      <label className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                      <label className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                         Expires
                       </label>
                       <input
                         type="text"
                         placeholder="MM/YY"
-                        className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-zinc-900"
+                        className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-black/40 transition-colors"
                         value={newExp}
                         onChange={(e) => setNewExp(e.target.value)}
                       />
                     </div>
                     <div className="flex flex-1 flex-col">
-                      <label className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                      <label className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                         CVV
                       </label>
                       <input
                         type="text"
                         placeholder="123"
-                        className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-zinc-900"
+                        className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-black/40 transition-colors"
                         value={newCvv}
                         onChange={(e) => setNewCvv(e.target.value)}
                       />
@@ -458,26 +462,27 @@ export default function VaultScreen(): React.ReactNode {
                 </>
               )}
               <div className="flex flex-col">
-                <label className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                <label className="mb-2 ml-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   Note
                 </label>
                 <textarea
                   placeholder="Any extra details..."
-                  className="min-h-[100px] resize-none rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-zinc-900"
+                  className="min-h-[100px] resize-none rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-white outline-none focus:border-emerald-500/50 focus:bg-black/40 transition-colors"
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                 />
               </div>
             </div>
 
-            <button
+            <GlassButton
+              variant="prominent"
               onClick={handleAddNewItem}
-              className="flex w-full items-center justify-center rounded-2xl bg-emerald-500 py-4 font-bold text-[#022c22] text-lg shadow-xl shadow-emerald-500/20 transition-transform active:scale-[0.98] hover:bg-emerald-600"
+              className="w-full !py-4 shadow-lg shadow-emerald-500/20"
             >
-              <ShieldCheck size={20} className="mr-2 text-[#022c22]" />
+              <ShieldCheck size={20} className="text-[#022c22]" />
               Save to Vault
-            </button>
-          </div>
+            </GlassButton>
+          </GlassCard>
         </div>
       )}
     </div>
