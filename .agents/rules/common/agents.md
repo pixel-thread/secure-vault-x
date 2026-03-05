@@ -1,8 +1,8 @@
-# Agent Orchestration
+# Agent Orchestration and ADD Flow
 
 ## Available Agents
 
-Located in `~/.claude/agents/`:
+Located as skills in `.agents/skills/`:
 
 | Agent | Purpose | When to Use |
 |-------|---------|-------------|
@@ -11,39 +11,25 @@ Located in `~/.claude/agents/`:
 | tdd-guide | Test-driven development | New features, bug fixes |
 | code-reviewer | Code review | After writing code |
 | security-reviewer | Security analysis | Before commits |
-| build-error-resolver | Fix build errors | When build fails |
-| e2e-runner | E2E testing | Critical user flows |
-| refactor-cleaner | Dead code cleanup | Code maintenance |
 | doc-updater | Documentation | Updating docs |
 
-## Immediate Agent Usage
+## The Agent-Driven Development (ADD) Flow
 
-No user prompt needed:
-1. Complex feature requests - Use **planner** agent
-2. Code just written/modified - Use **code-reviewer** agent
-3. Bug fix or new feature - Use **tdd-guide** agent
-4. Architectural decision - Use **architect** agent
+### Phase 1: Product Definition (User)
+Create a new file in `.agents/prd/features/<feature-name>.md` outlining **User Story**, **Acceptance Criteria**, and **Out of Scope**.
 
-## Parallel Task Execution
+### Phase 2: Planning (`planner` skill)
+Trigger: *"I want to build the feature described in `.agents/prd/features/<feature-name>.md`. Please act as the Planner."*
+The Planner reads `rules/common/agents.md`, `core_prd.md`, and the feature PRD, outputting a step-by-step implementation plan to `.agents/plans/active_feature_plan.md`.
 
-ALWAYS use parallel Task execution for independent operations:
+### Phase 3: Execution (`tdd-guide` or default coder)
+Trigger: *"Plan approved. Keep `active_feature_plan.md` open and begin execution."*
+The AI executes steps one by one, checking off boxes in `active_feature_plan.md` to maintain state. Reads domain-specific rules (backend/frontend).
 
-```markdown
-# GOOD: Parallel execution
-Launch 3 agents in parallel:
-1. Agent 1: Security analysis of auth module
-2. Agent 2: Performance review of cache system
-3. Agent 3: Type checking of utilities
+### Phase 4: Verification & Security (`security-reviewer` skill)
+Trigger: *"Acting as the Security Reviewer, audit the recent changes."*
+The AI scans against OWASP constraints in `rules/common/security.md`. Fix occurrences or issue all-clear.
 
-# BAD: Sequential when unnecessary
-First agent 1, then agent 2, then agent 3
-```
-
-## Multi-Perspective Analysis
-
-For complex problems, use split role sub-agents:
-- Factual reviewer
-- Senior engineer
-- Security expert
-- Consistency reviewer
-- Redundancy checker
+### Phase 5: Documentation (`doc-updater` skill)
+Trigger: *"Feature complete. Update the docs."*
+The AI marks the feature PRD as `[IMPLEMENTED]`, resets `active_feature_plan.md`, and updates public docs.
