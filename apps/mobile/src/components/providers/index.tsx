@@ -3,6 +3,8 @@ import Redirect from '../common/Redirect';
 import { TQueryProvider } from './query';
 import { AuthProvider } from './auth';
 import { CryptoProvider } from './crypto';
+import { UpdateProvider } from './update';
+import { ErrorBoundary } from '../common/ErrorBoundary';
 
 type Props = {
   children: React.ReactNode;
@@ -11,13 +13,17 @@ type Props = {
 export const Wrapper = ({ children }: Props) => {
   return (
     <TQueryProvider>
-      <CryptoProvider>
-        <Suspense>
-          <AuthProvider>
-            <Redirect>{children}</Redirect>
-          </AuthProvider>
-        </Suspense>
-      </CryptoProvider>
+      <ErrorBoundary>
+        <UpdateProvider>
+          <CryptoProvider>
+            <Suspense>
+              <AuthProvider>
+                <Redirect>{children}</Redirect>
+              </AuthProvider>
+            </Suspense>
+          </CryptoProvider>
+        </UpdateProvider>
+      </ErrorBoundary>
     </TQueryProvider>
   );
 };
