@@ -46,5 +46,7 @@ app.route("/", deviceRouter);
 
 // Start Server
 const port = 3000;
-console.log(`Server starting on http://localhost:${port}`);
-serve({ fetch: app.fetch, port });
+if (process.env.NODE_ENV !== "test") {
+  console.log(`Server starting on http://localhost:${port}`);
+  serve({ fetch: app.fetch, port });
+}
