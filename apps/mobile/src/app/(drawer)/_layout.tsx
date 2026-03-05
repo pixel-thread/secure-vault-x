@@ -1,4 +1,3 @@
-import { HeaderComponent } from '@/src/components/common/StackHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { Drawer } from 'expo-router/drawer';
 import { useColorScheme } from 'nativewind';

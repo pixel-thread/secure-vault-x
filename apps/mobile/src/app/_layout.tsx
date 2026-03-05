@@ -1,5 +1,6 @@
 import './global.css';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
@@ -8,6 +9,14 @@ import React, { useEffect } from 'react';
 
 import { Toaster } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
+
+// Suppress the "[Reanimated] Reading from `value` during component render" warning.
+// This is triggered internally by @react-navigation/drawer v7 and is a known issue
+// in the library, not in our application code.
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 
 export const unstable_settings = {
   initialRouteName: 'auth/index',
