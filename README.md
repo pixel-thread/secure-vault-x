@@ -1,4 +1,4 @@
-# 🔐 SecureVault X
+# 🔐 SecureVaultX
 
 Zero-Knowledge, End-to-End Encrypted Password Manager  
 Monorepo • TypeScript • Hono • Expo • WebAuthn
@@ -31,17 +31,14 @@ The backend is cryptographically incapable of decrypting vault contents.
 SecureVault X uses a monorepo structure with shared packages.
 
 ```
-
-securevault-x/  
+SecureVaultX/  
 ├── apps/  
 │ ├── api/ # Hono backend  
 │ ├── mobile/ # Expo React Native app  
-│  
 ├── packages/  
 │ ├── crypto/ # Shared encryption utilities  
 │ ├── types/ # Shared TypeScript types  
 │ ├── config/ # Shared config  
-│  
 ├── prisma/  
 ├── docker/  
 ├── docs/  
