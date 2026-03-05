@@ -1,4 +1,4 @@
-# PRD: Local-First Sync with Expo SQLite + Drizzle
+# PRD: Local-First Sync with Expo SQLite + Drizzle (Mobile)
 
 ## Overview
 
