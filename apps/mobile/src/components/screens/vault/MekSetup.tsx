@@ -143,6 +143,14 @@ export function MekSetup() {
             </>
           )}
         </TouchableOpacity>
+
+        <View className="px-4 text-center">
+          <Text className="text-center text-xs italic text-zinc-500 dark:text-zinc-400">
+            Your **Master Password** secures your vault. We never store or see it. It is used to
+            generate your encryption key. If you lose your device, you will need this password to
+            recover your vault. Keep it safe.
+          </Text>
+        </View>
       </View>
     </View>
   );
