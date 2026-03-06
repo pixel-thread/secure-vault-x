@@ -16,6 +16,7 @@ import { getDeviceIdentifier } from '../../../utils/deviceId';
 import * as SecureStore from 'expo-secure-store';
 import * as Device from 'expo-device';
 import { logger } from '@securevault/utils';
+import { useState } from 'react';
 
 type FormValue = {
   email: string;
@@ -29,6 +30,7 @@ type ApiRes = {
 
 export default function LoginScreen() {
   const { setIsAuthenticated } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
   const {
     control,
     handleSubmit,
@@ -36,8 +38,8 @@ export default function LoginScreen() {
   } = useForm<FormValue>({
     resolver: zodResolver(passwordLoginSchema),
     defaultValues: {
-      email: 'jyrwaboys@gmail.com',
-      password: '123Clashofclan@',
+      email: process.env.EMAIL || '',
+      password: process.env.PASSWORD || '',
     },
   });
 
@@ -137,10 +139,11 @@ export default function LoginScreen() {
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.email
-                  ? 'border-red-500 focus:border-red-500'
-                  : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                  }`}
+                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                  errors.email
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
+                }`}
                 placeholder="Email Address"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 onBlur={onBlur}
@@ -164,18 +167,31 @@ export default function LoginScreen() {
             control={control}
             name="password"
             render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.password
-                  ? 'border-red-500 focus:border-red-500'
-                  : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                  }`}
-                placeholder="Password"
-                placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                secureTextEntry
-              />
+              <View
+                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                  errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                }`}>
+                <TextInput
+                  className="flex-1 px-5 py-4 text-zinc-900 focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
+                  placeholder="Password"
+                  placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  className="p-3"
+                  onPressIn={() => setShowPassword(true)}
+                  onPressOut={() => setShowPassword(false)}
+                  delayPressIn={0}>
+                  <Ionicons
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={22}
+                    color={showPassword ? '#10b981' : '#71717a'}
+                  />
+                </TouchableOpacity>
+              </View>
             )}
           />
           {errors.password && (

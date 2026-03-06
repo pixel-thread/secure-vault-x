@@ -4,13 +4,12 @@ import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Ionicons } from '@expo/vector-icons';
-import { generatePassword, logger } from '@securevault/utils';
+import { generatePassword } from '@securevault/utils';
 import { useColorScheme } from 'nativewind';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { http } from '@securevault/utils-native';
 import { VAULT_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
-import { decryptData, encryptData } from '@securevault/crypto';
 import { DeviceStoreManager } from '../../../store/device';
 
 const passwordSchema = z.object({
@@ -65,7 +64,6 @@ export function AddPasswordForm({ onSuccess }: Props) {
         return data;
       }
 
-
       toast.error('Failed to add secret', {
         description: data.message || 'Please try again.',
       });
@@ -75,18 +73,12 @@ export function AddPasswordForm({ onSuccess }: Props) {
   });
 
   const onSubmitForm: SubmitHandler<PasswordFormValues> = async (data: PasswordFormValues) => {
-    // BUG: Remove the comment when the backend is fixed
     const mek = await DeviceStoreManager.getMek();
     if (!mek) {
       toast.error('Encryption Error', { description: 'Master Encryption Key not found.' });
       return;
     }
     const { encryptedData, iv } = await encryptData(data, mek);
-    // Not strictly needed to decrypt here, but left for testing like the original
-    const decryptedData = await decryptData(encryptedData, iv, mek);
-
-    // Convert to DTO expected by backend (in reality backend will want iv too, but matching current signature)
-    // Actually wait, let's keep it close to the old mutate signature
     mutate({ encryptedData: encryptedData, iv });
   };
 
@@ -102,8 +94,9 @@ export function AddPasswordForm({ onSuccess }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <>
               <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.serviceName ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}
+                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                  errors.serviceName ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                }`}
                 placeholder="example name"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 value={value}
@@ -128,8 +121,9 @@ export function AddPasswordForm({ onSuccess }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <>
               <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.url ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}
+                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                  errors.url ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                }`}
                 placeholder="https://example.com"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 value={value}
@@ -155,8 +149,9 @@ export function AddPasswordForm({ onSuccess }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <>
               <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.username ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}
+                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                  errors.username ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                }`}
                 placeholder="john@example.com"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 value={value}
@@ -181,8 +176,9 @@ export function AddPasswordForm({ onSuccess }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <>
               <View
-                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}>
+                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                  errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                }`}>
                 <TextInput
                   className="flex-1 px-5 py-4 text-zinc-900 focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
                   placeholder="Password"
