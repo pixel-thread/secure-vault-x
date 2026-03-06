@@ -30,7 +30,8 @@ export const errorHandler = (err: Error, c: Context) => {
     err.name === "JWTInvalid" ||
     err.name === "JWSInvalid" ||
     err.name === "JOSEAlgNotAllowed" ||
-    (err instanceof TypeError && err.message.includes("Key for the none algorithm"))
+    (err instanceof TypeError &&
+      err.message.includes("Key for the none algorithm"))
   ) {
     return errorResponse(c, {
       status: 401,

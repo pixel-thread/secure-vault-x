@@ -22,16 +22,23 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
 // Global Middleware
 app.use("*", logger());
 app.use("*", secureHeaders());
-app.use("*", cors({
-  origin: (origin) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV === "development") {
-      return origin;
-    }
-    return ALLOWED_ORIGINS[0]; // Fallback to first allowed origin
-  },
-  credentials: true
-}));
-app.use("/api/*", rateLimiter);
+app.use(
+  "*",
+  cors({
+    origin: (origin) => {
+      if (
+        !origin ||
+        ALLOWED_ORIGINS.includes(origin) ||
+        process.env.NODE_ENV === "development"
+      ) {
+        return origin;
+      }
+      return ALLOWED_ORIGINS[0]; // Fallback to first allowed origin
+    },
+    credentials: true,
+  }),
+);
+// app.use("/api/*", rateLimiter);
 app.onError(errorHandler);
 
 // Health Check
