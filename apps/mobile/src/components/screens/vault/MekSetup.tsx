@@ -10,6 +10,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
 import { logger } from '@securevault/utils';
+import { passwordLoginSchema } from '@securevault/validators';
+const schema = passwordLoginSchema.pick({ password: true });
 
 export function MekSetup() {
   const { colorScheme } = useColorScheme();
@@ -30,6 +32,15 @@ export function MekSetup() {
   const isLoading = isGettingSalt || isSettingSalt;
 
   const handleSetup = () => {
+    const result = schema.safeParse({ password });
+
+    if (!result.success) {
+      toast.error('Invalid Password', {
+        description: result.error.message,
+      });
+      return;
+    }
+
     if (!password || password.length < 8) {
       toast.error('Invalid Password', {
         description: 'Password must be at least 8 characters long.',
