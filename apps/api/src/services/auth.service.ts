@@ -80,7 +80,8 @@ export class AuthService {
     if (!user) throw new NotFoundError("User not found");
 
     const expectedChallenge = await redis.get(`${CHALLENGE_PREFIX}${user.id}`);
-    if (!expectedChallenge) throw new BadRequestError("Challenge expired or not found");
+    if (!expectedChallenge)
+      throw new BadRequestError("Challenge expired or not found");
 
     const verification = await verifyRegistrationResponse({
       response: registrationResponse,
@@ -116,7 +117,7 @@ export class AuthService {
           userId: user.id,
           deviceName: deviceName || "New Device",
           publicKey: publicKey || null,
-          encryptedMEK: encryptedMEK || null,
+          encryptedMEK: encryptedMEK || "",
           isTrusted: true, // Auto-trust first device mathematically established in DeviceService, but we know this is the first here mostly. Wait, let's explicitly calculate it or just set it since it's via registration.
         },
       });
@@ -170,7 +171,8 @@ export class AuthService {
     if (!user) throw new NotFoundError("User not found");
 
     const expectedChallenge = await redis.get(`${CHALLENGE_PREFIX}${user.id}`);
-    if (!expectedChallenge) throw new BadRequestError("Challenge expired or not found");
+    if (!expectedChallenge)
+      throw new BadRequestError("Challenge expired or not found");
 
     const authenticator = user.credentials.find(
       (c: any) => c.credentialId === authenticationResponse.id,

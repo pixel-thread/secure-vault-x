@@ -3,7 +3,7 @@ import { sendResponse } from "../utils/helper/response";
 import { redis } from "../services/redis.service";
 
 const RATE_LIMIT_PREFIX = "rl:";
-const MAX_REQUESTS = 20; // Increased slightly for production 
+const MAX_REQUESTS = 20; // Increased slightly for production
 const WINDOW_SEC = 60; // 1 minute
 
 export const rateLimiter = async (c: Context, next: Next) => {
@@ -12,7 +12,7 @@ export const rateLimiter = async (c: Context, next: Next) => {
   const ip =
     c.req.header("cf-connecting-ip") || // Cloudflare
     c.req.header("x-real-ip") ||
-    c.req.header("x-forwarded-for")?.split(",")[0].trim() ||
+    // c.req.header("x-forwarded-for")?.split(",")[0].trim() ||
     "unknown";
 
   const key = `${RATE_LIMIT_PREFIX}${ip}`;
@@ -27,8 +27,14 @@ export const rateLimiter = async (c: Context, next: Next) => {
     const ttl = await redis.ttl(key);
 
     c.header("X-RateLimit-Limit", MAX_REQUESTS.toString());
-    c.header("X-RateLimit-Remaining", Math.max(0, MAX_REQUESTS - count).toString());
-    c.header("X-RateLimit-Reset", (Math.floor(Date.now() / 1000) + ttl).toString());
+    c.header(
+      "X-RateLimit-Remaining",
+      Math.max(0, MAX_REQUESTS - count).toString(),
+    );
+    c.header(
+      "X-RateLimit-Reset",
+      (Math.floor(Date.now() / 1000) + ttl).toString(),
+    );
 
     if (count > MAX_REQUESTS) {
       c.header("Retry-After", ttl.toString());
