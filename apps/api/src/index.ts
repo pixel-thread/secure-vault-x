@@ -4,7 +4,6 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import { errorHandler } from "./middlewares/error.middleware";
-import { rateLimiter } from "./middlewares/rate-limiter.middleware";
 import "dotenv/config";
 import { HEALTH_ENDPOINT } from "@securevault/constants";
 
