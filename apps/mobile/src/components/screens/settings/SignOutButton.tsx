@@ -9,6 +9,7 @@ import { toast } from 'sonner-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/auth';
 import { DeviceStoreManager } from '@/src/store/device';
+import { logger } from '@securevault/utils';
 
 export default function SignOutButton() {
   const { colorScheme } = useColorScheme();
@@ -28,6 +29,11 @@ export default function SignOutButton() {
         setIsLoading(false);
         router.push('/auth');
       }
+    },
+    onError: (error) => {
+      logger.error('Failed to sign out', error);
+      toast.error(error?.message || 'Failed to sign out');
+      setIsLoading(false);
     },
   });
 
