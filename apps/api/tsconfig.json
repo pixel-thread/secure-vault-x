@@ -1,32 +1,10 @@
 {
- "extends": "../../packages/typescript-config/node.json",
- "compilerOptions": {
-  "outDir": "./dist",
-  "paths": {
-   "@securevault/constants": [
-    "../../packages/constants/src/index.ts"
-   ],
-   "@securevault/database": [
-    "../../packages/prisma/src/index.ts"
-   ],
-   "@securevault/validators": [
-    "../../packages/validators/src/index.ts"
-   ],
-   "@securevault/types": [
-    "../../packages/types/src/index.ts"
-   ],
-   "@securevault/crypto": [
-    "../../packages/crypto/src/index.ts"
-   ],
-   "@securevault/utils": [
-    "../../packages/utils/src/index.ts"
-   ],
-   "@securevault/config": [
-    "../../packages/config/src/index.ts"
-   ]
-  }
- },
- "include": [
-  "src/**/*"
- ]
+  "extends": "../../packages/typescript-config/node.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "paths": {}
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

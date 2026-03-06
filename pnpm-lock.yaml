@@ -40,6 +40,9 @@ importers:
       '@securevault/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      '@securevault/crypto':
+        specifier: workspace:*
+        version: link:../../packages/crypto
       '@securevault/database':
         specifier: workspace:*
         version: link:../../packages/prisma
@@ -74,6 +77,9 @@ importers:
       '@securevault/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@securevault/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@securevault/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
