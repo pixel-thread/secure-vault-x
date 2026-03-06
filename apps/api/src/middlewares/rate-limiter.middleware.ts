@@ -1,52 +1,57 @@
 import { Context, Next } from "hono";
 import { sendResponse } from "../utils/helper/response";
-import { redis } from "../services/redis.service";
 
 const RATE_LIMIT_PREFIX = "rl:";
-const MAX_REQUESTS = 20; // Increased slightly for production
-const WINDOW_SEC = 60; // 1 minute
+const MAX_REQUESTS = 20;
+const WINDOW_MS = 60 * 1000; // 1 minute
+
+type RateLimitEntry = {
+  count: number;
+  resetTime: number;
+};
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
 
 export const rateLimiter = async (c: Context, next: Next) => {
-  // In production, you would trust 'x-forwarded-for' ONLY if behind a trusted proxy.
-  // For standard Node server, remoteAddress is safer.
   const ip =
-    c.req.header("cf-connecting-ip") || // Cloudflare
-    c.req.header("x-real-ip") ||
-    // c.req.header("x-forwarded-for")?.split(",")[0].trim() ||
-    "unknown";
+    c.req.header("cf-connecting-ip") || c.req.header("x-real-ip") || "unknown";
 
   const key = `${RATE_LIMIT_PREFIX}${ip}`;
+  const now = Date.now();
 
-  try {
-    const count = await redis.incr(key);
+  // Prevent map from growing indefinitely
+  if (rateLimitStore.size >= 50) {
+    rateLimitStore.clear();
+  }
 
-    if (count === 1) {
-      await redis.expire(key, WINDOW_SEC);
-    }
+  let entry = rateLimitStore.get(key);
 
-    const ttl = await redis.ttl(key);
+  if (!entry || now > entry.resetTime) {
+    entry = {
+      count: 1,
+      resetTime: now + WINDOW_MS,
+    };
+  } else {
+    entry.count += 1;
+  }
 
-    c.header("X-RateLimit-Limit", MAX_REQUESTS.toString());
-    c.header(
-      "X-RateLimit-Remaining",
-      Math.max(0, MAX_REQUESTS - count).toString(),
-    );
-    c.header(
-      "X-RateLimit-Reset",
-      (Math.floor(Date.now() / 1000) + ttl).toString(),
-    );
+  rateLimitStore.set(key, entry);
 
-    if (count > MAX_REQUESTS) {
-      c.header("Retry-After", ttl.toString());
-      return sendResponse(c, {
-        success: false,
-        status: 429,
-        message: "Too Many Requests. Please try again later.",
-      });
-    }
-  } catch (error) {
-    console.error("[RateLimiter] Redis error:", error);
-    // Fallback: allow request if Redis is down (fail-open for UX, or fail-closed for security)
+  const remaining = Math.max(0, MAX_REQUESTS - entry.count);
+  const ttl = Math.ceil((entry.resetTime - now) / 1000);
+
+  c.header("X-RateLimit-Limit", MAX_REQUESTS.toString());
+  c.header("X-RateLimit-Remaining", remaining.toString());
+  c.header("X-RateLimit-Reset", Math.floor(entry.resetTime / 1000).toString());
+
+  if (entry.count > MAX_REQUESTS) {
+    c.header("Retry-After", ttl.toString());
+
+    return sendResponse(c, {
+      success: false,
+      status: 429,
+      message: "Too Many Requests. Please try again later.",
+    });
   }
 
   await next();

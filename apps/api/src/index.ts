@@ -10,6 +10,8 @@ import { HEALTH_ENDPOINT } from "@securevault/constants";
 import { authRouter } from "./routes/auth.routes";
 import { vaultRouter } from "./routes/vault.routes";
 import { deviceRouter } from "./routes/device.routes";
+import { rateLimiter } from "./middlewares/rate-limiter.middleware";
+import { successResponse } from "./utils/helper/response";
 
 export const app = new Hono();
 
@@ -25,24 +27,28 @@ app.use(
   "*",
   cors({
     origin: (origin) => {
+      // Allow mobile apps / curl / postman
+      if (!origin) return "*";
+
       if (
-        !origin ||
-        ALLOWED_ORIGINS.includes(origin) ||
-        process.env.NODE_ENV === "development"
+        process.env.NODE_ENV === "development" ||
+        ALLOWED_ORIGINS.includes(origin)
       ) {
         return origin;
       }
-      return ALLOWED_ORIGINS[0]; // Fallback to first allowed origin
+
+      return ALLOWED_ORIGINS[0];
     },
     credentials: true,
   }),
 );
-// app.use("/api/*", rateLimiter);
+
+app.use("/api/*", rateLimiter);
 app.onError(errorHandler);
 
 // Health Check
 app.get(HEALTH_ENDPOINT.GET_STATUS, (c) =>
-  c.json({ status: "ok", service: "SecureVault X API" }),
+  successResponse(c, { status: 200, data: { jservice: "SecureVault X" } }),
 );
 
 // Mount Domains
