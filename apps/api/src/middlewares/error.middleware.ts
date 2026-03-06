@@ -11,8 +11,8 @@ import { errorResponse } from "../utils/helper/response";
 
 export const errorHandler = (err: Error, c: Context) => {
   if (process.env.NODE_ENV !== "production") {
-    console.log(`[ErrorHandler] Captured error: ${err.name} - ${err.message}`);
-    if (err.stack) console.error(err.stack);
+    if (err.stack)
+      console.error("Debug Dev", JSON.stringify(err.stack, null, 2));
   }
 
   // Handle Unauthorized (401)
