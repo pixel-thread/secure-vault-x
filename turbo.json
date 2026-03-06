@@ -18,7 +18,8 @@
         "RP_NAME",
         "JWT_SECRET",
         "NODE_ENV",
-        "EXPECTED_ORIGIN"
+        "EXPECTED_ORIGIN",
+        "ALLOWED_ORIGINS"
       ]
     }
   }
