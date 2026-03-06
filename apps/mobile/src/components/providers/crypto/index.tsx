@@ -13,7 +13,6 @@ if (!isExpo) {
 
     // 2. Install the polyfills
     install();
-    logger.log('✅ react-native-quick-crypto installed.');
   } catch (error) {
     logger.error('Failed to install react-native-quick-crypto:', error);
   }

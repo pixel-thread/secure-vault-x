@@ -66,11 +66,10 @@ const getAndDecryptVault = async (): Promise<VaultSecretT[]> => {
         note: payload.note,
       });
     } catch (err) {
-      logger.error(
-        'Failed to decrypt vault entry',
-        entry.iv,
-        err instanceof Error ? err.message : err
-      );
+      logger.error('Failed to decrypt vault entry', {
+        iv: entry.iv,
+        error: err instanceof Error ? err.message : err,
+      });
     }
   }
 
