@@ -2,7 +2,10 @@
   "extends": "../../packages/typescript-config/node.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "paths": {}
+    "paths": {},
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022"
   },
   "include": [
     "src/**/*"
