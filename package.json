@@ -5,7 +5,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "generate": "turbo run generate"
+    "generate": "turbo run generate",
+    "postinstall": "cd packages/prisma && pnpm run generate"
   },
   "devDependencies": {
     "turbo": "latest"
@@ -31,3 +32,4 @@
     }
   }
 }
+
