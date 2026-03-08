@@ -10,6 +10,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { authenticateWithBiometric } from '@/src/utils/biometricLock';
 import { DeviceStoreManager } from '@/src/store/device';
+import { isExpoGo } from '@/src/utils/helper/checkIsExpo';
 
 type Props = { children: React.ReactNode };
 
@@ -101,6 +102,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       setIsLoading(isPending);
     }
   }, [isPending, isLoading, setIsLoading]);
+
+  useEffect(() => {
+    if (isExpoGo()) {
+      DeviceStoreManager.setMek('123');
+    }
+  }, []);
 
   // Biometric gate — show lock screen if biometric is required but not passed
   if (biometricRequired && !biometricPassed) {
