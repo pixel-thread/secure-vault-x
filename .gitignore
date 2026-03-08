@@ -33,3 +33,4 @@ expo-env.d.ts
 .vercel/.env.preview.local
 .vercel/.env.development.local
 .vercel
+apps/web/next-env.d.ts
