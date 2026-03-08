@@ -55,6 +55,12 @@ app.get(HEALTH_ENDPOINT.GET_STATUS, (c) =>
 app.route("/", authRouter);
 app.route("/", vaultRouter);
 app.route("/", deviceRouter);
+app.get("/", (c) => {
+  return c.redirect(
+    process.env.WEBSITE_BASE_URL || "https://securevaultx.com",
+    302,
+  );
+});
 
 // Start Server
 const port = 3000;
