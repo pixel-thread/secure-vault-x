@@ -21,7 +21,7 @@ const DrawerLayout = () => {
         name="(tabs)"
         options={{
           headerShown: true,
-          headerTitle: 'SecureVault X',
+          headerTitle: 'Secure Vault X',
           drawerLabel: 'My Vault',
           drawerIcon: ({ size, color }) => (
             <Ionicons name="lock-closed-outline" size={size} color={color} />
