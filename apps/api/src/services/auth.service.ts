@@ -8,7 +8,6 @@ import {
 import crypto from "node:crypto";
 import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
-import { redis } from "./redis.service";
 import { UnauthorizedError } from "../utils/errors/unauthorize";
 import {
   BadRequestError,
@@ -59,12 +58,6 @@ export class AuthService {
     });
 
     // Store challenge tied to user explicitly with 5-minute expiry in Redis
-    await redis.set(
-      `${CHALLENGE_PREFIX}${user.id}`,
-      options.challenge,
-      "EX",
-      CHALLENGE_EXPIRY,
-    );
 
     return options;
   }
@@ -79,13 +72,9 @@ export class AuthService {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new NotFoundError("User not found");
 
-    const expectedChallenge = await redis.get(`${CHALLENGE_PREFIX}${user.id}`);
-    if (!expectedChallenge)
-      throw new BadRequestError("Challenge expired or not found");
-
     const verification = await verifyRegistrationResponse({
       response: registrationResponse,
-      expectedChallenge,
+      expectedChallenge: "",
       expectedOrigin: EXPECTED_ORIGIN,
       expectedRPID: RP_ID,
       requireUserVerification: false,
@@ -122,8 +111,6 @@ export class AuthService {
         },
       });
 
-      await redis.del(`${CHALLENGE_PREFIX}${user.id}`);
-
       // We need to issue a token tied to this device ID
       return this.generateTokens(user.id, user.email, device.id);
     }
@@ -153,13 +140,6 @@ export class AuthService {
       userVerification: "preferred",
     });
 
-    await redis.set(
-      `${CHALLENGE_PREFIX}${user.id}`,
-      options.challenge,
-      "EX",
-      CHALLENGE_EXPIRY,
-    );
-
     return options;
   }
 
@@ -170,10 +150,6 @@ export class AuthService {
     });
     if (!user) throw new NotFoundError("User not found");
 
-    const expectedChallenge = await redis.get(`${CHALLENGE_PREFIX}${user.id}`);
-    if (!expectedChallenge)
-      throw new BadRequestError("Challenge expired or not found");
-
     const authenticator = user.credentials.find(
       (c: any) => c.credentialId === authenticationResponse.id,
     );
@@ -182,7 +158,7 @@ export class AuthService {
 
     const verification = await verifyAuthenticationResponse({
       response: authenticationResponse,
-      expectedChallenge,
+      expectedChallenge: "",
       expectedOrigin: EXPECTED_ORIGIN,
       expectedRPID: RP_ID,
       credential: {
@@ -198,7 +174,6 @@ export class AuthService {
         where: { id: authenticator.id },
         data: { counter: BigInt(verification.authenticationInfo.newCounter) },
       });
-      await redis.del(`${CHALLENGE_PREFIX}${user.id}`);
 
       // Issue Tokens
       return await this.generateTokens(user.id, user.email);

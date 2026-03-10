@@ -2,11 +2,10 @@
   "name": "@securevault/api",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "srvx",
     "start": "node dist/index.js",
-    "build": "tsc",
+    "build": "pnpm exec tsup",
     "lint": "eslint .",
     "generate": "echo \"Nothing to generate for API\"",
     "test": "vitest"
@@ -30,14 +29,15 @@
   },
   "devDependencies": {
     "@securevault/eslint-config": "workspace:*",
-    "@securevault/typescript-config": "workspace:*",
     "@securevault/types": "workspace:*",
+    "@securevault/typescript-config": "workspace:*",
     "@types/bcrypt": "^5.0.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^22.13.10",
     "eslint": "^9.39.1",
-    "nodemon": "^3.1.14",
     "prisma": "^6.4.1",
+    "srvx": "^0.11.9",
+    "tsup": "^8.5.1",
     "tsx": "^4.7.1",
     "typescript": "^5.8.2",
     "vitest": "^4.0.18"
