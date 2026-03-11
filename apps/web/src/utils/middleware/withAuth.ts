@@ -37,7 +37,7 @@ export const withAuth: MiddlewareFactory = (next) => {
         request.headers.get("Authorization");
 
       if (!authHeader) {
-        throw new UnauthorizedError("Authorization header missing");
+        throw new UnauthorizedError("Unauthorized");
       }
 
       // Extract token
@@ -46,7 +46,7 @@ export const withAuth: MiddlewareFactory = (next) => {
         : null;
 
       if (!token) {
-        throw new UnauthorizedError("Invalid authorization format");
+        throw new UnauthorizedError("Unauthorized");
       }
 
       // Verify JWT

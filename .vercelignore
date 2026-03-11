@@ -1,0 +1,47 @@
+.git/
+.agents/
+turbo/
+scripts/
+apps/
+packages/
+node_modules/
+.env*.local
+.next/
+.expo/
+dist/
+.next/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+# expo router
+expo-env.d.ts
+
+
+
+ios
+android
+
+# macOS
+.DS_Store
+
+# Temporary files created by Metro to check the health of the file watcher
+.metro-health-check*
+.env
+.turbo
+generated
+
+expo-env.d.ts
+*.apk
+.vercel/.env.preview.local
+.vercel/.env.development.local
+.vercel
+apps/web/next-env.d.ts
+apps/api/.env.local
+.env.local
+check-logs.js
+test-logger.js
