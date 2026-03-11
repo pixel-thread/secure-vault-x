@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?
+  mfaEnabled   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  credentials      WebAuthnCredential[]
+  devices          Device[]
+  refreshTokens    RefreshToken[]
+  otpVerifications OtpVerification[]
+  encryption       UserEncryption?
+  auditLogs        AuditLog[]
+}
+
+model UserEncryption {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  salt      String // Base64 encoded salt for Argon2 MEK generation
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WebAuthnCredential {
+  id           String @id @default(uuid())
+  userId       String
+  credentialId String @unique
+  publicKey    Bytes
+  counter      BigInt
+  transports   String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Device {
+  id               String   @id @default(uuid())
+  userId           String
+  deviceIdentifier String? // Hardware UUID or persistent device ID
+  deviceName       String
+  publicKey        String? // Base64 encoded ECDSA P-256 SPKI public key
+  encryptedMEK     String?
+  isTrusted        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@unique([userId, deviceIdentifier])
+}
+
+model Vault {
+  id            String   @id @default(uuid())
+  userId        String
+  encryptedData String
+  iv            String?
+  version       Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([id])
+  @@index([userId, iv])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  deviceId  String?
+  tokenHash String   @unique // Hashed token
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+model OtpVerification {
+  id        String    @id @default(uuid())
+  userId    String
+  code      String
+  type      String // e.g. "EMAIL_LOGIN"
+  expiresAt DateTime
+  isRevoked Boolean   @default(false)
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String // e.g. "LOGIN_SUCCESS", "MFA_TOGGLE", "VAULT_SYNC"
+  metadata  Json? // Optional extra data (e.g. device ID, IP)
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}

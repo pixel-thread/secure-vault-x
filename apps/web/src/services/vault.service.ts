@@ -1,4 +1,4 @@
-import { prisma } from "@securevault/database";
+import { prisma } from "@libs/db/prisma";
 import { BadRequestError, ConflictError } from "@/utils/errors/common";
 
 export class VaultService {

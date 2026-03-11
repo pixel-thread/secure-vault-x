@@ -1,4 +1,4 @@
-import { prisma } from "@securevault/database";
+import { prisma } from "@libs/db/prisma";
 import { NotFoundError } from "@/utils/errors/common";
 import { verifyDeviceSignature } from "@securevault/crypto";
 

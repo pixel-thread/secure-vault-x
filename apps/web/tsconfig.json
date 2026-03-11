@@ -5,6 +5,18 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@libs/*": [
+        "./src/libs/*"
+      ],
+      "@services/*": [
+        "./src/services/*"
+      ],
+      "@store/*": [
+        "./src/store/*"
+      ],
+      "@utils/*": [
+        "./src/utils/*"
       ]
     }
   },

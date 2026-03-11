@@ -1,4 +1,4 @@
-import { prisma } from "@securevault/database";
+import { prisma } from "@libs/db/prisma";
 
 export type AuditAction =
   | "LOGIN_SUCCESS"

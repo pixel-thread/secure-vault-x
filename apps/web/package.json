@@ -6,10 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:generate": "prisma generate --schema=src/libs/db/prisma/schema.prisma",
-    "db:migrate": "prisma migrate dev --schema=src/libs/db/prisma/schema.prisma",
-    "db:push": "prisma db push --schema=src/libs/db/prisma/schema.prisma"
+    "lint": "next lint"
   },
   "dependencies": {
     "@securevault/constants": "workspace:*",
@@ -45,4 +42,3 @@
     "@types/pg": "^8.0.0"
   }
 }
-

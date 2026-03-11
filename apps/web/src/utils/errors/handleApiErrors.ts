@@ -2,15 +2,17 @@ import { ErrorResponse } from "@/utils/next-response";
 import { ZodError } from "zod";
 import { UnauthorizedError } from "@/utils/errors/unAuthError";
 import * as JoseErrors from "jose/errors";
-
-/**
- * Checks if an error is a specific JWT/JWS/JWE error thrown by the 'jose' library.
- */
+import { Prisma } from "@/libs/db/prisma/generated/prisma";
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from "./common";
 
 const isJwtError = (error: unknown): boolean => {
-  // Check if it's an explicit Jose subclass
   const isJoseClass =
-    error instanceof JoseErrors.JOSEError || // Base class for all jose-specific errors
+    error instanceof JoseErrors.JOSEError ||
     error instanceof JoseErrors.JWTExpired ||
     error instanceof JoseErrors.JWTInvalid ||
     error instanceof JoseErrors.JWSSignatureVerificationFailed ||
@@ -21,13 +23,11 @@ const isJwtError = (error: unknown): boolean => {
     error instanceof JoseErrors.JWKInvalid ||
     error instanceof JoseErrors.JOSEAlgNotAllowed ||
     error instanceof JoseErrors.JOSENotSupported ||
-    error instanceof JoseErrors.JWSSignatureVerificationFailed ||
     error instanceof JoseErrors.JWEInvalid ||
     error instanceof JoseErrors.JWEDecryptionFailed;
 
   if (isJoseClass) return true;
 
-  // Catch the specific "none algorithm" TypeErrors thrown by jose
   if (error instanceof TypeError || error instanceof Error) {
     const msg = error.message;
     return (
@@ -43,43 +43,78 @@ const isJwtError = (error: unknown): boolean => {
 };
 
 export const handleApiErrors = (error: unknown) => {
+  console.error(error);
+
   if (isJwtError(error)) {
     return ErrorResponse({
       message: "Unauthorized",
       status: 401,
     });
   }
-  if (
-    error instanceof Error &&
-    (error.name === "PrismaClientKnownRequestError" ||
-      error.name === "PrismaClientValidationError" ||
-      error.name === "PrismaClientInitializationError" ||
-      (error as any).code?.startsWith("P"))
-  ) {
-    return ErrorResponse({
-      // db error
-      message: "Bad Request",
-      status: 400,
-    });
-  }
 
   if (error instanceof UnauthorizedError) {
     return ErrorResponse({
       message: error.message || "Unauthorized",
-      status: error.status,
+      status: 401,
     });
   }
 
   if (error instanceof ZodError || error?.constructor?.name === "ZodError") {
     return ErrorResponse({
-      message: (error as ZodError)?.issues[0]?.message || "Validation error",
+      message: (error as ZodError)?.issues?.[0]?.message || "Validation error",
       status: 400,
     });
   }
 
-  if (error instanceof Error) {
-    return ErrorResponse({ message: "Internal Server Error" });
+  if (error instanceof NotFoundError) {
+    return ErrorResponse({
+      message: error.message,
+      status: 404,
+    });
   }
 
-  return ErrorResponse({ message: "Internal Server Error", status: 500 });
+  if (error instanceof ConflictError) {
+    return ErrorResponse({
+      message: error.message,
+      status: 409,
+    });
+  }
+
+  if (error instanceof ForbiddenError) {
+    return ErrorResponse({
+      message: error.message,
+      status: 403,
+    });
+  }
+
+  if (error instanceof BadRequestError) {
+    return ErrorResponse({
+      message: error.message,
+      status: 400,
+    });
+  }
+
+  // Prisma errors
+  if (
+    error instanceof Prisma.PrismaClientValidationError ||
+    error instanceof Prisma.PrismaClientKnownRequestError ||
+    error instanceof Prisma.PrismaClientInitializationError
+  ) {
+    return ErrorResponse({
+      message: "Database error",
+      status: 500,
+    });
+  }
+
+  if (error instanceof Error) {
+    return ErrorResponse({
+      message: error.message || "Internal Server Error",
+      status: 500,
+    });
+  }
+
+  return ErrorResponse({
+    message: "Internal Server Error",
+    status: 500,
+  });
 };
