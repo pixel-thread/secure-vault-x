@@ -4,7 +4,7 @@ import Header from '../../common/Header';
 import { useState } from 'react';
 import { useAuthStore } from '../../../store/auth';
 import { useQuery } from '@tanstack/react-query';
-import { http } from '@securevault/utils-native';
+import { http, logger } from '@securevault/utils-native';
 import { VAULT_ENDPOINT } from '@securevault/constants';
 import { VaultItem } from './VaultItem';
 import { VaultItemDialog } from './VaultItemDialog';
@@ -13,7 +13,6 @@ import { VaultEmpty } from './VaultEmpty';
 import { MekSetup } from './MekSetup';
 import { decryptData } from '@securevault/crypto';
 import { DeviceStoreManager } from '../../../store/device';
-import { logger } from '@securevault/utils';
 import { VaultSecretT } from '@/src/types/vault';
 
 /** Shape of each encrypted vault entry returned by the API */
