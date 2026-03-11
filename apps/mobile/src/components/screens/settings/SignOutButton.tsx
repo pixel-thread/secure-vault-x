@@ -40,7 +40,10 @@ export default function SignOutButton() {
   const handleLogout = async () => {
     setIsLoading(true);
     const refreshToken = await tokenManager.getRefreshToken();
-    if (!refreshToken) return;
+    if (!refreshToken) {
+      logger.error('No refresh token found');
+      return;
+    }
     logoutMutate(refreshToken);
   };
 
