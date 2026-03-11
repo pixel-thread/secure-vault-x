@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { AuthService } from "@/services/auth.service";
 import { ErrorResponse, SuccessResponse } from "@/utils/next-response";
-import { prisma } from "@securevault/database";
+import { prisma } from "@libs/db/prisma";
 import { withValidation } from "@/utils/middleware/withValidiation";
 import { UnauthorizedError } from "@/utils/errors/unAuthError";
 
