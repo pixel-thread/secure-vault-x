@@ -43,7 +43,9 @@ const isJwtError = (error: unknown): boolean => {
 };
 
 export const handleApiErrors = (error: unknown) => {
-  console.error(error);
+  if (process.env.NODE_ENV === "development") {
+    console.error(JSON.stringify(error, null, 2));
+  }
 
   if (isJwtError(error)) {
     return ErrorResponse({
@@ -101,7 +103,7 @@ export const handleApiErrors = (error: unknown) => {
     error instanceof Prisma.PrismaClientInitializationError
   ) {
     return ErrorResponse({
-      message: "Database error",
+      message: error.message,
       status: 500,
     });
   }
