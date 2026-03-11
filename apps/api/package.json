@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "srvx",
+    "devs": "srvx",
     "start": "node dist/index.js",
     "build": "pnpm exec tsup",
     "lint": "eslint .",
