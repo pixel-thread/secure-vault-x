@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { UnauthorizedError } from "../errors/unAuthError";
-import { JWTService } from "@/services/jwt.services";
 import { AuthService } from "@/services/auth.service";
 
 const ROLE_HIERARCHY = {
@@ -13,17 +12,12 @@ const ROLE_HIERARCHY = {
 type Role = keyof typeof ROLE_HIERARCHY;
 
 async function requiredAuth(req: NextRequest) {
-  const token =
-    req.headers.get("authorization") || req.headers.get("Authorization");
+  const userId = req.headers.get("x-user-id");
 
-  if (!token) {
-    throw new UnauthorizedError("Unauthorized");
-  }
-  const payload = await JWTService.verifyAccessToken(token);
-  const userId = payload.sub;
   if (!userId) {
     throw new UnauthorizedError("Unauthorized");
   }
+
   return { userId };
 }
 

@@ -409,7 +409,7 @@ export class AuthService {
       },
     });
 
-    if (!user) throw new NotFoundError("User not found");
+    if (!user) throw new UnauthorizedError("User not found");
 
     return {
       ...user,

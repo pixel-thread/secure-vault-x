@@ -6,6 +6,7 @@ import { UnauthorizedError } from "@/utils/errors/unAuthError";
 
 export const GET = withValidation({}, async (_data, req) => {
   const userId = req.headers.get("x-user-id");
+
   if (!userId) throw new UnauthorizedError("Unauthorized");
 
   const user = await AuthService.getMe(userId);

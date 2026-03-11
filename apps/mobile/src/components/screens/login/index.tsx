@@ -15,7 +15,7 @@ import { generateDeviceKeyPair } from '@securevault/crypto';
 import { getDeviceIdentifier } from '../../../utils/deviceId';
 import * as Device from 'expo-device';
 import { logger } from '@securevault/utils';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type FormValue = {
   email: string;
@@ -34,7 +34,6 @@ export default function LoginScreen() {
   const isDev = process.env.NODE_ENV === 'development';
   const {
     control,
-    reset,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValue>({
