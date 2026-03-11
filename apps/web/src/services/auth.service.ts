@@ -8,12 +8,12 @@ import {
 import crypto from "node:crypto";
 import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
-import { UnauthorizedError } from "../utils/errors/unauthorize";
+import { UnauthorizedError } from "@/utils/errors/unAuthError";
 import {
   BadRequestError,
   ConflictError,
   NotFoundError,
-} from "../utils/errors/common";
+} from "@/utils/errors/common";
 
 const RP_ID = process.env.RP_ID || "localhost";
 const RP_NAME = process.env.RP_NAME || "Secure-Vault X";
@@ -23,9 +23,6 @@ if (!JWT_SECRET_STRING) {
   throw new Error("JWT_SECRET must be set in all environments");
 }
 const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
-
-// CHALLENGE STORAGE transitioned to Redis for scalability and persistence.
-// Key format: `challenge:${userId}`
 
 export class AuthService {
   // ==========================================
@@ -211,8 +208,11 @@ export class AuthService {
   static async loginPassword(email: string, passwordRaw: string) {
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || !user.passwordHash)
+    if (!user || !user.passwordHash) {
+      // Dummy hash to mitigate timing attacks
+      await bcrypt.hash(passwordRaw, 12);
       throw new UnauthorizedError("Invalid credentials");
+    }
 
     const validPassword = await bcrypt.compare(passwordRaw, user.passwordHash);
 
@@ -408,7 +408,10 @@ export class AuthService {
 
     if (!user) throw new NotFoundError("User not found");
 
-    return user;
+    return {
+      ...user,
+      role: "USER",
+    };
   }
 
   static async logout(token: string) {

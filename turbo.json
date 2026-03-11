@@ -1,5 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalEnv": ["DATABASE_URL"],
   "tasks": {
     "generate": {
       "dependsOn": ["^generate"]
@@ -21,6 +23,15 @@
         "EXPECTED_ORIGIN",
         "ALLOWED_ORIGINS"
       ]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:deploy": {
+      "cache": false
     }
   }
 }
