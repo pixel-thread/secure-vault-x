@@ -109,3 +109,23 @@ model AuditLog {
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
+
+enum ErrorType {
+  ERROR
+  WARN
+  INFO
+  LOG
+}
+
+model Log {
+  id        String    @id @default(uuid())
+  type      ErrorType // 'ERROR', 'INFO', 'WARN', or 'LOG'
+  content   String // The log message; can store stringified JSON
+  isBackend Boolean   @default(false)
+  message   String
+  timestamp DateTime  @default(now()) // When the log was created
+
+  @@index([isBackend, timestamp])
+  @@index([type, timestamp])
+  @@index([timestamp])
+}
