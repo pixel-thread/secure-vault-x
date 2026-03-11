@@ -22,18 +22,18 @@ export class AuditLogger {
     userAgent?: string;
   }) {
     try {
-      // await prisma.auditLog.create({
-      //  data: {
-      //   userId: params.userId,
-      //   action: params.action,
-      //   metadata: params.metadata,
-      //   ip: params.ip,
-      //   userAgent: params.userAgent,
-      //  },
-      // });
-    } catch (error) {
-      // Don't let audit logging failure block the main operation
-      console.error("[AuditLogger] Failed to create audit log:", error);
+      await prisma.auditLog.create({
+        data: {
+          userId: params.userId,
+          action: params.action,
+          metadata: params.metadata,
+          ip: params.ip,
+          userAgent: params.userAgent,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error logging audit:", error.message);
+      return;
     }
   }
 }

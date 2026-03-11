@@ -1,4 +1,4 @@
-import { prisma } from "@securevault/database";
+import { prisma } from "@/libs/db/client";
 import { NotFoundError } from "@/utils/errors/common";
 import { verifyDeviceSignature } from "@securevault/crypto";
 
@@ -42,8 +42,8 @@ export class DeviceService {
             publicKey: publicKey || null,
             refreshTokens: sessionId
               ? {
-                  connect: { id: sessionId },
-                }
+                connect: { id: sessionId },
+              }
               : undefined,
           },
           select: {
@@ -71,8 +71,8 @@ export class DeviceService {
             publicKey: publicKey || null,
             refreshTokens: sessionId
               ? {
-                  connect: { id: sessionId },
-                }
+                connect: { id: sessionId },
+              }
               : undefined,
           },
           select: {
@@ -96,8 +96,8 @@ export class DeviceService {
         isTrusted: isFirstDevice, // First device is auto-trusted
         refreshTokens: sessionId
           ? {
-              connect: { id: sessionId },
-            }
+            connect: { id: sessionId },
+          }
           : undefined,
       },
       select: {

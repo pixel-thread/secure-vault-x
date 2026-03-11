@@ -4,5 +4,16 @@ GET {{API_BASE_URL}}/auth/me
 ###
 POST {{API_BASE_URL}}/auth/password/login
 
+{
+  "email":"one@gmail.com",
+  "password":"123456768aA@"
+}
+
 ###
 POST {{API_BASE_URL}}/auth/password/register
+
+{
+  "email":"one@gmail.com",
+  "password":"123Clashofclan@",
+  "confirmPassword":"123Clashofclan@"
+}

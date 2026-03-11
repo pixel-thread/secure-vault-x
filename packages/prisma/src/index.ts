@@ -19,4 +19,6 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-export { Prisma } from "./generated/prisma/index.js";
+import { Prisma } from "./generated/prisma";
+
+export { Prisma };

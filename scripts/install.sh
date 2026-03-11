@@ -13,6 +13,7 @@ echo -e "${YELLOW}1. Removing node_modules...${NC}"
 rm -rf node_modules
 rm -rf apps/*/node_modules
 rm -rf packages/*/node_modules
+rm -rf **/.turbo/**
 echo -e "${GREEN}✓ Removed all node_modules${NC}\n"
 
 # Step 2: Remove build artifacts

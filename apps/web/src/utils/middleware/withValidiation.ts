@@ -6,9 +6,8 @@ import { handleApiErrors } from "../errors/handleApiErrors";
 /* Types */
 /* -------------------------------------------------- */
 
-type InferOrUndefined<T extends z.ZodTypeAny | undefined> = T extends z.ZodTypeAny
-  ? z.infer<T>
-  : undefined;
+type InferOrUndefined<T extends z.ZodTypeAny | undefined> =
+  T extends z.ZodTypeAny ? z.infer<T> : undefined;
 
 type Schemas<
   P extends z.ZodTypeAny | undefined,
@@ -49,24 +48,28 @@ export function withValidation<
       query: InferOrUndefined<Q>;
       body: InferOrUndefined<B>;
     },
-    req: NextRequest
-  ) => Promise<Response | NextResponse>
+    req: NextRequest,
+  ) => Promise<Response | NextResponse>,
 ) {
   return async (
     req: NextRequest,
-    segmentData: { params: Promise<Record<string, string | string[]>> }
+    segmentData: { params: Promise<Record<string, string | string[]>> },
   ): Promise<Response | NextResponse> => {
     try {
       /* ---------------- params ---------------- */
       const resolvedParams = await segmentData.params;
 
-      const validatedParams = schemas.params ? schemas.params.parse(resolvedParams) : undefined;
+      const validatedParams = schemas.params
+        ? schemas.params.parse(resolvedParams)
+        : undefined;
 
       /* ---------------- query ---------------- */
       const { searchParams } = new URL(req.url);
       const queryObj = Object.fromEntries(searchParams.entries());
 
-      const validatedQuery = schemas.query ? schemas.query.parse(queryObj) : undefined;
+      const validatedQuery = schemas.query
+        ? schemas.query.parse(queryObj)
+        : undefined;
 
       /* ---------------- body ---------------- */
       let validatedBody: InferOrUndefined<B>;
@@ -85,7 +88,7 @@ export function withValidation<
           query: validatedQuery as InferOrUndefined<Q>,
           body: validatedBody,
         },
-        req
+        req,
       );
     } catch (error) {
       return handleApiErrors(error);

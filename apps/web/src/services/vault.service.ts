@@ -1,4 +1,4 @@
-import { prisma } from "@securevault/database";
+import { prisma } from "@/libs/db/client";
 import { BadRequestError, ConflictError } from "@/utils/errors/common";
 
 export class VaultService {
@@ -26,7 +26,7 @@ export class VaultService {
       if (version <= existingVault.version) {
         throw new ConflictError(
           "Conflict: Client version is behind server. Current Version: " +
-            existingVault.version,
+          existingVault.version,
         );
       }
       const updated = await prisma.vault.update({

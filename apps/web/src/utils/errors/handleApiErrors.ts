@@ -1,7 +1,6 @@
 import { ErrorResponse } from "@/utils/next-response";
 import { ZodError } from "zod";
 import { UnauthorizedError } from "@/utils/errors/unAuthError";
-import { Prisma } from "@securevault/database";
 import * as JoseErrors from "jose/errors";
 
 /**
@@ -42,11 +41,25 @@ const isJwtError = (error: unknown): boolean => {
 
   return false;
 };
+
 export const handleApiErrors = (error: unknown) => {
   if (isJwtError(error)) {
     return ErrorResponse({
       message: "Unauthorized",
       status: 401,
+    });
+  }
+  if (
+    error instanceof Error &&
+    (error.name === "PrismaClientKnownRequestError" ||
+      error.name === "PrismaClientValidationError" ||
+      error.name === "PrismaClientInitializationError" ||
+      (error as any).code?.startsWith("P"))
+  ) {
+    return ErrorResponse({
+      // db error
+      message: "Bad Request",
+      status: 400,
     });
   }
 
@@ -57,27 +70,15 @@ export const handleApiErrors = (error: unknown) => {
     });
   }
 
-  if (error instanceof Prisma.PrismaClientInitializationError) {
-    return ErrorResponse({ message: "Bad Request", status: 400 });
-  }
-
-  if (error instanceof Prisma.PrismaClientValidationError) {
-    return ErrorResponse({ message: "Bad Request", status: 400 });
-  }
-
-  if (error instanceof Prisma.PrismaClientUnknownRequestError) {
-    return ErrorResponse({ message: "Bad Request", status: 400 });
-  }
-
-  if (error instanceof ZodError) {
+  if (error instanceof ZodError || error?.constructor?.name === "ZodError") {
     return ErrorResponse({
-      message: error?.issues[0]?.message,
+      message: (error as ZodError)?.issues[0]?.message || "Validation error",
       status: 400,
     });
   }
 
   if (error instanceof Error) {
-    return ErrorResponse({ message: error.message });
+    return ErrorResponse({ message: "Internal Server Error" });
   }
 
   return ErrorResponse({ message: "Internal Server Error", status: 500 });
