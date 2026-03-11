@@ -44,7 +44,7 @@ const isJwtError = (error: unknown): boolean => {
 
 export const handleApiErrors = (error: unknown) => {
   if (process.env.NODE_ENV) {
-    console.log(JSON.stringify(error, null, 2));
+    console.log("Logs", JSON.stringify(error, null, 2));
   }
 
   if (isJwtError(error)) {
