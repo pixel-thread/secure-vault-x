@@ -200,11 +200,13 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity
-          className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 transition-transform active:scale-[0.98] active:bg-emerald-600"
+          className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 transition-transform active:scale-[0.98] active:bg-emerald-600 disabled:opacity-50"
           disabled={isPending}
           onPress={handleSubmit(onSubmit)}>
           <Ionicons name="log-in" size={24} color="#064e3b" />
-          <Text className="ml-2 text-lg font-bold text-[#022c22]">Login</Text>
+          <Text className="ml-2 text-lg font-bold text-[#022c22]">
+            {isPending ? 'Logging in...' : 'Login'}
+          </Text>
         </TouchableOpacity>
 
         <View className="mt-6 flex-row justify-center">
