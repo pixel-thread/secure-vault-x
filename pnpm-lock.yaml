@@ -328,7 +328,7 @@ importers:
         specifier: workspace:^
         version: link:../../packages/crypto
       '@securevault/database':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/prisma
       '@securevault/validators':
         specifier: workspace:^
