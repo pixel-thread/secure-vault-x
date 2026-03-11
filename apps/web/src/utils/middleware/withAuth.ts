@@ -13,6 +13,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/auth/password/login",
   "/api/auth/mfa/verify",
   "/api/auth/refresh",
+  "/api/logs",
 ]);
 
 export const withAuth: MiddlewareFactory = (next) => {
