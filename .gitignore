@@ -38,3 +38,5 @@ expo-env.d.ts
 apps/web/next-env.d.ts
 apps/api/.env.local
 .env.local
+check-logs.js
+test-logger.js
