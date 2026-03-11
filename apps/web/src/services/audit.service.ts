@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { prisma } from "@libs/db/prisma";
 
 export type AuditAction =
@@ -22,18 +23,18 @@ export class AuditLogger {
     userAgent?: string;
   }) {
     try {
-      // await prisma.auditLog.create({
-      //  data: {
-      //   userId: params.userId,
-      //   action: params.action,
-      //   metadata: params.metadata,
-      //   ip: params.ip,
-      //   userAgent: params.userAgent,
-      //  },
-      // });
+      await prisma.auditLog.create({
+        data: {
+          userId: params.userId,
+          action: params.action,
+          metadata: params.metadata,
+          ip: params.ip,
+          userAgent: params.userAgent,
+        },
+      });
     } catch (error) {
       // Don't let audit logging failure block the main operation
-      console.error("[AuditLogger] Failed to create audit log:", error);
+      logger.error("[AuditLogger] Failed to create audit log", error);
     }
   }
 }
