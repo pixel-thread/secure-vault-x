@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Image, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { VaultSecretT } from '@/src/type/vault';
+import { VaultSecretT } from '@/src/types/vault';
 import { logger } from '@securevault/utils';
 
 export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {

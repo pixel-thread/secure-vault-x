@@ -1,4 +1,4 @@
-import { VaultSecretT } from '@/src/type/vault';
+import { VaultSecretT } from '@/src/types/vault';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';

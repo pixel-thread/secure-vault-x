@@ -14,7 +14,7 @@ import { MekSetup } from './MekSetup';
 import { decryptData } from '@securevault/crypto';
 import { DeviceStoreManager } from '../../../store/device';
 import { logger } from '@securevault/utils';
-import { VaultSecretT } from '@/src/type/vault';
+import { VaultSecretT } from '@/src/types/vault';
 
 /** Shape of each encrypted vault entry returned by the API */
 interface EncryptedVaultEntry {

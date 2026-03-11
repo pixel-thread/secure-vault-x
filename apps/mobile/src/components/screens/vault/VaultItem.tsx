@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { toast } from 'sonner-native';
-import { VaultSecretT } from '@/src/type/vault';
+import { VaultSecretT } from '@/src/types/vault';
 
 export const VaultItem = ({
   item,
