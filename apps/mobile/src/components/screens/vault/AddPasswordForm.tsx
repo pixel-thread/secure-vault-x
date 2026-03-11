@@ -11,6 +11,7 @@ import { http } from '@securevault/utils-native';
 import { VAULT_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { DeviceStoreManager } from '../../../store/device';
+import { encryptData } from '@securevault/crypto';
 
 const passwordSchema = z.object({
   serviceName: z.string().min(1, 'Service name is required'),
@@ -53,7 +54,7 @@ export function AddPasswordForm({ onSuccess }: Props) {
     },
   });
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (data: DTO) => http.post(VAULT_ENDPOINT.POST_ADD_SECRET, data),
     onSuccess: (data) => {
       if (data.success) {
@@ -61,6 +62,7 @@ export function AddPasswordForm({ onSuccess }: Props) {
           description: data.message,
         });
         queryClient.invalidateQueries({ queryKey: ['vault'] });
+        onSuccess?.();
         return data;
       }
 
@@ -234,10 +236,13 @@ export function AddPasswordForm({ onSuccess }: Props) {
         />
       </View>
       <TouchableOpacity
+        disabled={isPending}
         className="mt-2 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98]"
         onPress={handleSubmit(onSubmitForm)}>
         <Ionicons name="save-outline" size={20} color="#022c22" />
-        <Text className="ml-2 text-lg font-bold text-[#022c22]">Save to Vault</Text>
+        <Text className="ml-2 text-lg font-bold text-[#022c22]">
+          {isPending ? 'Saving' : 'Save to Vault'}
+        </Text>
       </TouchableOpacity>
     </>
   );
