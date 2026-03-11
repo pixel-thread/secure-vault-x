@@ -8,13 +8,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordLoginSchema } from '@securevault/validators';
 import { tokenManager, DeviceStoreManager } from '@securevault/libs';
 import { useMutation } from '@tanstack/react-query';
-import { http } from '@securevault/utils-native';
+import { http, logger } from '@securevault/utils-native';
 import { AUTH_ENDPOINT, DEVICE_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { generateDeviceKeyPair } from '@securevault/crypto';
 import { getDeviceIdentifier } from '../../../utils/deviceId';
 import * as Device from 'expo-device';
-import { logger } from '@securevault/utils';
 import { useState } from 'react';
 
 type FormValue = {

@@ -3,13 +3,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { useMutation } from '@tanstack/react-query';
 import { AUTH_ENDPOINT } from '@securevault/constants';
-import { http } from '@securevault/utils-native';
+import { http, logger } from '@securevault/utils-native';
 import { tokenManager } from '@securevault/libs';
 import { toast } from 'sonner-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/src/store/auth';
 import { DeviceStoreManager } from '@/src/store/device';
-import { logger } from '@securevault/utils';
 
 export default function SignOutButton() {
   const { colorScheme } = useColorScheme();

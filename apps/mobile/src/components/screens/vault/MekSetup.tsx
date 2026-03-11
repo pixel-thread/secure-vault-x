@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '../../../store/auth';
 import { useMutation } from '@tanstack/react-query';
-import { http } from '@securevault/utils-native';
+import { http, logger } from '@securevault/utils-native';
 import { AUTH_ENDPOINT } from '@securevault/constants';
 import { generateMEK } from '@securevault/crypto';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
-import { logger } from '@securevault/utils';
 import { passwordLoginSchema } from '@securevault/validators';
 const schema = passwordLoginSchema.pick({ password: true });
 

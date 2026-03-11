@@ -8,14 +8,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { verifyOtpSchema } from '@securevault/validators';
 import { tokenManager } from '@securevault/libs';
 import { useMutation } from '@tanstack/react-query';
-import { http } from '@securevault/utils-native';
+import { http, logger } from '@securevault/utils-native';
 import { AUTH_ENDPOINT, DEVICE_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { generateDeviceKeyPair } from '@securevault/crypto';
 import { getDeviceIdentifier } from '../../../utils/deviceId';
 import * as SecureStore from 'expo-secure-store';
 import * as Device from 'expo-device';
-import { logger } from '@securevault/utils';
 
 type FormValue = {
   email: string;

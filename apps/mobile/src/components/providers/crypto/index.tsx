@@ -1,6 +1,6 @@
 import React from 'react';
 import { isExpoGo } from '@/src/utils/helper/checkIsExpo';
-import { logger } from '@securevault/utils';
+import { logger } from '@securevault/utils-native';
 
 const isExpo = isExpoGo();
 

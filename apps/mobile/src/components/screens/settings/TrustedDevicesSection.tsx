@@ -3,13 +3,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { DEVICE_ENDPOINT } from '@securevault/constants';
-import { http } from '@securevault/utils-native';
+import { http, logger } from '@securevault/utils-native';
 import { toast } from 'sonner-native';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../../store/auth';
 import { DeviceStoreManager } from '../../../store/device';
 import { signDevicePayload } from '@securevault/crypto';
-import { logger } from '@securevault/utils';
 
 export interface DeviceItem {
   id: string;
@@ -20,11 +19,9 @@ export interface DeviceItem {
 }
 type TrustedDeviceSectionProps = {
   onDevicesLoad?: (devices: DeviceItem[], currentDeviceId: string) => void;
-}
+};
 
-export default function TrustedDevicesSection({
-  onDevicesLoad,
-}: TrustedDeviceSectionProps) {
+export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSectionProps) {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const { user } = useAuthStore();
@@ -207,13 +204,15 @@ export default function TrustedDevicesSection({
           devices?.map((device, index) => (
             <View
               key={device.id}
-              className={`flex-row items-center p-5 ${index < devices.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800/50' : ''
-                }`}>
+              className={`flex-row items-center p-5 ${
+                index < devices.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800/50' : ''
+              }`}>
               <View
-                className={`mr-4 h-10 w-10 items-center justify-center rounded-xl ${device.isTrusted
-                  ? 'bg-emerald-100 dark:bg-emerald-500/20'
-                  : 'bg-zinc-200 dark:bg-zinc-800/80'
-                  }`}>
+                className={`mr-4 h-10 w-10 items-center justify-center rounded-xl ${
+                  device.isTrusted
+                    ? 'bg-emerald-100 dark:bg-emerald-500/20'
+                    : 'bg-zinc-200 dark:bg-zinc-800/80'
+                }`}>
                 <Ionicons
                   name={device.isTrusted ? 'shield-checkmark-outline' : 'phone-portrait-outline'}
                   size={22}
@@ -232,10 +231,11 @@ export default function TrustedDevicesSection({
               </View>
               <View className="flex-row items-center gap-2">
                 <TouchableOpacity
-                  className={`h-10 w-10 items-center justify-center rounded-full ${device.isTrusted
-                    ? 'bg-amber-100 active:bg-amber-200 dark:bg-amber-500/10 dark:active:bg-amber-500/20'
-                    : 'bg-emerald-100 active:bg-emerald-200 dark:bg-emerald-500/10 dark:active:bg-emerald-500/20'
-                    }`}
+                  className={`h-10 w-10 items-center justify-center rounded-full ${
+                    device.isTrusted
+                      ? 'bg-amber-100 active:bg-amber-200 dark:bg-amber-500/10 dark:active:bg-amber-500/20'
+                      : 'bg-emerald-100 active:bg-emerald-200 dark:bg-emerald-500/10 dark:active:bg-emerald-500/20'
+                  }`}
                   onPress={() =>
                     handleToggleTrust(device.id, device.deviceName, !device.isTrusted)
                   }>

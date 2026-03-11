@@ -2,6 +2,7 @@ import * as Updates from 'expo-updates';
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Alert, AppState, AppStateStatus } from 'react-native';
 import { toast } from 'sonner-native';
+import { logger } from '@securevault/utils-native';
 
 interface UpdateContextType {
  isChecking: boolean;
@@ -43,7 +44,7 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     );
    }
   } catch (error) {
-   console.error('Error fetching latest Expo update:', error);
+   logger.error('Error fetching latest Expo update:', error);
   } finally {
    setIsDownloading(false);
   }
@@ -70,7 +71,7 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
    }
   } catch (error) {
    if (!silent) toast.error('Failed to check for updates');
-   console.error('Check for updates error:', error);
+   logger.error('Check for updates error:', error);
   } finally {
    setIsChecking(false);
   }

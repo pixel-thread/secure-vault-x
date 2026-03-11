@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
-import { logger } from '@securevault/utils';
+import { logger } from '@securevault/utils-native';
 import * as Updates from 'expo-updates';
 
 interface Props {

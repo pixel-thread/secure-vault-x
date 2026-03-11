@@ -66,7 +66,7 @@ const result = await db.query(query, [userId]);
 - **Deep nesting** (>4 levels) — Use early returns, extract helpers
 - **Missing error handling** — Unhandled promise rejections, empty catch blocks
 - **Mutation patterns** — Prefer immutable operations (spread, map, filter)
-- **console.log statements** — Remove debug logging before merge
+- **console.log statements** — Remove debug logging before merge. Strictly forbid `console.*` in Mobile development and enforce the usage of the custom utility imported as `import { http, logger } from '@securevault/utils-native';`.
 - **Missing tests** — New code paths without test coverage
 - **Dead code** — Commented-out code, unused imports, unreachable branches
 
@@ -92,7 +92,16 @@ function processUsers(users) {
   return users
     .filter(user => user.active && user.email)
     .map(user => ({ ...user, verified: true }));
-}
+```typescript
+// BAD: Using built-in console for logging globally (specifically in Mobile code)
+console.log("User logged in", { id: user.id });
+console.error("Token invalid");
+
+// GOOD: Importing and using the designated logger module
+import { http, logger } from '@securevault/utils-native';
+
+logger.log("User logged in", { id: user.id });
+logger.error("Token invalid");
 ```
 
 ### React/Next.js Patterns (HIGH)
