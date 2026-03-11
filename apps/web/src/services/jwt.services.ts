@@ -10,12 +10,18 @@ const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
 
 export class JWTService {
   static async verifyAccessToken(token: string) {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, JWT_SECRET, {
+      issuer: "securevault-api",
+      audience: "securevault-client",
+    });
     return payload;
   }
 
   static async verifyRefreshToken(token: string) {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, JWT_SECRET, {
+      issuer: "securevault-api",
+      audience: "securevault-client",
+    });
     return payload;
   }
 }

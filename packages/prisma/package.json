@@ -10,7 +10,7 @@
     }
   },
   "scripts": {
-    "generate": "tsc",
+    "generate": "tsc && cp -r src/generated dist/",
     "migrate": "prisma migrate dev --schema=src/schema.prisma",
     "push": "prisma db push --schema=src/schema.prisma",
     "build": "tsc && cp -r src/generated dist/",
@@ -33,3 +33,4 @@
     "@types/pg": "^8.0.0"
   }
 }
+

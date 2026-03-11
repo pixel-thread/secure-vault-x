@@ -3,6 +3,7 @@ import { DeviceStoreManager, tokenManager } from "@securevault/libs";
 import { AUTH_ENDPOINT } from "@securevault/constants";
 
 const url = process.env.EXPO_PUBLIC_API_URL;
+
 const isDev = process.env.NODE_ENV === "development";
 
 const baseURL = isDev ? url : url?.replace("http://", "https://");
@@ -101,6 +102,10 @@ axiosInstance.interceptors.response.use(
 
     try {
       const refreshToken = await tokenManager.getRefreshToken();
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("[HTTP] REFRESH =>", refreshToken);
+      }
 
       // Use standard axios instance for the refresh call
       const url = `${process.env.EXPO_PUBLIC_API_URL}${AUTH_ENDPOINT.POST_REFRESH}`;

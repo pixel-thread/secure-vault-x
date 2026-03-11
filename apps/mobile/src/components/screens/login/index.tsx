@@ -6,17 +6,16 @@ import { useAuthStore } from '../../../store/auth';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordLoginSchema } from '@securevault/validators';
-import { tokenManager } from '@securevault/libs';
+import { tokenManager, DeviceStoreManager } from '@securevault/libs';
 import { useMutation } from '@tanstack/react-query';
 import { http } from '@securevault/utils-native';
 import { AUTH_ENDPOINT, DEVICE_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { generateDeviceKeyPair } from '@securevault/crypto';
 import { getDeviceIdentifier } from '../../../utils/deviceId';
-import * as SecureStore from 'expo-secure-store';
 import * as Device from 'expo-device';
 import { logger } from '@securevault/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type FormValue = {
   email: string;
@@ -26,20 +25,23 @@ type FormValue = {
 type ApiRes = {
   accessToken: string;
   refreshToken: string;
+  requiresMfa: boolean;
 };
 
 export default function LoginScreen() {
   const { setIsAuthenticated } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const isDev = process.env.NODE_ENV === 'development';
   const {
     control,
+    reset,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValue>({
     resolver: zodResolver(passwordLoginSchema),
     defaultValues: {
-      email: process.env.EMAIL || '',
-      password: process.env.PASSWORD || '',
+      email: isDev ? process.env.EMAIL : '',
+      password: isDev ? process.env.PASSWORD : '',
     },
   });
 
@@ -48,26 +50,25 @@ export default function LoginScreen() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_PASSWORD_LOGIN, data),
-    onSuccess: async (data: any) => {
+    onSuccess: async (data) => {
       if (data.success) {
-        const loginData = data?.data as any;
-
+        const loginData = data?.data;
         // NEW: Check if MFA is required before extracting tokens
         if (loginData?.requiresMfa) {
           toast.info('Two-Factor Authentication', {
-            description: loginData.message || 'OTP code sent to email.',
+            description: data.message || 'OTP code sent to email.',
           });
           router.push({ pathname: '/auth/mfa', params: { email: control._formValues.email } });
           return;
         }
 
         if (loginData?.refreshToken && loginData?.accessToken) {
-          await tokenManager.setBothTokens(loginData?.accessToken, loginData?.refreshToken);
+          await tokenManager.setBothTokens(loginData.accessToken, loginData.refreshToken);
 
           // Generate Device KeyPair and Register Device
           try {
             const keyPair = await generateDeviceKeyPair();
-            await SecureStore.setItemAsync('SV_DEVICE_PRIVATE_KEY', keyPair.privateKey);
+            await DeviceStoreManager.setDevicePrivateKey(keyPair.privateKey);
 
             // Wait for tokens to be flushed to avoid unauth error
             const dName =
@@ -82,8 +83,8 @@ export default function LoginScreen() {
 
             if (res.data?.id) {
               logger.log('[Login] Registration successful. Device UUID:', res.data.id);
-              await SecureStore.setItemAsync('SV_DEVICE_ID', res.data.id);
-              await SecureStore.setItemAsync('SV_DEVICE_ID_RESERVE', devId); // Store hardware ID as reserve
+              await DeviceStoreManager.setDeviceId(res.data.id);
+              await DeviceStoreManager.setDeviceIdReserve(devId);
             }
           } catch (err) {
             logger.warn('Could not register device automatically upon login:', err);

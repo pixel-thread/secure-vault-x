@@ -1,13 +1,8 @@
 import { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
 import { MiddlewareFactory } from "./stackMiddleware";
 import { handleApiErrors } from "../errors/handleApiErrors";
 import { UnauthorizedError } from "../errors/unAuthError";
-
-const JWT_SECRET_STRING = process.env.JWT_SECRET;
-const JWT_SECRET = JWT_SECRET_STRING
-  ? new TextEncoder().encode(JWT_SECRET_STRING)
-  : new Uint8Array();
+import { JWTService } from "@/services/jwt.services";
 
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/register/generate-options",
@@ -21,47 +16,57 @@ const PUBLIC_API_ROUTES = new Set([
 ]);
 
 export const withAuth: MiddlewareFactory = (next) => {
-  return async (request: NextRequest, _next) => {
+  return async (request: NextRequest, event) => {
     try {
       const { pathname } = request.nextUrl;
 
-      if (!pathname.startsWith("/api/") || PUBLIC_API_ROUTES.has(pathname)) {
-        return await next(request, _next);
+      // Skip non API routes
+      if (!pathname.startsWith("/api/")) {
+        return next(request, event);
       }
 
-      if (!JWT_SECRET_STRING) {
-        throw new UnauthorizedError("Unauthorized");
+      // Skip public routes
+      if (PUBLIC_API_ROUTES.has(pathname)) {
+        return next(request, event);
       }
 
+      // Get Authorization header
       const authHeader =
         request.headers.get("authorization") ||
         request.headers.get("Authorization");
 
-      const token = authHeader?.startsWith("Bearer ")
-        ? authHeader.split(" ")[1]
+      if (!authHeader) {
+        throw new UnauthorizedError("Authorization header missing");
+      }
+
+      // Extract token
+      const token = authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7)
         : null;
 
       if (!token) {
-        throw new UnauthorizedError("Unauthorized");
+        throw new UnauthorizedError("Invalid authorization format");
       }
 
-      const { payload } = await jwtVerify(token, JWT_SECRET, {
-        issuer: "securevaultx-api",
-        audience: "securevaultx-client",
-      });
+      // Verify JWT
+      const payload = await JWTService.verifyAccessToken(token);
 
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set("x-user-id", payload.userId as string);
-      requestHeaders.set("x-session-id", payload.sessionId as string);
+      const sessionId: string = payload.sessionId as string;
+      const userId: string = payload.userId as string;
+      // Inject user info into request headers
+      const headers = new Headers(request.headers);
+      headers.set("x-user-id", userId);
+      headers.set("x-session-id", sessionId);
 
+      // Continue request chain
       const modifiedRequest = new NextRequest(request.url, {
-        headers: requestHeaders,
         method: request.method,
+        headers,
         body: request.body,
         duplex: "half",
       });
 
-      return await next(modifiedRequest, _next);
+      return next(modifiedRequest, event);
     } catch (error) {
       return handleApiErrors(error);
     }

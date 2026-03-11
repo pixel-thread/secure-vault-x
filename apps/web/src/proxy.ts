@@ -4,9 +4,9 @@ import { withRateLimiting } from "./utils/middleware/withRateLimiting";
 import { withAuth } from "./utils/middleware/withAuth";
 
 export default stackMiddlewares([
-  withSecurityHeaders,
   withRateLimiting,
   withAuth,
+  withSecurityHeaders,
 ]);
 
 export const config = {

@@ -11,5 +11,5 @@ export function stackMiddlewares(
     const next = stackMiddlewares(functions, index + 1);
     return current(next);
   }
-  return () => NextResponse.next();
+  return () => NextResponse.next({ request: { headers: request.headers } });
 }

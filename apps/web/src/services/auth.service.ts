@@ -18,7 +18,9 @@ import {
 const RP_ID = process.env.RP_ID || "localhost";
 const RP_NAME = process.env.RP_NAME || "Secure-Vault X";
 const EXPECTED_ORIGIN = process.env.EXPECTED_ORIGIN || "http://localhost:3000";
+
 const JWT_SECRET_STRING = process.env.JWT_SECRET;
+
 if (!JWT_SECRET_STRING) {
   throw new Error("JWT_SECRET must be set in all environments");
 }
@@ -242,7 +244,8 @@ export class AuthService {
     }
 
     // Direct Login without MFA (fallback)
-    return await this.generateTokens(user.id, user.email);
+    const tokens = await this.generateTokens(user.id, user.email);
+    return { ...tokens, requiresMfa: false };
   }
 
   static async verifyOtp(email: string, code: string) {
@@ -376,7 +379,7 @@ export class AuthService {
       .setIssuer("securevault-api")
       .setAudience("securevault-client")
       .setIssuedAt()
-      .setExpirationTime("15m")
+      .setExpirationTime("5m")
       .sign(JWT_SECRET);
 
     return {

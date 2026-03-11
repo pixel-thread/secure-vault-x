@@ -43,10 +43,6 @@ const isJwtError = (error: unknown): boolean => {
 };
 
 export const handleApiErrors = (error: unknown) => {
-  if (process.env.NODE_ENV === "development") {
-    console.error(JSON.stringify(error, null, 2));
-  }
-
   if (isJwtError(error)) {
     return ErrorResponse({
       message: "Unauthorized",
