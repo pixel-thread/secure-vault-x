@@ -309,6 +309,68 @@ export class AuthService {
   }
 
   // ==========================================
+  // 3.5. PASSWORD CHANGE LOGIC
+  // ==========================================
+  static async requestPasswordChangeOtp(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundError("User not found");
+
+    const code = crypto.randomInt(100000, 999999).toString();
+    await prisma.otpVerification.create({
+      data: {
+        userId: user.id,
+        code,
+        type: "CHANGE_PASSWORD",
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[DEV OTP] Change Password OTP: ${code}`);
+    }
+    return { requiresMfa: true, message: "OTP sent to email" };
+  }
+
+  static async changePassword(userId: string, currentPasswordRaw: string, newPasswordRaw: string, otp?: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundError("User not found");
+
+    if (user.passwordHash) {
+      if (!currentPasswordRaw) throw new BadRequestError("Current password is required");
+      const validPassword = await bcrypt.compare(currentPasswordRaw, user.passwordHash);
+      if (!validPassword) throw new UnauthorizedError("Invalid current password");
+    }
+
+    if (!otp) throw new BadRequestError("OTP is required");
+    const otpRecord = await prisma.otpVerification.findFirst({
+      where: { userId: user.id, type: "CHANGE_PASSWORD", isRevoked: false },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!otpRecord) throw new BadRequestError("No pending OTP found");
+    if (otpRecord.expiresAt < new Date()) throw new BadRequestError("OTP Expired");
+    if (otpRecord.code !== otp) throw new BadRequestError("Invalid OTP");
+
+    await prisma.otpVerification.updateMany({
+      where: { userId: user.id, type: "CHANGE_PASSWORD", isRevoked: false },
+      data: { isRevoked: true, revokedAt: new Date() },
+    });
+
+    const newPasswordHash = await bcrypt.hash(newPasswordRaw, 12);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    // Invalidate all other refresh tokens to secure the account
+    await prisma.refreshToken.updateMany({
+      where: { userId: user.id },
+      data: { revoked: true },
+    });
+
+    return { success: true, message: "Password updated successfully." };
+  }
+
+  // ==========================================
   // 4. REFRESH TOKEN ROTATION
   // ==========================================
   static async refreshTokens(refreshToken: string) {
