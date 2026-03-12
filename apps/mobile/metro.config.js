@@ -8,6 +8,8 @@ const { withNativeWind } = require('nativewind/metro');
 const config = getDefaultConfig(__dirname);
 
 // Polyfill node:crypto with react-native-quick-crypto for React Native
+
+config.resolver.sourceExts.push('sql');
 config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
   crypto: require.resolve('react-native-quick-crypto'),

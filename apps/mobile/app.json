@@ -5,6 +5,7 @@
     "version": "0.0.1",
     "scheme": ["securevaultx"],
     "platforms": ["ios", "android"],
+    "newArchEnabled": true,
     "web": {
       "bundler": "metro",
       "output": "static",

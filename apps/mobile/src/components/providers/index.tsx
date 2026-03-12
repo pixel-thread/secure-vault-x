@@ -7,6 +7,7 @@ import { UpdateProvider } from './update';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { Toaster } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
+import { DBProvider } from './db';
 
 type Props = {
   children: React.ReactNode;
@@ -19,11 +20,13 @@ export const Wrapper = ({ children }: Props) => {
       <ErrorBoundary>
         <UpdateProvider>
           <CryptoProvider>
-            <Suspense>
-              <AuthProvider>
-                <Redirect>{children}</Redirect>
-              </AuthProvider>
-            </Suspense>
+            <DBProvider>
+              <Suspense>
+                <AuthProvider>
+                  <Redirect>{children}</Redirect>
+                </AuthProvider>
+              </Suspense>
+            </DBProvider>
           </CryptoProvider>
         </UpdateProvider>
         <Toaster duration={1000} theme={colorScheme as 'light' | 'dark'} />

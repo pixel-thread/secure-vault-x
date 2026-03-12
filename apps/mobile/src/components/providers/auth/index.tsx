@@ -102,11 +102,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   }, [isPending, isLoading, setIsLoading]);
 
-  useEffect(() => {
-    if (isExpoGo()) {
-      DeviceStoreManager.setMek('123');
-    }
-  }, []);
 
   // Biometric gate — show lock screen if biometric is required but not passed
   if (biometricRequired && !biometricPassed) {

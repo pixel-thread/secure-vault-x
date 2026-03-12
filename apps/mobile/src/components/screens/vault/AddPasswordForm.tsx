@@ -7,11 +7,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { generatePassword } from '@securevault/utils';
 import { useColorScheme } from 'nativewind';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { http } from '@securevault/utils-native';
-import { VAULT_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { DeviceStoreManager } from '../../../store/device';
 import { encryptData } from '@securevault/crypto';
+import * as Crypto from 'expo-crypto';
+import { VaultService } from '@/src/services/VaultService';
+import { useVaultService } from '@/src/hooks/useVaultService';
+import { useSyncService } from '@/src/hooks/useSyncService';
 
 const passwordSchema = z.object({
   serviceName: z.string().min(1, 'Service name is required'),
@@ -23,7 +25,8 @@ const passwordSchema = z.object({
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
-type DTO = {
+type SaveDTO = {
+  id: string;
   encryptedData: string;
   iv: string;
 };
@@ -37,6 +40,8 @@ export function AddPasswordForm({ onSuccess }: Props) {
   const isDarkMode = colorScheme === 'dark';
   const [showPassword, setShowPassword] = useState(false);
   const queryClient = useQueryClient();
+  const vaultService = useVaultService();
+  const syncService = useSyncService();
 
   const {
     control,
@@ -55,22 +60,24 @@ export function AddPasswordForm({ onSuccess }: Props) {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (data: DTO) => http.post(VAULT_ENDPOINT.POST_ADD_SECRET, data),
-    onSuccess: (data) => {
-      if (data.success) {
-        toast.success('Secret added successfully', {
-          description: data.message,
-        });
-        queryClient.invalidateQueries({ queryKey: ['vault'] });
-        onSuccess?.();
-        return data;
-      }
-
-      toast.error('Failed to add secret', {
-        description: data.message || 'Please try again.',
-      });
+    mutationFn: async (data: SaveDTO) => {
+      if (!vaultService) throw new Error('Vault Service not initialized');
+      return await vaultService.saveVaultItem(data);
+    },
+    onSuccess: () => {
+      toast.success('Secret added locally');
+      queryClient.invalidateQueries({ queryKey: ['vault'] });
       onSuccess?.();
-      return data;
+
+      // Trigger background sync
+      if (syncService) {
+        syncService.sync();
+      }
+    },
+    onError: (error: any) => {
+      toast.error('Failed to save secret locally', {
+        description: error.message || 'Please try again.',
+      });
     },
   });
 
@@ -81,7 +88,11 @@ export function AddPasswordForm({ onSuccess }: Props) {
       return;
     }
     const { encryptedData, iv } = await encryptData(data, mek);
-    mutate({ encryptedData: encryptedData, iv });
+
+    // Generate a local UUID for the item
+    const id = Crypto.randomUUID();
+
+    mutate({ id, encryptedData, iv });
   };
 
   return (
@@ -96,9 +107,8 @@ export function AddPasswordForm({ onSuccess }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <>
               <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.serviceName ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}
+                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.serviceName ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                  }`}
                 placeholder="example name"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 value={value}
@@ -123,9 +133,8 @@ export function AddPasswordForm({ onSuccess }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <>
               <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.url ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}
+                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.url ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                  }`}
                 placeholder="https://example.com"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 value={value}
@@ -151,9 +160,8 @@ export function AddPasswordForm({ onSuccess }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <>
               <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.username ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}
+                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.username ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                  }`}
                 placeholder="john@example.com"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 value={value}
@@ -178,9 +186,8 @@ export function AddPasswordForm({ onSuccess }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <>
               <View
-                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
-                  errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}>
+                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                  }`}>
                 <TextInput
                   className="flex-1 px-5 py-4 text-zinc-900 focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
                   placeholder="Password"

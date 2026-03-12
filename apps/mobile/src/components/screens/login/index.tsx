@@ -38,8 +38,8 @@ export default function LoginScreen() {
   } = useForm<FormValue>({
     resolver: zodResolver(passwordLoginSchema),
     defaultValues: {
-      email: isDev ? process.env.EMAIL : '',
-      password: isDev ? process.env.PASSWORD : '',
+      email: isDev ? 'one@gmail.com' : '',
+      password: isDev ? '123Clashofclan@' : '',
     },
   });
 

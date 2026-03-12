@@ -95,8 +95,8 @@ export async function decryptData<T>(encryptedBase64: string, ivBase64: string, 
   ['decrypt']
  );
 
- const iv = Buffer.from(ivBase64, 'base64');
- const encryptedBuffer = Buffer.from(encryptedBase64, 'base64');
+ const iv = new Uint8Array(Buffer.from(ivBase64, 'base64'));
+ const encryptedBuffer = new Uint8Array(Buffer.from(encryptedBase64, 'base64'));
 
  const decryptedBuffer = await cryptoApi.subtle.decrypt(
   { name: 'AES-GCM', iv },

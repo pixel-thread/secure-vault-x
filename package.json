@@ -5,8 +5,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "generate": "turbo run generate",
-    "postinstall": "turbo run db:generate"
+    "generate": "turbo run generate"
   },
   "devDependencies": {
     "turbo": "latest"

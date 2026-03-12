@@ -12,7 +12,6 @@
   "dependencies": {
     "@securevault/constants": "workspace:*",
     "@securevault/crypto": "workspace:^",
-    "@securevault/database": "workspace:^",
     "@securevault/validators": "workspace:^",
     "@simplewebauthn/server": "^13.2.3",
     "@upstash/ratelimit": "^2.0.8",
