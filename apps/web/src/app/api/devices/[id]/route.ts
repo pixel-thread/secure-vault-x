@@ -27,10 +27,10 @@ export const POST = withValidation(
 
     const result = await DeviceService.removeDevice(
       userId,
-      id,
-      actingDeviceId,
-      signature,
-      timestamp,
+      id, // device id which is to be removed
+      actingDeviceId, // the device that is making the request
+      signature, // signature of the request from the acting device
+      timestamp, // timestamp of the request
     );
 
     return SuccessResponse({ data: result });
