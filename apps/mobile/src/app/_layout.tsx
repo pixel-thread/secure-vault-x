@@ -65,7 +65,6 @@ export default function RootLayout() {
             />
             <Stack.Screen name="+not-found" />
           </Stack>
-          <Toaster theme={colorScheme as 'light' | 'dark'} />
         </Wrapper>
       </SafeAreaProvider>
     </GestureHandlerRootView>
