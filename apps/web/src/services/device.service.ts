@@ -1,5 +1,5 @@
 import { prisma } from "@libs/db/prisma";
-import { NotFoundError } from "@/utils/errors/common";
+import { BadRequestError, NotFoundError } from "@/utils/errors/common";
 import { verifyDeviceSignature } from "@securevault/crypto";
 
 export class DeviceService {
@@ -155,12 +155,18 @@ export class DeviceService {
       );
 
       if (!isValid) {
-        throw new Error("Invalid device signature. Action denied.");
+        throw new BadRequestError("Invalid device signature. Action denied.");
       }
     }
 
     const device = await prisma.device.findFirst({
       where: { id: deviceId, userId },
+    });
+
+    // revoked user token link to this device when device is removed
+    await prisma.refreshToken.updateMany({
+      where: { deviceId, revoked: false },
+      data: { revoked: true },
     });
 
     if (!device) throw new NotFoundError("Device not found");
