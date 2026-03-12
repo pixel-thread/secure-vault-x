@@ -22,4 +22,20 @@ export class LoggerService {
       console.error("[Logger] Failed to create audit log:", error);
     }
   }
+  static async clear() {
+    try {
+      await prisma.log.deleteMany();
+    } catch (error) {
+      // Don't let audit logging failure block the main operation
+      console.error("[Logger] Failed to clear audit log:", error);
+    }
+  }
+  static async get() {
+    try {
+      return await prisma.log.findMany();
+    } catch (error) {
+      // Don't let audit logging failure block the main operation
+      console.error("[Logger] Failed to get audit log:", error);
+    }
+  }
 }
