@@ -103,10 +103,6 @@ axiosInstance.interceptors.response.use(
     try {
       const refreshToken = await tokenManager.getRefreshToken();
 
-      if (process.env.NODE_ENV === "development") {
-        console.log("[HTTP] REFRESH =>", refreshToken);
-      }
-
       // Use standard axios instance for the refresh call
       const url = `${process.env.EXPO_PUBLIC_API_URL}${AUTH_ENDPOINT.POST_REFRESH}`;
       const res = await axios.post(url, { refreshToken });
