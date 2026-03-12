@@ -15,7 +15,8 @@ const paramsSchema = z.object({
   id: z.string(),
 });
 
-export const DELETE = withValidation(
+// POST for deleting a device as it need a body
+export const POST = withValidation(
   { body: deleteDeviceSchema, params: paramsSchema },
   async ({ body, params }, req) => {
     const { id } = params;
