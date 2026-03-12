@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import GlassButton from "@/components/ui/GlassButton";
+import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
+  const router = useRouter();
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -46,6 +48,12 @@ export default function LandingPage() {
               className="hover:text-emerald-400 transition-colors"
             >
               Features
+            </button>
+            <button
+              onClick={() => router.push("/docs")}
+              className="hover:text-emerald-400 transition-colors"
+            >
+              Documentation
             </button>
             <button
               onClick={() => scrollToSection("contact")}
