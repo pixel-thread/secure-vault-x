@@ -12,118 +12,40 @@ import { MekSetup } from './MekSetup';
 import { VaultSecretT } from '@/src/types/vault';
 import { useVaultService } from '@/src/hooks/useVaultService';
 import { useSyncService } from '@/src/hooks/useSyncService';
-import { logger } from '@securevault/utils-native';
 
-/**
- * VaultScreen Component
- * The main screen for displaying and managing encrypted vault items.
- * Handles data fetching, synchronization, and item presentation.
- */
 export default function VaultScreen() {
   // --- UI State Management ---
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedSecret, setSelectedSecret] = useState<VaultSecretT | null>(null);
 
-  // --- External Stores & Services ---
-  const { isAuthenticated, hasMek } = useAuthStore();
   const vaultService = useVaultService();
   const syncService = useSyncService();
 
-  // --- Data Fetching (Vault Items) ---
   const {
     data: vaults = [],
     isLoading,
     isFetching,
-    refetch: triggerRefresh,
+    refetch: triggerSync,
   } = useQuery<VaultSecretT[]>({
     queryKey: ['vault'],
     queryFn: async (): Promise<VaultSecretT[]> => {
       if (!vaultService) return [];
-      try {
-        const items = await vaultService.getVaultItems();
-        logger.log('[VaultScreen] Fetched local vault items', { count: items.length });
-        return items;
-      } catch (err) {
-        logger.error('[VaultScreen] Failed to fetch vault items', { error: err });
-        return [];
-      }
+      return await vaultService.getVaultItems();
     },
     enabled: isAuthenticated && hasMek && !!vaultService,
-    refetchOnMount: true,
-    networkMode: 'offlineFirst',
   });
 
   // Consolidate loading state for UI feedback
   const isSyncingOrLoading = isLoading || isFetching;
 
-  // --- User Actions ---
-
-  /**
-   * Triggers a manual synchronization with the server
-   */
-  const onManualSync = useCallback(async () => {
-    if (!syncService) {
-      logger.warn('[VaultScreen] Sync attempted but SyncService is missing', {
-        manualSync: true,
-      });
-      return;
-    }
-
-    if (syncService.isSyncing) {
-      logger.log('[VaultScreen] Manual sync skipped: already in progress', {
-        manualSync: true,
-        isSyncing: syncService.isSyncing,
-      });
-      return;
-    }
-
-    logger.info('[VaultScreen] Manual sync initiated');
-    try {
+  const onManualSync = async () => {
+    if (syncService) {
       await syncService.sync();
-      triggerRefresh();
-      logger.info('[VaultScreen] Manual sync completed and data refreshed', {
-        manualSync: true,
-        isSyncing: syncService.isSyncing,
-      });
-    } catch (error) {
-      logger.error('[VaultScreen] Manual sync failed', {
-        manualSync: true,
-        isSyncing: syncService.isSyncing,
-        error,
-      });
+      triggerSync(); // Refresh local list after sync
     }
-  }, [syncService, triggerRefresh]);
+  };
 
-  /**
-   * Handles opening the detail dialog for a specific secret
-   */
-  const onSelectItem = useCallback((item: VaultSecretT) => {
-    logger.log('[VaultScreen] Secret selected', { id: item.id, type: item.type });
-    setSelectedSecret(item);
-    setDetailModalVisible(true);
-  }, []);
-
-  /**
-   * Handles closing the detail dialog
-   */
-  const onCloseDetail = useCallback((isOpen: boolean) => {
-    if (!isOpen) {
-      logger.log('[VaultScreen] Detail dialog closed', {});
-      setSelectedSecret(null);
-    }
-    setDetailModalVisible(isOpen);
-  }, []);
-
-  /**
-   * Handles opening the add secret dialog
-   */
-  const onOpenAdd = useCallback(() => {
-    logger.log('[VaultScreen] Opening add secret dialog');
-    setAddModalVisible(true);
-  }, []);
-
-  // --- Security Check: Ensure MEK is set up ---
   if (!hasMek) {
     return <MekSetup />;
   }
@@ -138,7 +60,7 @@ export default function VaultScreen() {
           <TouchableOpacity
             className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 shadow-md active:bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-900/80 dark:active:bg-zinc-800"
             onPress={onManualSync}>
-            {isSyncingOrLoading ? (
+            {loading ? (
               <ActivityIndicator color="#10b981" />
             ) : (
               <Ionicons name="sync" size={24} color="#10b981" />

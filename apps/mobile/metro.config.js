@@ -19,6 +19,9 @@ config.resolver.nodeModulesPaths = [
 // Existing SQL and Crypto logic
 config.resolver.sourceExts.push('sql');
 
+// Polyfill node:crypto with react-native-quick-crypto for React Native
+
+config.resolver.sourceExts.push('sql');
 config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
   crypto: require.resolve('react-native-quick-crypto'),
