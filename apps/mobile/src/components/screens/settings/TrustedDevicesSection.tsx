@@ -86,13 +86,13 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
           `Missing required headers for removal: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`
         );
       }
+      const payload = {
+        actingDeviceId: actingId,
+        signature: signature,
+        timestamp: timestamp,
+      };
 
-      return http.delete(DEVICE_ENDPOINT.DELETE_DEVICE.replace(':id', deviceId), {
-        headers: {
-          'X-Device-Id': actingId,
-          ...(signature ? { 'X-Device-Signature': signature, 'X-Timestamp': timestamp } : {}),
-        },
-      });
+      return http.post(DEVICE_ENDPOINT.POST_DELETE_DEVICE.replace(':id', deviceId), payload);
     },
     onSuccess: () => {
       toast.success('Device removed');
@@ -139,16 +139,13 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
           `Missing required headers for trust update: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`
         );
       }
-      return await http.put(
-        DEVICE_ENDPOINT.PUT_TRUST_DEVICE.replace(':id', deviceId),
-        { isTrusted },
-        {
-          headers: {
-            'X-Device-Id': actingId,
-            ...(signature ? { 'X-Device-Signature': signature, 'X-Timestamp': timestamp } : {}),
-          },
-        }
-      );
+      const payload = {
+        actingDeviceId: actingId,
+        signature: signature,
+        timestamp: timestamp,
+        isTrusted: isTrusted,
+      };
+      return await http.put(DEVICE_ENDPOINT.PUT_TRUST_DEVICE.replace(':id', deviceId), payload);
     },
     onSuccess: (data) => {
       if (data.success) {

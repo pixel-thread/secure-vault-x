@@ -55,16 +55,22 @@ export default function SecurityControlsSection() {
     mutationFn: (enabled: boolean) =>
       http.post<{ mfaEnabled: boolean }>(AUTH_ENDPOINT.POST_MFA_TOGGLE, { enabled }),
     onSuccess: (data) => {
+      // Toggle successful
       if (data.success && data.data) {
         setMfaEnabled(data.data.mfaEnabled);
         toast.success(
-          data.data.mfaEnabled
-            ? 'Two-factor authentication enabled'
-            : 'Two-factor authentication disabled'
+          data.data.mfaEnabled ? 'Two-factor authentication enabled' : 'Two-factor authentication disabled'
         );
+      } else {
+        // Toggle failed but returned 200 OK (e.g. wrapper error)
+        toast.error(data.message || 'Failed to toggle MFA');
       }
     },
-    onError: () => toast.error('Failed to toggle MFA'),
+    onError: (error: any) => {
+      // Toggle failed with 4xx/5xx status code
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to toggle MFA';
+      toast.error(errorMessage);
+    },
   });
 
   const handleMfaToggle = useCallback(

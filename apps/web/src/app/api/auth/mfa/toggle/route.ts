@@ -2,18 +2,33 @@ import { NextRequest } from "next/server";
 import { toggleMfaSchema } from "@securevault/validators";
 import { AuthService } from "@/services/auth.service";
 import { AuditLogger } from "@/services/audit.service";
-import { SuccessResponse } from "@/utils/next-response";
+import { ErrorResponse, SuccessResponse } from "@/utils/next-response";
 import { withValidation } from "@/utils/middleware/withValidiation";
 import { UnauthorizedError } from "@/utils/errors/unAuthError";
+import { prisma } from "@libs/db/prisma";
 
 export const POST = withValidation(
   { body: toggleMfaSchema },
   async ({ body }, req) => {
     const userId = req.headers.get("x-user-id");
-    if (!userId) throw new UnauthorizedError("Unauthorized");
+    const sessionId = req.headers.get("x-session-id");
+
+    if (!sessionId || !userId) throw new UnauthorizedError("Unauthorized");
+
+    const session = await prisma.refreshToken.findUnique({
+      where: { id: sessionId },
+      include: { device: true },
+    });
+
+    if (!session?.device?.isTrusted) {
+      return ErrorResponse({
+        status: 403,
+        message: "Only trusted devices can toggle MFA",
+        data: [],
+      });
+    }
 
     const { enabled } = body;
-    // TODO: Check only trusted device to enable/disable MFA
     const result = await AuthService.toggleMfa(userId, enabled);
 
     await AuditLogger.log({

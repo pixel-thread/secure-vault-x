@@ -27,25 +27,30 @@ const sendLog = async (payload: LogPayload) => {
     console.error("[NativeLogger] Failed to send log to backend", error);
   }
 };
+const logLocally = (message: string, content?: any) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log(message, content);
+  }
+};
 
 export const logger = {
   info: (message: string, content?: any) => {
-    console.info(message, content);
+    logLocally(message, content);
     sendLog({ type: "INFO", message, content });
   },
 
   warn: (message: string, content?: any) => {
-    console.warn(message, content);
+    logLocally(message, content);
     sendLog({ type: "WARN", message, content });
   },
 
   error: (message: string, content?: any) => {
-    console.error(message, content);
+    logLocally(message, content);
     sendLog({ type: "ERROR", message, content });
   },
 
   log: (message: string, content?: any) => {
-    console.log(message, content);
+    logLocally(message, content);
     sendLog({ type: "LOG", message, content });
   },
 };

@@ -18,7 +18,6 @@ echo -e "${GREEN}✓ Removed all node_modules${NC}\n"
 
 # Step 2: Remove build artifacts
 echo -e "${YELLOW}2. Removing build artifacts...${NC}"
-rm -rf apps/api/dist
 rm -rf apps/web/.next
 rm -rf packages/*/dist
 echo -e "${GREEN}✓ Removed build artifacts${NC}\n"
@@ -39,6 +38,7 @@ echo -e "${GREEN}✓ Removed lock files${NC}\n"
 # Step 5: Install dependencies
 echo -e "${YELLOW}5. Installing dependencies...${NC}"
 pnpm install
+pnpm run generate
 echo -e "${GREEN}✓ Installed dependencies${NC}\n"
 
 # Step 6: Generate Prisma client
