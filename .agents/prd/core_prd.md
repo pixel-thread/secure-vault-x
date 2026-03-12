@@ -28,7 +28,7 @@ server-side. - Even a full database breach exposes no user secrets.
 
 ### Primary Goals
 
-- Deliver passwordless authentication via WebAuthn.
+- Deliver passwordless authentication via WebAuthn and also login with email and password.
 - Implement end-to-end encrypted vault storage.
 - Support secure multi-device encrypted synchronization.
 - Provide offline-first mobile experience.
@@ -58,6 +58,13 @@ server-side. - Even a full database breach exposes no user secrets.
 - WebAuthn-based login
 - Public/private key cryptography
 - Phishing-resistant authentication
+
+### 5.1 Password Authentication
+
+- Email/Password login
+- encrypted password storage
+- Strong password requirements
+- Two-factor authentication
 
 ### 5.2 End-to-End Encrypted Vault
 
@@ -101,7 +108,7 @@ server-side. - Even a full database breach exposes no user secrets.
 
 ### Authentication
 
-- User can register via WebAuthn.
+- User can register via WebAuthn or email and password.
 - User can login via challenge-response.
 - Tokens issued securely.
 - Token rotation enforced.
