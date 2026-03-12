@@ -1,4 +1,5 @@
-import { View, Text, Switch, Alert } from 'react-native';
+import { View, Text, Switch, Alert, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect, useCallback } from 'react';
@@ -59,7 +60,9 @@ export default function SecurityControlsSection() {
       if (data.success && data.data) {
         setMfaEnabled(data.data.mfaEnabled);
         toast.success(
-          data.data.mfaEnabled ? 'Two-factor authentication enabled' : 'Two-factor authentication disabled'
+          data.data.mfaEnabled
+            ? 'Two-factor authentication enabled'
+            : 'Two-factor authentication disabled'
         );
       } else {
         // Toggle failed but returned 200 OK (e.g. wrapper error)
@@ -68,7 +71,8 @@ export default function SecurityControlsSection() {
     },
     onError: (error: any) => {
       // Toggle failed with 4xx/5xx status code
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to toggle MFA';
+      const errorMessage =
+        error?.response?.data?.message || error?.message || 'Failed to toggle MFA';
       toast.error(errorMessage);
     },
   });
@@ -134,9 +138,7 @@ export default function SecurityControlsSection() {
             />
           </View>
           <View className="flex-1">
-            <Text className="text-lg font-bold text-zinc-900 dark:text-white">
-              Two-Factor Auth
-            </Text>
+            <Text className="text-lg font-bold text-zinc-900 dark:text-white">Two-Factor Auth</Text>
             <Text className="text-sm text-zinc-500 dark:text-zinc-400">
               {mfaEnabled ? 'Enabled — OTP on login' : 'Disabled'}
             </Text>
@@ -148,6 +150,23 @@ export default function SecurityControlsSection() {
             trackColor={{ false: '#3f3f46', true: '#059669' }}
             thumbColor="#fff"
           />
+        </View>
+
+        <View className="flex-row items-center border-t border-zinc-100 p-5 dark:border-zinc-800/50">
+          <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
+            <Ionicons name="key-outline" size={22} color={isDarkMode ? '#10b981' : '#059669'} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-lg font-bold text-zinc-900 dark:text-white">Change Password</Text>
+            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+              Update your account password
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => router.push('/settings/change-password')}
+            className="rounded-full bg-zinc-200 p-2 dark:bg-zinc-800">
+            <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#a1a1aa' : '#52525b'} />
+          </TouchableOpacity>
         </View>
       </View>
     </>
