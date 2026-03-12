@@ -13,6 +13,7 @@ export const POST = withValidation(
     if (!userId) throw new UnauthorizedError("Unauthorized");
 
     const { enabled } = body;
+    // TODO: Check only trusted device to enable/disable MFA
     const result = await AuthService.toggleMfa(userId, enabled);
 
     await AuditLogger.log({
