@@ -24,7 +24,7 @@ const sendLog = async (payload: LogPayload) => {
     });
   } catch (error) {
     // Fail silently for logger to avoid infinite loops or app crashes
-    console.error("[NativeLogger] Failed to send log to backend", error);
+    console.log("[NativeLogger] Failed to send log to backend", error);
   }
 };
 const logLocally = (message: string, content?: any) => {
