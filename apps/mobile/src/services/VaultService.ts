@@ -31,14 +31,14 @@ export class VaultService {
   constructor(
     private readonly db: DrizzleDB,
     private readonly userId: string
-  ) { }
+  ) {}
 
   /**
    * Add or update a vault item locally.
    * Ensures data integrity via Zod and enforces user isolation.
    */
   async saveVaultItem(input: unknown) {
-    logger.info('Attempting to save vault item', { userId: this.userId });
+    logger.info('Attempting to save vault item', { userId: !!this.userId });
 
     try {
       // Validate input schema
@@ -69,6 +69,9 @@ export class VaultService {
       logger.info('Vault item saved successfully', { id: data.id });
       return result;
     } catch (error) {
+      // TODO: trigger this error
+      // validate schema
+      // Check how ui will handle this error it should handle the error not break the ui
       if (error instanceof z.ZodError) {
         logger.error('Validation failed for saveVaultItem', { errors: error.errors });
         throw new Error('Invalid vault data');
@@ -86,7 +89,7 @@ export class VaultService {
    * Enforces user isolation to prevent unauthorized deletions (IDOR).
    */
   async deleteVaultItem(id: string) {
-    logger.info('Requesting soft delete for vault item', { id, userId: this.userId });
+    logger.info('Requesting soft delete for vault item', { vaultId: id });
 
     try {
       const result = await this.db
@@ -102,11 +105,11 @@ export class VaultService {
           )
         );
 
-      logger.info('Vault item soft-deleted successfully', { id });
+      logger.info('Vault item soft-deleted successfully', { vaultId: id });
       return result;
     } catch (error) {
       logger.error('Failed to delete vault item', {
-        id,
+        vaultId: id,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -117,7 +120,7 @@ export class VaultService {
    * Get all non-deleted vault items for the current user and decrypt them.
    */
   async getVaultItems(): Promise<VaultSecretT[]> {
-    logger.log('Fetching local vault items', { userId: this.userId });
+    logger.log('Fetching local vault items');
 
     try {
       const entries = await this.db
@@ -132,7 +135,9 @@ export class VaultService {
         .orderBy(desc(schema.vault.updatedAt));
 
       if (entries.length === 0) {
-        logger.info('No vault items found for user', { userId: this.userId });
+        logger.info('No vault items found for user', {
+          vaults: entries,
+        });
         return [];
       }
 
@@ -147,7 +152,7 @@ export class VaultService {
 
       for (const entry of entries) {
         if (!entry.encryptedData || !entry.iv) {
-          logger.warn('Skipping corrupted vault entry', { id: entry.id });
+          logger.warn('Skipping corrupted vault entry', { vaultId: entry.id });
           continue;
         }
 
@@ -162,11 +167,13 @@ export class VaultService {
         }
       }
 
-      logger.info(`Successfully processed ${decryptedItems.length}/${entries.length} items`);
+      logger.info(`Successfully processed ${decryptedItems.length}/${entries.length} items`, {
+        dataLength: decryptedItems.length,
+      });
       return decryptedItems;
     } catch (error) {
       logger.error('Failed to retrieve vault items', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       return [];
     }
