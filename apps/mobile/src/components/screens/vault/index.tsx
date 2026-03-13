@@ -34,6 +34,8 @@ export default function VaultScreen() {
       return await vaultService.getVaultItems();
     },
     enabled: isAuthenticated && hasMek && !!vaultService,
+    refetchOnMount: true,
+    networkMode: 'offlineFirst',
   });
 
   // Consolidate loading state for UI feedback
