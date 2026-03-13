@@ -9,6 +9,9 @@ interface LogPayload {
 
 const sendLog = async (payload: LogPayload) => {
   try {
+    // dont send logs to the backend
+    // if it's a log
+    if (payload.type === "LOG") return;
     // In a React Native / Expo environment, we use the public API URL
     const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 

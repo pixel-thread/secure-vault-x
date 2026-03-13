@@ -11,24 +11,18 @@ const ROLE_HIERARCHY = {
 
 type Role = keyof typeof ROLE_HIERARCHY;
 
-async function requiredAuth(req: NextRequest) {
-  const userId = req.headers.get("x-user-id");
-
-  if (!userId) {
-    throw new UnauthorizedError("Unauthorized");
-  }
-
-  return { userId };
-}
-
 export async function withRole(req: NextRequest, requiredRole: Role) {
   // 1. If the requirement is NONE, we don't even need to check auth
   if (requiredRole === "NONE") {
     return null; // Or return a mock auth object
   }
-  const user = await requiredAuth(req);
+
+  const userId = req.headers.get("x-user-id");
+
+  if (!userId) throw new UnauthorizedError("Unauthorized");
+
   // 2. Otherwise, perform the authentication check
-  const auth = await AuthService.getMe(user.userId);
+  const auth = await AuthService.getMe(userId);
 
   const userRoleValue = ROLE_HIERARCHY[auth.role as Role] || 0;
 

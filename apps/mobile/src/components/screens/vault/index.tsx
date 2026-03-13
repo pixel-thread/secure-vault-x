@@ -4,8 +4,6 @@ import Header from '../../common/Header';
 import { useState } from 'react';
 import { useAuthStore } from '../../../store/auth';
 import { useQuery } from '@tanstack/react-query';
-import { http, logger } from '@securevault/utils-native';
-import { VAULT_ENDPOINT } from '@securevault/constants';
 import { VaultItem } from './VaultItem';
 import { VaultItemDialog } from './VaultItemDialog';
 import { AddSecretDialog } from './AddSecretDialog';
@@ -36,6 +34,8 @@ export default function VaultScreen() {
       return await vaultService.getVaultItems();
     },
     enabled: isAuthenticated && hasMek && !!vaultService,
+    refetchOnMount: true,
+    networkMode: 'offlineFirst',
   });
 
   const loading = isLoading || isFetching;

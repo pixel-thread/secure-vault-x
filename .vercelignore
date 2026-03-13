@@ -39,9 +39,9 @@ expo-env.d.ts
 *.apk
 .vercel/.env.preview.local
 .vercel/.env.development.local
-.vercel
 apps/web/next-env.d.ts
 apps/api/.env.local
 .env.local
 check-logs.js
 test-logger.js
+apps/web/

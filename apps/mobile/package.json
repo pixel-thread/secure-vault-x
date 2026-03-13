@@ -4,6 +4,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "build:local:android": "eas build --profile development --platform android --local",
+    "build:preview:android": "eas build --profile preview --platform android --local",
+    "build:prod:android": "eas build --profile production --platform android --local",
     "start": "expo start",
     "dev": "expo start -c",
     "prebuild": "expo prebuild",

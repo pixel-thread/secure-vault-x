@@ -52,7 +52,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
           {selectedSecret && (
             <>
               <View className="mb-6 flex-row items-center justify-between">
-                <Text className="text-2xl font-bold text-zinc-900 dark:text-white">
+                <Text className="text-2xl font-bold capitalize text-zinc-900 dark:text-white">
                   {selectedSecret.serviceName}
                 </Text>
                 <TouchableOpacity
