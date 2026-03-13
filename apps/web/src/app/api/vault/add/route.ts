@@ -13,6 +13,9 @@ export const POST = withValidation(
 
     const result = await VaultService.addSecret(userId, body);
 
-    return SuccessResponse({ data: result });
+    return SuccessResponse({
+      data: result,
+      message: "Secret added successfully",
+    });
   },
 );

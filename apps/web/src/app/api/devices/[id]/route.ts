@@ -6,13 +6,17 @@ import { z } from "zod";
 import { UnauthorizedError } from "@/utils/errors/unAuthError";
 
 const deleteDeviceSchema = z.object({
-  actingDeviceId: z.string(),
-  signature: z.string(),
-  timestamp: z.string().regex(/^\d+$/),
+  actingDeviceId: z
+    .string({ message: "Acting device id is required" })
+    .uuid("Invalid acting device id"),
+  signature: z.string({ message: "Signature is required" }),
+  timestamp: z
+    .string({ message: "Timestamp is required" })
+    .regex(/^\d+$/, "Timestamp must be a number"),
 });
 
 const paramsSchema = z.object({
-  id: z.string(),
+  id: z.string({ message: "Device id is required" }).uuid("Invalid device id"),
 });
 
 // POST for deleting a device as it need a body
@@ -33,6 +37,9 @@ export const POST = withValidation(
       timestamp, // timestamp of the request
     );
 
-    return SuccessResponse({ data: result });
+    return SuccessResponse({
+      data: result,
+      message: "Device removed successfully",
+    });
   },
 );

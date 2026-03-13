@@ -9,5 +9,8 @@ export const GET = withValidation({}, async (_data, req) => {
   if (!userId) throw new UnauthorizedError("Unauthorized");
 
   const vaults = await VaultService.getVault(userId);
-  return SuccessResponse({ data: vaults });
+  return SuccessResponse({
+    data: vaults,
+    message: "Vaults fetched successfully",
+  });
 });
