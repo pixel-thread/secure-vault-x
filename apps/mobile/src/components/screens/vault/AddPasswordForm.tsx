@@ -13,6 +13,7 @@ import { encryptData } from '@securevault/crypto';
 import * as Crypto from 'expo-crypto';
 import { useVaultService } from '@/src/hooks/useVaultService';
 import { useSyncService } from '@/src/hooks/useSyncService';
+import { logger } from '@securevault/utils-native';
 
 // --- Validation Schema ---
 const passwordSchema = z.object({
@@ -126,18 +127,25 @@ export function AddPasswordForm({ onSuccess }: Props) {
 
   // --- Persistence Logic ---
   const { mutate, isPending } = useMutation({
-    mutationFn: async (data: SaveDTO) => await vaultService?.saveVaultItem(data),
+    mutationFn: async (data: SaveDTO) => {
+      logger.info('[AddPasswordForm] Saving vault item to local service', { id: data.id });
+      return await vaultService?.saveVaultItem(data);
+    },
     onSuccess: () => {
-      toast.success('Password added Successfully');
+      logger.info('[AddPasswordForm] Successfully saved password to vault');
+      toast.success('Password added successfully');
       queryClient.invalidateQueries({ queryKey: ['vault'] });
       onSuccess?.();
 
-      // Trigger background sync
       if (syncService) {
-        syncService.sync();
+        logger.log('[AddPasswordForm] Triggering background sync');
+        syncService
+          .sync()
+          .catch((err) => logger.error('[AddPasswordForm] Background sync failed', { error: err }));
       }
     },
     onError: (error: any) => {
+      logger.error('[AddPasswordForm] Failed to save secret', { error: error.message });
       toast.error('Failed to save secret', {
         description: error.message || 'Please try again.',
       });
@@ -161,12 +169,18 @@ export function AddPasswordForm({ onSuccess }: Props) {
       toast.error('Encryption Error', { description: 'Master Encryption Key not found.' });
       return;
     }
-    const { encryptedData, iv } = await encryptData(data, mek);
 
-    // Generate a local UUID for the item
-    const id = Crypto.randomUUID();
+    try {
+      logger.log('[AddPasswordForm] Encrypting data...');
+      const { encryptedData, iv } = await encryptData(data, mek);
+      logger.log('[AddPasswordForm] Encryption successful');
 
-    mutate({ id, encryptedData, iv });
+      const id = Crypto.randomUUID();
+      mutate({ id, encryptedData, iv });
+    } catch (err) {
+      logger.error('[AddPasswordForm] Encryption failed', { error: err });
+      toast.error('Encryption Failed', { description: 'Could not secure your data.' });
+    }
   };
 
   // --- UI Handlers ---
@@ -178,158 +192,77 @@ export function AddPasswordForm({ onSuccess }: Props) {
 
   // --- Render ---
   return (
-    <>
-      <View>
-        <Text className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          Service Name
-        </Text>
-        <Controller
-          control={control}
-          name="serviceName"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <>
-              <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.serviceName ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}
-                placeholder="example name"
-                placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                autoCapitalize="none"
+    <View>
+      <FormField
+        label="Service Name"
+        name="serviceName"
+        control={control}
+        errors={errors}
+        isDarkMode={isDarkMode}
+        placeholder="e.g. Google, Netflix"
+      />
+
+      <FormField
+        label="Website URL"
+        name="url"
+        control={control}
+        errors={errors}
+        isDarkMode={isDarkMode}
+        placeholder="https://example.com"
+        keyboardType="url"
+      />
+
+      <FormField
+        label="Username / Email"
+        name="username"
+        control={control}
+        errors={errors}
+        isDarkMode={isDarkMode}
+        placeholder="john@example.com"
+        keyboardType="email-address"
+      />
+
+      <FormField
+        label="Password"
+        name="password"
+        control={control}
+        errors={errors}
+        isDarkMode={isDarkMode}
+        placeholder="Password"
+        secureTextEntry={!showPassword}
+        extraElement={
+          <>
+            <TouchableOpacity
+              className="p-2"
+              onPressIn={() => setShowPassword(true)}
+              onPressOut={() => setShowPassword(false)}
+              delayPressIn={0}>
+              <Ionicons
+                name={showPassword ? 'eye' : 'eye-off'}
+                size={22}
+                color={showPassword ? '#10b981' : '#71717a'}
               />
-              {errors.serviceName && (
-                <Text className="ml-2 mt-1 text-xs text-red-500">{errors.serviceName.message}</Text>
-              )}
-            </>
-          )}
-        />
-      </View>
-      <View>
-        <Text className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          Website URL
-        </Text>
-        <Controller
-          control={control}
-          name="url"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <>
-              <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.url ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}
-                placeholder="https://example.com"
-                placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                autoCapitalize="none"
-                keyboardType="url"
-              />
-              {errors.url && (
-                <Text className="ml-2 mt-1 text-xs text-red-500">{errors.url.message}</Text>
-              )}
-            </>
-          )}
-        />
-      </View>
-      <View>
-        <Text className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          Username / Email
-        </Text>
-        <Controller
-          control={control}
-          name="username"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <>
-              <TextInput
-                className={`rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
-                  errors.username ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}
-                placeholder="john@example.com"
-                placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-              {errors.username && (
-                <Text className="ml-2 mt-1 text-xs text-red-500">{errors.username.message}</Text>
-              )}
-            </>
-          )}
-        />
-      </View>
-      <View>
-        <Text className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          Password
-        </Text>
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <>
-              <View
-                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
-                  errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}>
-                <TextInput
-                  className="flex-1 px-5 py-4 text-zinc-900 focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
-                  keyboardType="default"
-                  placeholder="Password"
-                  placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  secureTextEntry={!showPassword}
-                />
-                <TouchableOpacity
-                  className="p-3"
-                  onPressIn={() => setShowPassword(true)}
-                  onPressOut={() => setShowPassword(false)}
-                  delayPressIn={0}>
-                  <Ionicons
-                    name={showPassword ? 'eye' : 'eye-off'}
-                    size={22}
-                    color={showPassword ? '#10b981' : '#71717a'}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="p-3"
-                  onPress={() => setValue('password', generatePassword(32))}>
-                  <Ionicons name="refresh" size={22} color="#71717a" />
-                </TouchableOpacity>
-              </View>
-              {errors.password && (
-                <Text className="ml-2 mt-1 text-xs text-red-500">{errors.password.message}</Text>
-              )}
-            </>
-          )}
-        />
-      </View>
-      <View>
-        <Text className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          Note
-        </Text>
-        <Controller
-          control={control}
-          name="note"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
-              className="min-h-[100px] rounded-2xl border border-zinc-200 bg-zinc-50 px-5 py-4 text-zinc-900 focus:border-emerald-500/50 focus:bg-white dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900"
-              placeholder="Any extra details..."
-              placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              multiline
-              textAlignVertical="top"
-            />
-          )}
-        />
-      </View>
+            </TouchableOpacity>
+            <TouchableOpacity className="p-2" onPress={handleRefreshPassword}>
+              <Ionicons name="refresh" size={22} color="#71717a" />
+            </TouchableOpacity>
+          </>
+        }
+      />
+
+      <FormField
+        label="Note"
+        name="note"
+        control={control}
+        errors={errors}
+        isDarkMode={isDarkMode}
+        placeholder="Any extra details..."
+        multiline
+        numberOfLines={4}
+        textAlignVertical="top"
+        style={{ minHeight: 100 }}
+      />
+
       <TouchableOpacity
         disabled={isPending}
         className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
