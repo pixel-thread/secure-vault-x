@@ -94,9 +94,12 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
 
       return http.post(DEVICE_ENDPOINT.POST_DELETE_DEVICE.replace(':id', deviceId), payload);
     },
-    onSuccess: () => {
-      toast.success('Device removed');
-      refetchDevices();
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(data.message);
+        refetchDevices();
+      }
+      toast.error(data.message);
     },
     onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to remove device'),
   });
