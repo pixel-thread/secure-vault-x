@@ -2,95 +2,131 @@ import { SYNC_ENDPOINT } from '@securevault/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '../libs/database/schema';
-import { eq, gt } from 'drizzle-orm';
+import { eq, gt, and } from 'drizzle-orm';
 import { http, logger } from '@securevault/utils-native';
 
 const LAST_SYNCED_KEY = 'last_synced_at';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 
+/**
+ * Service to synchronize local vault data with the remote server.
+ * Implements security checks (OWASP A01) and efficient push/pull logic.
+ */
 export class SyncService {
-  private db: DrizzleDB;
-  private userId: string;
   private _isSyncing: boolean = false;
-  private onStatusChange?: (isSyncing: boolean) => void;
 
-  constructor(db: DrizzleDB, userId: string, onStatusChange?: (isSyncing: boolean) => void) {
-    this.db = db;
-    this.userId = userId;
-    this.onStatusChange = onStatusChange;
-  }
+  constructor(
+    private readonly db: DrizzleDB,
+    private readonly userId: string,
+    private readonly onStatusChange?: (isSyncing: boolean) => void
+  ) {}
 
   /**
-   * Getter to check if a sync is currently in progress
+   * Status check for UI components
    */
   public get isSyncing(): boolean {
     return this._isSyncing;
   }
 
   /**
-   * Internal helper to update state and notify listeners
+   * Main sync coordinator
    */
-  private setSyncing(state: boolean) {
-    this._isSyncing = state;
-    if (this.onStatusChange) {
-      this.onStatusChange(state);
+  async sync() {
+    if (!this.userId || this._isSyncing) {
+      logger.log('Sync skipped: User missing or already syncing');
+      return;
+    }
+
+    this.updateSyncStatus(true);
+    logger.info('Sync started', { userId: this.userId });
+
+    try {
+      await this.push();
+      await this.pull();
+      logger.info('Sync finished successfully');
+    } catch (error) {
+      logger.error('Sync failed', {
+        userId: this.userId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    } finally {
+      this.updateSyncStatus(false);
     }
   }
 
   /**
-   * Main entry point for synchronization
+   * Push local changes to server
    */
-  async sync() {
-    // Prevent sync if no user or if already running
-    if (!this.userId || this._isSyncing) {
-      logger.log('Sync skipped: User missing or sync already in progress');
+  private async push() {
+    const lastSyncedAt = await this.getLastSyncedAt();
+
+    // Buffer for clock drift (30s)
+    const sinceDate = new Date(lastSyncedAt - 30000);
+
+    // Security: Only push changes belonging to the current user
+    const localChanges = await this.db
+      .select()
+      .from(schema.vault)
+      .where(and(gt(schema.vault.updatedAt, sinceDate), eq(schema.vault.userId, this.userId)));
+
+    if (localChanges.length === 0) {
+      logger.log('[Sync] No local changes to push');
       return;
     }
 
-    this.setSyncing(true);
-    logger.log('Starting sync for user:', this.userId);
+    logger.info(`[Sync] Pushing ${localChanges.length} items`);
 
     try {
-      // Run push and pull sequentially
-      await this.push();
-      await this.pull();
-      logger.log('Sync completed successfully:', this.userId);
+      await http.post(SYNC_ENDPOINT.POST_SYNC_PUSH, {
+        items: localChanges.map((item) => ({
+          id: item.id,
+          encryptedData: item.encryptedData,
+          iv: item.iv,
+          version: item.version,
+          updatedAt: item.updatedAt.getTime(),
+          deletedAt: item.deletedAt?.getTime() ?? null,
+        })),
+      });
     } catch (error) {
-      logger.error('Sync failed:', error);
-      throw error; // Re-throw so UI can handle specific errors if needed
-    } finally {
-      // Ensure state is reset regardless of success or failure
-      this.setSyncing(false);
+      logger.error('[Sync] Failed to push changes', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
+  /**
+   * Pull server changes to local database
+   */
   private async pull() {
-    const storageKey = `${LAST_SYNCED_KEY}_${this.userId}`;
-    const lastSyncedAt = await AsyncStorage.getItem(storageKey);
-    const since = lastSyncedAt ? lastSyncedAt : '0';
+    const lastSyncedAt = await this.getLastSyncedAt();
 
     const response = await http.get<{ items: any[]; serverTime: number }>(
-      SYNC_ENDPOINT.GET_SYNC.replace(':since', since)
+      SYNC_ENDPOINT.GET_SYNC.replace(':since', lastSyncedAt.toString())
     );
 
     if (!response?.data) return;
 
     const { items, serverTime } = response.data;
+    if (items.length === 0) return;
 
-    // Use a transaction for better performance on bulk updates
+    logger.info(`[Sync] Pulling ${items.length} items`, {
+      id: !!this.userId,
+      dataLength: items.length,
+    });
+
     await this.db.transaction(async (tx) => {
       for (const item of items) {
+        // Enforce user isolation during update (OWASP A01)
         const existing = await tx.query.vault.findFirst({
-          where: eq(schema.vault.id, item.id),
+          where: and(eq(schema.vault.id, item.id), eq(schema.vault.userId, this.userId)),
         });
 
-        // Simple Last-Write-Wins (LWW) conflict resolution
-        const isNewer = !existing || new Date(item.updatedAt) > new Date(existing.updatedAt);
+        // Simple Last-Write-Wins (LWW) resolution
+        const shouldUpdate = !existing || new Date(item.updatedAt) > new Date(existing.updatedAt);
 
-        if (isNewer) {
-          logger.log(`[Sync Pull] Updating record: ${item.id}`);
-
+        if (shouldUpdate) {
           await tx
             .insert(schema.vault)
             .values({
@@ -116,38 +152,20 @@ export class SyncService {
       }
     });
 
-    await AsyncStorage.setItem(storageKey, serverTime.toString());
+    await this.setLastSyncedAt(serverTime);
   }
 
-  private async push() {
-    const storageKey = `${LAST_SYNCED_KEY}_${this.userId}`;
-    const lastSyncedAt = await AsyncStorage.getItem(storageKey);
+  private async getLastSyncedAt(): Promise<number> {
+    const val = await AsyncStorage.getItem(`${LAST_SYNCED_KEY}_${this.userId}`);
+    return val ? parseInt(val) : 0;
+  }
 
-    // 30s buffer helps with edge cases where client/server clocks are slightly off
-    const sinceDate = lastSyncedAt ? new Date(parseInt(lastSyncedAt) - 30000) : new Date(0);
+  private async setLastSyncedAt(time: number) {
+    await AsyncStorage.setItem(`${LAST_SYNCED_KEY}_${this.userId}`, time.toString());
+  }
 
-    // Fetch local changes that haven't been pushed yet
-    const changes = await this.db
-      .select()
-      .from(schema.vault)
-      .where(gt(schema.vault.updatedAt, sinceDate));
-
-    if (changes.length === 0) {
-      logger.log('[Sync Push] No local changes found.');
-      return;
-    }
-
-    logger.log(`[Sync Push] Pushing ${changes.length} items to server.`);
-
-    await http.post(SYNC_ENDPOINT.POST_SYNC_PUSH, {
-      items: changes.map((c) => ({
-        id: c.id,
-        encryptedData: c.encryptedData,
-        iv: c.iv,
-        version: c.version,
-        updatedAt: c.updatedAt.getTime(),
-        deletedAt: c.deletedAt ? c.deletedAt.getTime() : null,
-      })),
-    });
+  private updateSyncStatus(isSyncing: boolean) {
+    this._isSyncing = isSyncing;
+    this.onStatusChange?.(isSyncing);
   }
 }

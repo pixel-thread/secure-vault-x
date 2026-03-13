@@ -1,128 +1,205 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '../libs/database/schema';
-import { eq, desc, isNull } from 'drizzle-orm';
+import { eq, desc, isNull, and } from 'drizzle-orm';
 import { VaultSecretT } from '../types/vault';
 import { decryptData } from '@securevault/crypto';
 import { DeviceStoreManager } from '../store/device';
 import { logger } from '@securevault/utils-native';
+import { z } from 'zod';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 
-export class VaultService {
-  private db: DrizzleDB;
-  private userId: string;
+/**
+ * Zod schema for Vault Item input validation (OWASP A04: Insecure Design)
+ */
+const VaultItemSchema = z.object({
+  id: z.string().uuid(),
+  encryptedData: z.string().min(1),
+  iv: z.string().min(1),
+  version: z.number().int().optional().default(1),
+  deletedAt: z.date().nullable().optional(),
+});
 
-  constructor(db: DrizzleDB, userId: string) {
-    this.db = db;
-    this.userId = userId;
-  }
+/**
+ * Service for managing local vault data with security isolation and detailed logging.
+ */
+export class VaultService {
+  /**
+   * @param db Drizzle database instance
+   * @param userId Currectly authenticated user's ID (OWASP A01: Broken Access Control)
+   */
+  constructor(
+    private readonly db: DrizzleDB,
+    private readonly userId: string
+  ) { }
 
   /**
-   * Add or update a vault item locally
+   * Add or update a vault item locally.
+   * Ensures data integrity via Zod and enforces user isolation.
    */
-  async saveVaultItem(data: {
-    id: string;
-    encryptedData: string;
-    iv: string;
-    version?: number;
-    deletedAt?: Date | null;
-  }) {
-    return await this.db
-      .insert(schema.vault)
-      .values({
-        id: data.id,
-        userId: this.userId,
-        encryptedData: data.encryptedData,
-        iv: data.iv,
-        version: data.version ?? 1,
+  async saveVaultItem(input: unknown) {
+    logger.info('Attempting to save vault item', { userId: this.userId });
+
+    try {
+      // Validate input schema
+      const data = VaultItemSchema.parse(input);
+
+      const values = {
+        ...data,
+        userId: this.userId, // Enforce current user
         updatedAt: new Date(),
         deletedAt: data.deletedAt ?? null,
-      })
-      .onConflictDoUpdate({
-        target: schema.vault.id,
-        set: {
-          encryptedData: data.encryptedData,
-          iv: data.iv,
-          version: data.version ?? 1,
-          updatedAt: new Date(),
-          deletedAt: data.deletedAt ?? null,
-        },
+      };
+
+      const result = await this.db
+        .insert(schema.vault)
+        .values(values)
+        .onConflictDoUpdate({
+          target: schema.vault.id,
+          set: {
+            encryptedData: values.encryptedData,
+            iv: values.iv,
+            version: values.version,
+            updatedAt: values.updatedAt,
+            deletedAt: values.deletedAt,
+            // userId is NOT updated to prevent IDOR
+          },
+        });
+
+      logger.info('Vault item saved successfully', { id: data.id });
+      return result;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        logger.error('Validation failed for saveVaultItem', { errors: error.errors });
+        throw new Error('Invalid vault data');
+      }
+
+      logger.error('Failed to save vault item', {
+        error: error instanceof Error ? error.message : String(error),
       });
+      throw error;
+    }
   }
 
   /**
-   * Soft delete a vault item locally
+   * Soft delete a vault item locally.
+   * Enforces user isolation to prevent unauthorized deletions (IDOR).
    */
   async deleteVaultItem(id: string) {
-    return await this.db
-      .update(schema.vault)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.vault.id, id));
+    logger.info('Requesting soft delete for vault item', { id, userId: this.userId });
+
+    try {
+      const result = await this.db
+        .update(schema.vault)
+        .set({
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(schema.vault.id, id),
+            eq(schema.vault.userId, this.userId) // Security: Prevent cross-user deletion
+          )
+        );
+
+      logger.info('Vault item soft-deleted successfully', { id });
+      return result;
+    } catch (error) {
+      logger.error('Failed to delete vault item', {
+        id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   /**
-   * Get all non-deleted vault items from local DB and decrypt them
+   * Get all non-deleted vault items for the current user and decrypt them.
    */
   async getVaultItems(): Promise<VaultSecretT[]> {
-    const entries = await this.db
-      .select()
-      .from(schema.vault)
-      .where(isNull(schema.vault.deletedAt))
-      .orderBy(desc(schema.vault.updatedAt));
+    logger.log('Fetching local vault items', { userId: this.userId });
 
-    if (entries.length === 0) return [];
+    try {
+      const entries = await this.db
+        .select()
+        .from(schema.vault)
+        .where(
+          and(
+            isNull(schema.vault.deletedAt),
+            eq(schema.vault.userId, this.userId) // Security: Enforce user isolation
+          )
+        )
+        .orderBy(desc(schema.vault.updatedAt));
 
-    const mek = await DeviceStoreManager.getMek();
+      if (entries.length === 0) {
+        logger.info('No vault items found for user', { userId: this.userId });
+        return [];
+      }
 
-    if (!mek) {
-      logger.error('Vault decrypt failed: MEK not found');
-      return [];
-    }
+      const mek = await DeviceStoreManager.getMek();
+      if (!mek) {
+        logger.error('Decryption aborted: Master Encryption Key (MEK) missing');
+        return [];
+      }
 
-    const decrypted: VaultSecretT[] = [];
+      logger.log(`Beginning decryption for ${entries.length} items`);
+      const decryptedItems: VaultSecretT[] = [];
 
-    for (const entry of entries) {
-      if (!entry.encryptedData || !entry.iv) continue;
-      try {
-        const payload = await decryptData<any>(entry.encryptedData, entry.iv, mek);
+      for (const entry of entries) {
+        if (!entry.encryptedData || !entry.iv) {
+          logger.warn('Skipping corrupted vault entry', { id: entry.id });
+          continue;
+        }
 
-        const isCard = !!payload.cardNumber;
-
-        if (isCard) {
-          decrypted.push({
+        try {
+          const payload = await decryptData<any>(entry.encryptedData, entry.iv, mek);
+          decryptedItems.push(this.transformToVaultSecret(entry.id, payload));
+        } catch (err) {
+          logger.error('Failed to decrypt vault entry', {
             id: entry.id,
-            type: 'card',
-            serviceName: payload.serviceName || 'Unknown Card',
-            cardholderName: payload.cardName || '',
-            cardNumber: payload.cardNumber || '',
-            expirationDate: payload.exp || '',
-            cvv: payload.cvv || '',
-            note: payload.note,
-          });
-        } else {
-          decrypted.push({
-            id: entry.id,
-            type: 'password',
-            serviceName: payload.serviceName || 'Unknown',
-            website: payload.url ?? '',
-            username: payload.username ?? '',
-            secretInfo: payload.password ?? '',
-            note: payload.note,
+            error: err instanceof Error ? err.message : String(err),
           });
         }
-      } catch (err) {
-        logger.error('Failed to decrypt local vault entry', {
-          id: entry.id,
-          error: err instanceof Error ? err.message : err,
-          dataLength: entry.encryptedData?.length,
-          ivLength: entry.iv?.length,
-        });
       }
+
+      logger.info(`Successfully processed ${decryptedItems.length}/${entries.length} items`);
+      return decryptedItems;
+    } catch (error) {
+      logger.error('Failed to retrieve vault items', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Transforms raw decrypted payload into a structured VaultSecretT
+   * Centralizes mapping logic for easier maintenance.
+   */
+  private transformToVaultSecret(id: string, payload: any): VaultSecretT {
+    const isCard = !!payload.cardNumber;
+
+    if (isCard) {
+      return {
+        id,
+        type: 'card',
+        serviceName: payload.serviceName || 'Unknown Card',
+        cardholderName: payload.cardName || '',
+        cardNumber: payload.cardNumber || '',
+        expirationDate: payload.exp || '',
+        cvv: payload.cvv || '',
+        note: payload.note,
+      };
     }
 
-    return decrypted;
+    return {
+      id,
+      type: 'password',
+      serviceName: payload.serviceName || 'Unknown',
+      website: payload.url ?? '',
+      username: payload.username ?? '',
+      secretInfo: payload.password ?? '',
+      note: payload.note,
+    };
   }
 }
