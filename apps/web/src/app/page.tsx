@@ -27,7 +27,6 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden text-slate-100">
-      {/* HEADER */}
       <header className="fixed top-0 left-0 right-0 z-50 p-4">
         <GlassCard className="mx-auto flex max-w-5xl items-center justify-between !py-3 !px-6 backdrop-blur-xl bg-white/5 border-white/10">
           <div className="flex items-center gap-2">
