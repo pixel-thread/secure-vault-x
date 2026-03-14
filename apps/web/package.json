@@ -7,9 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "test": "vitest run",
+    "test:owasp": "node build-owasp-tests.js && RATE_LIMIT_THRESHOLD=5 vitest run tests/owasp",
+    "test:functional": "vitest run tests/functional",
+    "test:all": "npm run test:owasp && npm run test:functional"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.0.0",
+    "@prisma/client": "7.0.0",
     "@securevault/constants": "workspace:*",
     "@securevault/crypto": "workspace:^",
     "@securevault/validators": "workspace:^",
@@ -17,28 +23,31 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.4",
     "bcryptjs": "^3.0.3",
+    "dotenv": "^16.0.0",
     "ioredis": "^5.10.0",
     "jose": "^6.1.3",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
+    "pg": "^8.0.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "zod": "^3.22.4",
-    "zustand": "^4.5.1",
-    "@prisma/client": "7.0.0",
-    "@prisma/adapter-pg": "7.0.0",
-    "pg": "^8.0.0",
-    "dotenv": "^16.0.0"
+    "zustand": "^4.5.1"
   },
   "devDependencies": {
     "@securevault/eslint-config": "workspace:*",
     "@securevault/types": "workspace:*",
     "@securevault/typescript-config": "workspace:*",
     "@types/bcryptjs": "^3.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/pg": "^8.0.0",
+    "@types/supertest": "^7.2.0",
+    "@vitest/ui": "^4.1.0",
     "autoprefixer": "^10.4.17",
+    "prisma": "7.0.0",
+    "supertest": "^7.2.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5",
-    "prisma": "7.0.0",
-    "@types/pg": "^8.0.0"
+    "vitest": "^4.1.0"
   }
 }

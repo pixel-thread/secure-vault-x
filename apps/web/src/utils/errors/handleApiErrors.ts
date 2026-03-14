@@ -1,15 +1,14 @@
 import { ErrorResponse } from "@/utils/next-response";
 import { ZodError } from "zod";
 import { UnauthorizedError } from "@/utils/errors/unAuthError";
-import * as JoseErrors from "jose/errors";
-import { Prisma } from "@/libs/db/prisma/generated/prisma";
+import { errors as JoseErrors } from "jose";
+// Removed Prisma and logger imports for Edge compatibility in middleware
 import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
   NotFoundError,
 } from "./common";
-import { logger } from "../logger";
 
 const isJwtError = (error: unknown): boolean => {
   const isJoseClass =
@@ -45,7 +44,7 @@ const isJwtError = (error: unknown): boolean => {
 
 export const handleApiErrors = (error: unknown) => {
   if (process.env.NODE_ENV === "development") {
-    logger.log("Logs", JSON.stringify(error, null, 2));
+    console.log("Logs", JSON.stringify(error, null, 2));
   }
 
   if (isJwtError(error)) {
@@ -97,21 +96,29 @@ export const handleApiErrors = (error: unknown) => {
     });
   }
 
-  // Prisma errors
+  // Prisma errors - check by constructor name to avoid importing Prisma in Edge
+  const err = error as any;
   if (
-    error instanceof Prisma.PrismaClientValidationError ||
-    error instanceof Prisma.PrismaClientKnownRequestError ||
-    error instanceof Prisma.PrismaClientInitializationError
+    err?.constructor?.name?.startsWith("PrismaClient") ||
+    err?.code?.startsWith("P")
   ) {
+    const message =
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "Internal Database Error";
     return ErrorResponse({
-      message: error.message,
+      message,
       status: 500,
     });
   }
 
   if (error instanceof Error) {
+    const message =
+      process.env.NODE_ENV === "development"
+        ? error.message
+        : "Internal Server Error";
     return ErrorResponse({
-      message: error.message || "Internal Server Error",
+      message,
       status: 500,
     });
   }
