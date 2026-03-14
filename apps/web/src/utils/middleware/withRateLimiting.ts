@@ -25,15 +25,20 @@ if (isProd && process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_RE
 // In-memory store for local development/testing to save Upstash limits
 const localStore = new Map<string, { count: number; reset: number }>();
 
-const checkRateLimit = async (ip: string) => {
+const checkRateLimit = async (ip: string, request: NextRequest) => {
  if (isProd && ratelimit) {
   return await ratelimit.limit(ip);
  }
 
- // Local Development Simulation (100 req / 10s Fixed Window)
+ // Local Development Simulation (Configurable Threshold)
  const now = Date.now();
- const windowMs = 10000;
- const limit = 1000;
+ const windowMs = process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 10000;
+
+ // Allow test override via header in non-prod
+ const manualLimit = request.headers.get("x-test-limit");
+ const limit = (!isProd && manualLimit)
+  ? parseInt(manualLimit)
+  : (process.env.RATE_LIMIT_THRESHOLD ? parseInt(process.env.RATE_LIMIT_THRESHOLD) : 100);
 
  let record = localStore.get(ip);
  if (!record || now > record.reset) {
@@ -73,7 +78,7 @@ export const withRateLimiting: MiddlewareFactory = (next) => {
    }
   }
 
-  const result = await checkRateLimit(clientIp);
+  const result = await checkRateLimit(clientIp, request);
 
   if (!result.success) {
    console.warn(`[RATE-LIMIT] Threshold exceeded for IP: ${clientIp}`);

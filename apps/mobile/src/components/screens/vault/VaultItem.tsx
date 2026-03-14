@@ -24,7 +24,7 @@ export const VaultItem = ({
       <View className="flex-1">
         {item.type === 'password' ? (
           <>
-            <Text className="mb-1 text-xl font-bold text-zinc-900 dark:text-white">
+            <Text className="mb-1 text-xl font-bold capitalize text-zinc-900 dark:text-white">
               {item.serviceName}
             </Text>
             <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">

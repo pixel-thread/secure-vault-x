@@ -10,7 +10,10 @@ export const GET = withValidation({}, async (_data, req) => {
   if (!userId) throw new Error("Unauthorized");
 
   const encryptionData = await AuthService.getEncryptionSalt(userId);
-  return SuccessResponse({ data: encryptionData });
+  return SuccessResponse({
+    data: encryptionData,
+    message: "Encryption salt fetched successfully",
+  });
 });
 
 export const POST = withValidation(
@@ -21,6 +24,6 @@ export const POST = withValidation(
 
     const { salt } = body;
     const encryptionData = await AuthService.setEncryptionSalt(userId, salt);
-    return SuccessResponse({ data: encryptionData });
+    return SuccessResponse({ data: encryptionData, message: "Salt set" });
   },
 );

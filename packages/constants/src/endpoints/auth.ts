@@ -19,7 +19,9 @@ type AuthEndpointKeys =
   | "POST_LOGOUT"
   | "POST_REFRESH"
   | "GET_ENCRYPTION_SALT"
-  | "POST_ENCRYPTION_SALT";
+  | "POST_ENCRYPTION_SALT"
+  | "POST_PASSWORD_RESET_REQUEST"
+  | "POST_PASSWORD_CHANGE";
 
 /**
  * Authentication API endpoints configuration.
@@ -40,4 +42,6 @@ export const AUTH_ENDPOINT: EndpointT<AuthEndpointKeys> = {
   POST_LOGOUT: "/api/auth/logout",
   GET_ENCRYPTION_SALT: "/api/auth/encryption/salt",
   POST_ENCRYPTION_SALT: "/api/auth/encryption/salt",
+  POST_PASSWORD_RESET_REQUEST: "/api/auth/password/change-password/request-otp",
+  POST_PASSWORD_CHANGE: "/api/auth/password/change-password",
 };

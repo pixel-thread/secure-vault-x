@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { DeviceStoreManager, tokenManager } from "@securevault/libs";
+import { tokenManager } from "@securevault/libs";
 import { AUTH_ENDPOINT } from "@securevault/constants";
 
 const url = process.env.EXPO_PUBLIC_API_URL;
@@ -46,7 +46,6 @@ const shouldSkipRefresh = (url?: string) => {
 
 const handleUnauthorizedExit = async () => {
   await tokenManager.removeAllTokens();
-  await DeviceStoreManager.clearAll();
 };
 
 /* -------------------------------------------------- */

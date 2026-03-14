@@ -28,6 +28,9 @@ export const POST = withValidation(
       body.deviceIdentifier,
     );
 
-    return SuccessResponse({ data: result });
+    return SuccessResponse({
+      data: result,
+      message: "Device registered successfully",
+    });
   },
 );

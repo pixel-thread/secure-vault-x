@@ -1,26 +1,27 @@
 {
- "name": "@securevault/constants",
- "version": "1.0.0",
- "main": "./dist/index.js",
- "types": "./dist/index.js",
- "exports": {
-  ".": {
-   "types": "./dist/index.d.ts",
-   "default": "./dist/index.js"
+  "name": "@securevault/constants",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "private": true,
+  "scripts": {
+    "generate": "tsc",
+    "build": "tsc",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@securevault/eslint-config": "workspace:*",
+    "@securevault/typescript-config": "workspace:*",
+    "@securevault/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
   }
- },
- "private": true,
- "scripts": {
-  "generate": "tsc",
-  "build": "tsc",
-  "lint": "eslint ."
- },
- "dependencies": {
-  "@securevault/types": "workspace:*"
- },
- "devDependencies": {
-  "@securevault/eslint-config": "workspace:*",
-  "@securevault/typescript-config": "workspace:*",
-  "typescript": "^5.3.3"
- }
 }
+

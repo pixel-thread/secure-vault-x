@@ -6,7 +6,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "generate": "turbo run generate",
-    "postinstall": "turbo run db:generate"
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "postinstall": "turbo run generate"
   },
   "devDependencies": {
     "turbo": "latest"

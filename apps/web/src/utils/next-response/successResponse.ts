@@ -1,12 +1,12 @@
 import { MetaT } from "@securevault/types";
-import { HttpStatusCode } from "axios";
+// Removed axios import to avoid module load failure in middleware
 import { NextResponse } from "next/server";
 
 interface Props<T> {
   message?: string;
   data?: T | unknown | null;
   meta?: MetaT;
-  status?: HttpStatusCode;
+  status?: number;
   token?: string;
 }
 

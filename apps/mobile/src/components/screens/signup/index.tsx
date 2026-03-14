@@ -1,15 +1,24 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordRegisterSchema } from '@securevault/validators';
 import { useMutation } from '@tanstack/react-query';
-import { http, logger } from '@securevault/utils-native';
+import { http } from '@securevault/utils-native';
 import { AUTH_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { useState } from 'react';
+import { PasswordStrength } from '../../common/PasswordStrength';
+import { ScrollView } from 'react-native-gesture-handler';
 
 type FormValue = {
   email: string;
@@ -24,6 +33,8 @@ type ApiRes = {
 
 export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
+  const { colorScheme } = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
 
   const {
     control,
@@ -38,9 +49,15 @@ export default function SignupScreen() {
     },
   });
 
-  const { colorScheme } = useColorScheme();
+  const password = useWatch({
+    control,
+    name: 'password',
+  });
 
-  const isDarkMode = colorScheme === 'dark';
+  const confirmPassword = useWatch({
+    control,
+    name: 'confirmPassword',
+  });
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_PASSWORD_REGISTER, data),
@@ -57,11 +74,11 @@ export default function SignupScreen() {
   });
 
   const onSubmit = async (data: FormValue) => mutate(data);
-  logger.log("Signup validation errors:", errors);
+
   return (
     <View className="flex-1 items-center justify-center bg-white p-8 dark:bg-[#09090b]">
       <View className="mb-12 items-center">
-        <View className="mb-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
+        <View className="mb-4 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
           <Ionicons name="person-add" size={48} color="#10b981" />
         </View>
         <Text className="text-4xl font-extrabold tracking-tighter text-zinc-900 dark:text-white">
@@ -82,10 +99,11 @@ export default function SignupScreen() {
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${errors.email
+                className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
+                  errors.email
                     ? 'border-red-500 focus:border-red-500'
                     : 'border-zinc-200 focus:border-emerald-500/50 dark:border-zinc-800'
-                  }`}
+                }`}
                 placeholder="Email Address"
                 placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
                 onBlur={onBlur}
@@ -110,8 +128,9 @@ export default function SignupScreen() {
             name="password"
             render={({ field: { onChange, onBlur, value } }) => (
               <View
-                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}>
+                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                  errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                }`}>
                 <TextInput
                   className="flex-1 px-5 py-4 text-zinc-900 focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
                   placeholder="Password"
@@ -149,8 +168,9 @@ export default function SignupScreen() {
             name="confirmPassword"
             render={({ field: { onChange, onBlur, value } }) => (
               <View
-                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${errors.confirmPassword ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}>
+                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                  errors.confirmPassword ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                }`}>
                 <TextInput
                   className="flex-1 px-5 py-4 text-zinc-900 focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
                   placeholder="Confirm Password"

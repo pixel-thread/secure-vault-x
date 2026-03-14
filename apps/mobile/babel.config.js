@@ -1,6 +1,13 @@
 module.exports = function (api) {
   api.cache(true);
-  let plugins = [];
+  let plugins = [
+    [
+      'babel-plugin-inline-import',
+      {
+        extensions: ['.sql'],
+      },
+    ],
+  ];
 
   plugins.push('react-native-worklets/plugin');
 

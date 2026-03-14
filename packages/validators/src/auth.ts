@@ -5,30 +5,65 @@ import { passwordSchema } from "./common";
 // AUTHENTICATION SCHEMAS
 // ==========================================
 
+const emailValidiation = z
+  .string({
+    required_error: "Email is required",
+    message: "Invalid email format provided",
+    invalid_type_error: "Email must be a string",
+  })
+  .email("Invalid email format provided");
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: passwordSchema.optional(),
+    newPassword: passwordSchema,
+    confirmPassword: passwordSchema,
+    otp: z.string().min(6, "OTP is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
 export const generateRegistrationOptionsSchema = z.object({
-  email: z.string().email("Invalid email format provided"),
+  email: emailValidiation,
 });
 
 export const verifyRegistrationResponseSchema = z.object({
-  email: z.string().email(),
-  deviceName: z.string().optional(),
-  publicKey: z.string().optional(),
-  encryptedMEK: z.string().optional(),
+  email: emailValidiation,
+  deviceName: z
+    .string({
+      required_error: "Device name is required",
+      invalid_type_error: "Device name must be a string",
+    })
+    .optional(),
+  publicKey: z
+    .string({
+      required_error: "Public key is required",
+      invalid_type_error: "Public key must be a string",
+    })
+    .optional(),
+  encryptedMEK: z
+    .string({
+      required_error: "Mek  is required",
+      invalid_type_error: "Mek must be a string",
+    })
+    .optional(),
   registrationResponse: z.record(z.any()), // WebAuthn registration response object
 });
 
 export const generateLoginOptionsSchema = z.object({
-  email: z.string().email("Invalid email format provided"),
+  email: emailValidiation,
 });
 
 export const verifyLoginResponseSchema = z.object({
-  email: z.string().email(),
+  email: emailValidiation,
   authenticationResponse: z.record(z.any()), // WebAuthn authentication response object
 });
 
 export const passwordRegisterSchema = z
   .object({
-    email: z.string().email("Invalid email format"),
+    email: emailValidiation,
     password: passwordSchema,
     confirmPassword: passwordSchema,
   })
@@ -43,12 +78,12 @@ export const passwordRegisterSchema = z
   });
 
 export const passwordLoginSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  email: emailValidiation,
   password: passwordSchema,
 });
 
 export const verifyOtpSchema = z.object({
-  email: z.string().email(),
+  email: emailValidiation,
   code: z
     .string()
     .regex(/^[0-9]{6}$/, "OTP must be exactly 6 digits")
@@ -72,13 +107,34 @@ export const setEncryptionSaltSchema = z.object({
 // ==========================================
 
 export const registerDeviceSchema = z.object({
-  deviceName: z.string().min(1, "Device name is required").max(100),
-  deviceIdentifier: z.string().optional(),
-  publicKey: z.string().optional(),
+  deviceName: z
+    .string({
+      required_error: "Device name is required",
+      invalid_type_error: "Device name must be a string",
+    })
+    .min(1, "Device name is required")
+    .max(100),
+  deviceIdentifier: z
+    .string({
+      required_error: "Device identifier is required",
+      invalid_type_error: "Device identifier must be a string",
+    })
+    .optional(),
+  publicKey: z
+    .string({
+      required_error: "Public key is required",
+      invalid_type_error: "Public key must be a string",
+    })
+    .optional(),
 });
 
 export const toggleTrustDeviceSchema = z.object({
-  isTrusted: z.boolean(),
+  isTrusted: z
+    .boolean({
+      message: "isTrusted is required",
+      required_error: "isTrusted is required",
+    })
+    .catch(false),
 });
 
 // ==========================================
@@ -86,5 +142,5 @@ export const toggleTrustDeviceSchema = z.object({
 // ==========================================
 
 export const toggleMfaSchema = z.object({
-  enabled: z.boolean(),
+  enabled: z.boolean({ message: "enabled is required" }).catch(false),
 });

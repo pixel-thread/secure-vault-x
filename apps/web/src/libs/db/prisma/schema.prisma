@@ -60,13 +60,14 @@ model Device {
 }
 
 model Vault {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   userId        String
   encryptedData String
   iv            String?
-  version       Int      @default(1)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  version       Int       @default(1)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
   @@index([userId])
   @@index([id])

@@ -26,15 +26,26 @@ export const withAuth: MiddlewareFactory = (next) => {
         return next(request, event);
       }
 
+      // Security: Strip internal headers that might be spoofed by the client
+      const headers = new Headers(request.headers);
+      headers.delete("x-user-id");
+      headers.delete("x-session-id");
+
       // Skip public routes
       if (PUBLIC_API_ROUTES.has(pathname)) {
-        return next(request, event);
+        // Even for public routes, we pass the sanitized headers
+        const sanitizedRequest = new NextRequest(request.url, {
+          method: request.method,
+          headers,
+          body: request.body,
+          duplex: "half",
+        });
+        return next(sanitizedRequest, event);
       }
 
       // Get Authorization header
       const authHeader =
-        request.headers.get("authorization") ||
-        request.headers.get("Authorization");
+        headers.get("authorization") || headers.get("Authorization");
 
       if (!authHeader) {
         throw new UnauthorizedError("Unauthorized");
@@ -54,8 +65,8 @@ export const withAuth: MiddlewareFactory = (next) => {
 
       const sessionId: string = payload.sessionId as string;
       const userId: string = payload.userId as string;
-      // Inject user info into request headers
-      const headers = new Headers(request.headers);
+
+      // Inject verified user info into request headers
       headers.set("x-user-id", userId);
       headers.set("x-session-id", sessionId);
 

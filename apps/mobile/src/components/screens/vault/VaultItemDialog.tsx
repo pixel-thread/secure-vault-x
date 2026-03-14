@@ -6,6 +6,10 @@ import { useColorScheme } from 'nativewind';
 import { Modal, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { toast } from 'sonner-native';
 
+import { useSyncService } from '@/src/hooks/useSyncService';
+import { useVaultService } from '@/src/hooks/useVaultService';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 type Props = {
   open: boolean;
   onValueChange: (value: boolean) => void;
@@ -15,6 +19,31 @@ type Props = {
 export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: Props) => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  const queryClient = useQueryClient();
+  const vaultService = useVaultService();
+  const syncService = useSyncService();
+
+  const { mutate: deleteItem, isPending: isDeleting } = useMutation({
+    mutationFn: async (id: string) => {
+      if (!vaultService) throw new Error('Vault Service not initialized');
+      return await vaultService.deleteVaultItem(id);
+    },
+    onSuccess: () => {
+      toast.success('Secret deleted locally');
+      queryClient.invalidateQueries({ queryKey: ['vault'] });
+      onValueChange(false);
+
+      // Trigger background sync
+      if (syncService) {
+        syncService.sync();
+      }
+    },
+    onError: (error: any) => {
+      toast.error('Failed to delete secret', {
+        description: error.message || 'Please try again.',
+      });
+    },
+  });
 
   return (
     <Modal visible={open} transparent animationType="fade">
@@ -23,7 +52,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
           {selectedSecret && (
             <>
               <View className="mb-6 flex-row items-center justify-between">
-                <Text className="text-2xl font-bold text-zinc-900 dark:text-white">
+                <Text className="text-2xl font-bold capitalize text-zinc-900 dark:text-white">
                   {selectedSecret.serviceName}
                 </Text>
                 <TouchableOpacity
@@ -173,6 +202,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                 ) : null}
 
                 <TouchableOpacity
+                  disabled={isDeleting}
                   className="mb-4 mt-2 w-full flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 py-4 shadow-xl active:scale-[0.98] dark:border-red-500/20 dark:bg-red-500/10"
                   onPress={() => {
                     Alert.alert(
@@ -183,14 +213,16 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                         {
                           text: 'Delete',
                           style: 'destructive',
-                          onPress: () => {},
+                          onPress: () => deleteItem(selectedSecret.id),
                         },
                       ]
                     );
                   }}>
                   <Ionicons name="trash-outline" size={20} color="#ef4444" />
                   <Text className="ml-2 text-lg font-bold text-red-500">
-                    Delete {selectedSecret.type === 'password' ? 'Password' : 'Card'}
+                    {isDeleting
+                      ? 'Deleting...'
+                      : `Delete ${selectedSecret.type === 'password' ? 'Password' : 'Card'}`}
                   </Text>
                 </TouchableOpacity>
               </ScrollView>

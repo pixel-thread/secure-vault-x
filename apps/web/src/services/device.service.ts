@@ -137,11 +137,13 @@ export class DeviceService {
       });
 
       if (!actingDevice || !actingDevice.isTrusted) {
-        throw new Error("Only a trusted device can remove other devices.");
+        throw new BadRequestError(
+          "Only a trusted device can remove other devices.",
+        );
       }
 
       if (!actingDevice.publicKey) {
-        throw new Error(
+        throw new BadRequestError(
           "Acting device does not have a cryptographic public key registered.",
         );
       }

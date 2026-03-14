@@ -38,6 +38,7 @@ echo -e "${GREEN}✓ Removed lock files${NC}\n"
 # Step 5: Install dependencies
 echo -e "${YELLOW}5. Installing dependencies...${NC}"
 pnpm install
+pnpm turbo run build
 pnpm run generate
 echo -e "${GREEN}✓ Installed dependencies${NC}\n"
 

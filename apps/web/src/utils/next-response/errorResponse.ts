@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { HttpStatusCode } from "axios";
+// Removed axios import to avoid module load failure in middleware
 
 interface Props<T> {
   message?: string;
   error?: T | unknown | null;
-  status?: HttpStatusCode;
+  status?: number;
   data?: T | unknown | null;
 }
 

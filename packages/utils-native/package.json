@@ -19,11 +19,11 @@
   },
   "dependencies": {
     "@securevault/constants": "workspace:*",
-    "@securevault/libs": "workspace:*"
+    "@securevault/libs": "workspace:*",
+    "@securevault/eslint-config": "workspace:*",
+    "@securevault/typescript-config": "workspace:*"
   },
   "devDependencies": {
-    "@securevault/eslint-config": "workspace:*",
-    "@securevault/typescript-config": "workspace:*",
     "@types/react": "^19.0.0",
     "@types/react-native": "^0.73.0",
     "react": "19.1.0",
@@ -31,3 +31,4 @@
     "typescript": "^5.3.3"
   }
 }
+

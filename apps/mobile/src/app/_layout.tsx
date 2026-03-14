@@ -9,6 +9,12 @@ import React, { useEffect } from 'react';
 
 import { Toaster } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
+import { useSyncTrigger } from '../hooks/useSyncTrigger';
+
+function AppSyncManager() {
+  useSyncTrigger();
+  return null;
+}
 
 // Suppress the "[Reanimated] Reading from `value` during component render" warning.
 // This is triggered internally by @react-navigation/drawer v7 and is a known issue
@@ -40,6 +46,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider className="bg-white dark:bg-[#09090b]">
         <Wrapper>
+          <AppSyncManager />
           <Stack
             screenOptions={{
               headerShown: false,
