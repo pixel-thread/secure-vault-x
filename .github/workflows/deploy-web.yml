@@ -37,19 +37,15 @@ jobs:
 
       - name: Generate Prisma Client
         # Generate Prisma clients for all packages that need it.
-        run: pnpm turbo db:generate --filter=web
-
-      - name: Generate shared packages
-        # Generate Prisma clients for all packages that need it.
-        run: pnpm run generate
+        run: pnpm turbo db:generate --filter=@securevault/web
 
       - name: Build Shared Packages
         # In a monorepo, shared packages must be built before the web app.
         run: pnpm run build
 
-      - name: Generate Prisma Client
+      - name: Generate shared packages
         # Generate Prisma clients for all packages that need it.
-        run: pnpm turbo db:generate --filter=web
+        run: pnpm run generate
 
       - name: Pull Vercel Environment Information
         # Pulls the environment variables and settings from Vercel.
