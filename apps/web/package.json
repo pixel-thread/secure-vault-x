@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "vercel-build": "next build",
     "dev": "next dev",
     "build:local": "next build",
     "start": "next start",
@@ -51,4 +52,3 @@
     "vitest": "^4.1.0"
   }
 }
-
