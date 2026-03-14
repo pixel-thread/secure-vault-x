@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
-    "test": "vitest run",
+    "test": "NODE_ENV=test vitest run",
     "test:owasp": "node build-owasp-tests.js && RATE_LIMIT_THRESHOLD=5 vitest run tests/owasp",
     "test:functional": "vitest run tests/functional",
     "test:all": "npm run test:owasp && npm run test:functional"
