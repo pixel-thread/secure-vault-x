@@ -10,6 +10,7 @@ on:
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
 
+workflow_dispatch:
 # This workflow automates the deployment of the 'web' Next.js application to Vercel.
 # It ensures that the build is consistent by using pnpm and targets the specific monorepo app directory.
 jobs:
@@ -34,6 +35,10 @@ jobs:
       - name: Install Dependencies
         # Ensuring deterministic builds using the frozen lockfile.
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        # Generate Prisma clients for all packages that need it.
+        run: pnpm turbo db:generate --filter=web
 
       - name: Generate shared packages
         # Generate Prisma clients for all packages that need it.
