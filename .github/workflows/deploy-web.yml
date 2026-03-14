@@ -1,0 +1,69 @@
+name: Deploy Web Application to Vercel
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+
+# This workflow automates the deployment of the 'web' Next.js application to Vercel.
+# It ensures that the build is consistent by using pnpm and targets the specific monorepo app directory.
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        # Ensuring deterministic builds using the frozen lockfile.
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Shared Packages
+        # In a monorepo, shared packages must be built before the web app.
+        run: pnpm run build
+
+      - name: Generate Prisma Client
+        # Generate Prisma clients for all packages that need it.
+        run: pnpm turbo db:generate --filter=web
+
+      - name: Generate shared packages
+        # Generate Prisma clients for all packages that need it.
+        run: pnpm run generate
+
+      - name: Pull Vercel Environment Information
+        # Pulls the environment variables and settings from Vercel.
+        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build Project for Vercel
+        # Builds the project locally using Vercel's build engine.
+        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy Prebuilt Artifacts to Vercel
+        # Deploys the artifacts generated in the previous step.
+        run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
