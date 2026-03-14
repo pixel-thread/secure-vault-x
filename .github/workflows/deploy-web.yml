@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - uat
     paths:
       - "apps/web/**"
       - "packages/**"
