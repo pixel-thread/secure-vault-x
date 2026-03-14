@@ -1,13 +1,14 @@
-name: Deploy Web Application to Vercel
+name: Deploy Prod Web Application to Vercel
 
 on:
   push:
     branches:
       - master
-      - uat
     paths:
       - "apps/web/**"
       - "packages/**"
+      - "!packages/ui-native/**"
+      - "!packages/utils-native/**"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
 
