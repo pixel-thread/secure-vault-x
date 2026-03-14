@@ -6,19 +6,9 @@ import { decryptData } from '@securevault/crypto';
 import { DeviceStoreManager } from '../store/device';
 import { logger } from '@securevault/utils-native';
 import { z } from 'zod';
+import { VaultItemSchema } from '../utils/validators/vault';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
-
-/**
- * Zod schema for Vault Item input validation (OWASP A04: Insecure Design)
- */
-const VaultItemSchema = z.object({
-  id: z.string().uuid(),
-  encryptedData: z.string().min(1),
-  iv: z.string().min(1),
-  version: z.number().int().optional().default(1),
-  deletedAt: z.date().nullable().optional(),
-});
 
 /**
  * Service for managing local vault data with security isolation and detailed logging.
@@ -69,9 +59,6 @@ export class VaultService {
       logger.info('Vault item saved successfully', { id: data.id });
       return result;
     } catch (error) {
-      // TODO: trigger this error
-      // validate schema
-      // Check how ui will handle this error it should handle the error not break the ui
       if (error instanceof z.ZodError) {
         logger.error('Validation failed for saveVaultItem', { errors: error.errors });
         throw new Error('Invalid vault data');

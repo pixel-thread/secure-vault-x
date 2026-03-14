@@ -13,6 +13,18 @@ const emailValidiation = z
   })
   .email("Invalid email format provided");
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: passwordSchema.optional(),
+    newPassword: passwordSchema,
+    confirmPassword: passwordSchema,
+    otp: z.string().min(6, "OTP is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
 export const generateRegistrationOptionsSchema = z.object({
   email: emailValidiation,
 });
