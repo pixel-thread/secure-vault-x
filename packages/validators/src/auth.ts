@@ -20,9 +20,30 @@ export const changePasswordSchema = z
     confirmPassword: passwordSchema,
     otp: z.string().min(6, "OTP is required"),
   })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
+  .superRefine((val, ctx) => {
+    if (val.newPassword !== val.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+      });
+    }
+  });
+
+export const changePasswordWithOutOtpSchema = z
+  .object({
+    currentPassword: passwordSchema.optional(),
+    newPassword: passwordSchema,
+    confirmPassword: passwordSchema,
+  })
+  .superRefine((val, ctx) => {
+    if (val.newPassword !== val.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+      });
+    }
   });
 
 export const generateRegistrationOptionsSchema = z.object({

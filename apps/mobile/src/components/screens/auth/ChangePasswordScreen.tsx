@@ -10,6 +10,8 @@ import { PasswordStrength } from '../../common/PasswordStrength';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { changePasswordSchema, changePasswordWithOutOtpSchema } from '@securevault/validators';
+import { useMutation } from '@tanstack/react-query';
 
 type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
@@ -17,7 +19,6 @@ const ChangePasswordScreen = () => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
-  const [loading, setLoading] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
@@ -28,10 +29,15 @@ const ChangePasswordScreen = () => {
     control,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
-    getValues,
+    formState: { errors },
   } = useForm<ChangePasswordFormData>({
-    resolver: zodResolver(changePasswordSchema),
+    resolver: async (values: ChangePasswordFormData, context: any, options: any) => {
+      const activeSchema = isOtpSent ? changePasswordSchema : changePasswordWithOutOtpSchema;
+      const resolver = zodResolver(activeSchema);
+      const result = await resolver(values, context, options);
+
+      return result as any;
+    },
     mode: 'onChange',
     defaultValues: {
       currentPassword: '',
@@ -53,52 +59,49 @@ const ChangePasswordScreen = () => {
     /[^A-Za-z0-9]/.test(watchNewPassword);
   const isMatch = watchNewPassword && watchNewPassword === watchConfirmPassword;
 
-  const handleContinue = async (data: ChangePasswordFormData) => {
-    setLoading(true);
-
-    try {
-      if (!isOtpSent) {
-        // Step 1: Request OTP
-        const res = await http.post<{ success: boolean; message?: string }>(
-          AUTH_ENDPOINT.POST_PASSWORD_RESET_REQUEST,
-          {}
-        );
-
-        if (res.success) {
-          toast.success('OTP sent to your email.');
-          setIsOtpSent(true);
-        } else {
-          toast.error(res.message || 'Failed to request OTP');
-        }
+  // Mutations
+  const { mutate: requestOtp, isPending: isRequestingOtp } = useMutation({
+    mutationFn: () => http.post(AUTH_ENDPOINT.POST_PASSWORD_RESET_REQUEST, {}),
+    onSuccess: (res) => {
+      if (res.success) {
+        toast.success(res.message);
+        setIsOtpSent(true);
+        return;
       } else {
-        // Step 2: Ensure OTP is present and make the actual change password request
-        if (!data.otp || data.otp.length !== 6) {
-          toast.error('Please enter a valid 6-digit OTP.');
-          setLoading(false);
-          return;
-        }
-
-        const res = await http.post<any>(AUTH_ENDPOINT.POST_PASSWORD_CHANGE, {
-          current_password: data.currentPassword,
-          new_password: data.newPassword,
-          otp: data.otp,
-        });
-
-        if (res.success) {
-          toast.success(res.message);
-          router.back();
-        } else {
-          toast.error(res?.message || 'Failed to update password');
-        }
+        toast.error(res.message || 'Failed to request OTP');
+        return;
       }
-    } catch (err: any) {
-      logger.error('Failed to update password', {
-        message: err.message,
-        stack: err.stack,
-      });
+    },
+    onError: (err: any) => {
+      logger.error('Failed to request OTP', err);
+      toast.error(err.response?.data?.message || 'Failed to request OTP');
+    },
+  });
+
+  const { mutate: changePassword, isPending: isChangingPassword } = useMutation({
+    mutationFn: (data: ChangePasswordFormData) =>
+      http.post<any>(AUTH_ENDPOINT.POST_PASSWORD_CHANGE, data),
+    onSuccess: (res) => {
+      if (res.success) {
+        toast.success(res.message);
+        router.back();
+      } else {
+        toast.error(res?.message || 'Failed to update password');
+      }
+    },
+    onError: (err: any) => {
+      logger.error('Failed to update password', err);
       toast.error(err.response?.data?.message || 'An error occurred server-side');
-    } finally {
-      setLoading(false);
+    },
+  });
+
+  const loading = isRequestingOtp || isChangingPassword;
+
+  const handleContinue = async (data: ChangePasswordFormData) => {
+    if (!isOtpSent) {
+      requestOtp();
+    } else {
+      changePassword(data);
     }
   };
 
@@ -248,11 +251,10 @@ const ChangePasswordScreen = () => {
         </View>
 
         <TouchableOpacity
-          className={`mt-8 w-full flex-row items-center justify-center rounded-2xl py-4 transition-transform active:scale-[0.98] ${
-            loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)
+          className={`mt-8 w-full flex-row items-center justify-center rounded-2xl py-4 transition-transform active:scale-[0.98] ${loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)
               ? 'bg-zinc-300 dark:bg-zinc-700'
               : 'bg-emerald-500 active:bg-emerald-600'
-          }`}
+            }`}
           disabled={loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)}
           onPress={handleSubmit(handleContinue)}>
           <Text
