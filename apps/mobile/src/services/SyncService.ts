@@ -1,11 +1,9 @@
 import { SYNC_ENDPOINT } from '@securevault/constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '../libs/database/schema';
 import { eq, gt, and } from 'drizzle-orm';
 import { http, logger } from '@securevault/utils-native';
-
-const LAST_SYNCED_KEY = 'last_synced_at';
+import { SyncStoreManager } from '../store/sync';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -39,7 +37,7 @@ export class SyncService {
     }
 
     this.updateSyncStatus(true);
-    logger.info('Sync started', { userId: this.userId });
+    logger.info('Sync started', { userId: !!this.userId });
 
     try {
       await this.push();
@@ -47,7 +45,7 @@ export class SyncService {
       logger.info('Sync finished successfully');
     } catch (error) {
       logger.error('Sync failed', {
-        userId: this.userId,
+        userId: !!this.userId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -156,12 +154,12 @@ export class SyncService {
   }
 
   private async getLastSyncedAt(): Promise<number> {
-    const val = await AsyncStorage.getItem(`${LAST_SYNCED_KEY}_${this.userId}`);
+    const val = await SyncStoreManager.lastSyncAt({ userId: this.userId });
     return val ? parseInt(val) : 0;
   }
 
   private async setLastSyncedAt(time: number) {
-    await AsyncStorage.setItem(`${LAST_SYNCED_KEY}_${this.userId}`, time.toString());
+    await SyncStoreManager.setLastSyncAt({ userId: this.userId, time: time });
   }
 
   private updateSyncStatus(isSyncing: boolean) {
