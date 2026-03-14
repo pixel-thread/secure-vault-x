@@ -33,7 +33,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 10.0.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -42,23 +42,20 @@ jobs:
           cache: "pnpm"
 
       - name: Install Dependencies
-        # Ensuring deterministic builds using the frozen lockfile.
+        # Using --frozen-lockfile ensures that the build is deterministic.
         run: pnpm install --frozen-lockfile
 
-      - name: Generate Prisma Client
-        # Generate Prisma clients for all packages that need it.
-        run: pnpm turbo db:generate --filter=@securevault/web
-
-      - name: Build Shared Packages
-        # In a monorepo, shared packages must be built before the web app.
-        run: pnpm run build
-
-      - name: Generate shared packages
-        # Generate Prisma clients for all packages that need it.
+      - name: Generate Prisma Clients
+        # Generates all database clients across the monorepo.
         run: pnpm run generate
+
+      - name: Build Workspace
+        # Builds all packages and apps in the monorepo.
+        run: pnpm run build
 
       - name: Pull Vercel Environment Information
         # Pulls the environment variables and settings from Vercel.
+        # Note: The "Build not running on Vercel" warning is expected when pre-building in CI.
         run: npx vercel pull --yes --environment=production --token=$VERCEL_TOKEN
 
       - name: Build Project for Vercel
