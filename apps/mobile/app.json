@@ -22,7 +22,7 @@
     "splash": {
       "image": "./assets/splashscreen/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#001010"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -31,8 +31,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#000000"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#001010"
       },
       "package": "com.pixelthread.securevaultx"
     },
