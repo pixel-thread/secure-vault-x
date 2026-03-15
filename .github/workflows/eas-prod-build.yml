@@ -8,6 +8,8 @@ on:
       - "packages/**"
       - "!packages/ui/**"
 
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
