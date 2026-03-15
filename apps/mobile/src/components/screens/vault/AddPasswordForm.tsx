@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, TextInputProps } from 'react-native';
 import { useForm, Controller, SubmitHandler, Control, FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,14 +6,12 @@ import { z } from 'zod';
 import { Ionicons } from '@expo/vector-icons';
 import { generatePassword } from '@securevault/utils';
 import { useColorScheme } from 'nativewind';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 import { DeviceStoreManager } from '../../../store/device';
 import { encryptData } from '@securevault/crypto';
 import * as Crypto from 'expo-crypto';
-import { useVaultService } from '@/src/hooks/useVaultService';
-import { useSyncService } from '@/src/hooks/useSyncService';
 import { logger } from '@securevault/utils-native';
+import { usePasswordMutation, MutationMode } from '@/src/hooks/usePasswordMutation';
 
 // --- Validation Schema ---
 const passwordSchema = z.object({
@@ -24,16 +22,13 @@ const passwordSchema = z.object({
   note: z.string().optional(),
 });
 
-type PasswordFormValues = z.infer<typeof passwordSchema>;
-
-type SaveDTO = {
-  id: string;
-  encryptedData: string;
-  iv: string;
-};
+export type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 type Props = {
   onSuccess?: () => void;
+  onCancel?: () => void;
+  mode?: MutationMode;
+  initialValues?: PasswordFormValues & { id: string };
 };
 
 /**
@@ -100,57 +95,43 @@ const FormField = ({
  * AddPasswordForm Component
  * Handles input for new password items, encryption, and local persistence.
  */
-export function AddPasswordForm({ onSuccess }: Props) {
+export function AddPasswordForm({ onSuccess, onCancel, mode = 'create', initialValues }: Props) {
   // --- Initialization & Hooks ---
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const [showPassword, setShowPassword] = useState(false);
-  const queryClient = useQueryClient();
-  const vaultService = useVaultService();
-  const syncService = useSyncService();
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: {
+  const defaultValues = useMemo(() => {
+    if (mode === 'edit' && initialValues) {
+      return {
+        serviceName: initialValues.serviceName,
+        url: initialValues.url ?? 'https://',
+        username: initialValues.username,
+        password: initialValues.password,
+        note: initialValues.note ?? '',
+      };
+    }
+    return {
       serviceName: '',
       url: 'https://',
       username: '',
       password: generatePassword(32),
       note: '',
-    },
+    };
+  }, [mode, initialValues]);
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors, isDirty },
+  } = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues,
   });
 
   // --- Persistence Logic ---
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (data: SaveDTO) => {
-      logger.info('[AddPasswordForm] Saving vault item to local service', { id: data.id });
-      return await vaultService?.saveVaultItem(data);
-    },
-    onSuccess: () => {
-      logger.info('[AddPasswordForm] Successfully saved password to vault');
-      toast.success('Password added successfully');
-      queryClient.invalidateQueries({ queryKey: ['vault'] });
-      onSuccess?.();
-
-      if (syncService) {
-        logger.log('[AddPasswordForm] Triggering background sync');
-        syncService
-          .sync()
-          .catch((err) => logger.error('[AddPasswordForm] Background sync failed', { error: err }));
-      }
-    },
-    onError: (error: any) => {
-      logger.error('[AddPasswordForm] Failed to save secret', { error: error.message });
-      toast.error('Failed to save secret', {
-        description: error.message || 'Please try again.',
-      });
-    },
-  });
+  const { mutate, isPending } = usePasswordMutation(mode, onSuccess);
 
   /**
    * Main submission handler.
@@ -159,8 +140,7 @@ export function AddPasswordForm({ onSuccess }: Props) {
   const onSubmitForm: SubmitHandler<PasswordFormValues> = async (data: PasswordFormValues) => {
     logger.info('[AddPasswordForm] Submitting form', {
       service: data.serviceName,
-      hasUrl: !!data.url,
-      hasNote: !!data.note,
+      mode,
     });
 
     const mek = await DeviceStoreManager.getMek();
@@ -175,7 +155,7 @@ export function AddPasswordForm({ onSuccess }: Props) {
       const { encryptedData, iv } = await encryptData(data, mek);
       logger.log('[AddPasswordForm] Encryption successful');
 
-      const id = Crypto.randomUUID();
+      const id = mode === 'edit' && initialValues?.id ? initialValues.id : Crypto.randomUUID();
       mutate({ id, encryptedData, iv });
     } catch (err) {
       logger.error('[AddPasswordForm] Encryption failed', { error: err });
@@ -187,7 +167,8 @@ export function AddPasswordForm({ onSuccess }: Props) {
   const handleRefreshPassword = useCallback(() => {
     const newPass = generatePassword(32);
     logger.log('[AddPasswordForm] Generated new password');
-    setValue('password', newPass);
+    setValue('password', newPass, { shouldDirty: true });
+    toast.info('New Password Generated', { description: "Don't forget to save!" });
   }, [setValue]);
 
   // --- Render ---
@@ -263,15 +244,34 @@ export function AddPasswordForm({ onSuccess }: Props) {
         style={{ minHeight: 100 }}
       />
 
-      <TouchableOpacity
-        disabled={isPending}
-        className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
-        onPress={handleSubmit(onSubmitForm)}>
-        <Ionicons name="save-outline" size={20} color="#022c22" />
-        <Text className="ml-2 text-lg font-bold text-[#022c22]">
-          {isPending ? 'Saving to Vault...' : 'Save to Vault'}
-        </Text>
-      </TouchableOpacity>
+      {mode === 'edit' ? (
+        <View className="mt-4 gap-3">
+          {isDirty && (
+            <TouchableOpacity
+              disabled={isPending}
+              className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
+              onPress={handleSubmit(onSubmitForm)}>
+              <Ionicons name="save-outline" size={20} color="#022c22" />
+              <Text className="ml-2 text-lg font-bold text-[#022c22]">
+                {isPending ? 'Updating...' : 'Save Changes'}
+              </Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={onCancel} className="w-full items-center py-3">
+            <Text className="text-sm text-zinc-400">Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity
+          disabled={isPending}
+          className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
+          onPress={handleSubmit(onSubmitForm)}>
+          <Ionicons name="save-outline" size={20} color="#022c22" />
+          <Text className="ml-2 text-lg font-bold text-[#022c22]">
+            {isPending ? 'Saving to Vault...' : 'Save to Vault'}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

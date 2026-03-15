@@ -251,10 +251,11 @@ const ChangePasswordScreen = () => {
         </View>
 
         <TouchableOpacity
-          className={`mt-8 w-full flex-row items-center justify-center rounded-2xl py-4 transition-transform active:scale-[0.98] ${loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)
+          className={`mt-8 w-full flex-row items-center justify-center rounded-2xl py-4 transition-transform active:scale-[0.98] ${
+            loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)
               ? 'bg-zinc-300 dark:bg-zinc-700'
               : 'bg-emerald-500 active:bg-emerald-600'
-            }`}
+          }`}
           disabled={loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)}
           onPress={handleSubmit(handleContinue)}>
           <Text

@@ -196,4 +196,45 @@ export class VaultService {
       note: payload.note,
     };
   }
+
+  /**
+   * Update an existing vault item by id.
+   * Re-stores the encrypted blob and refreshes updatedAt.
+   * userId is intentionally excluded from .set() to prevent IDOR.
+   */
+  async updateVaultItem(input: unknown) {
+    logger.info('Attempting to update vault item', { userId: !!this.userId });
+
+    try {
+      const data = VaultItemSchema.parse(input);
+
+      const result = await this.db
+        .update(schema.vault)
+        .set({
+          encryptedData: data.encryptedData,
+          iv: data.iv,
+          updatedAt: new Date(),
+          // userId intentionally excluded — IDOR protection
+        })
+        .where(
+          and(
+            eq(schema.vault.id, data.id),
+            eq(schema.vault.userId, this.userId) // user may only update their own records
+          )
+        );
+
+      logger.info('Vault item updated successfully', { id: data.id });
+      return result;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        logger.error('Validation failed for updateVaultItem', { errors: error.errors });
+        throw new Error('Invalid vault data');
+      }
+
+      logger.error('Failed to update vault item', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }
