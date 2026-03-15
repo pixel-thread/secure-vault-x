@@ -7,7 +7,7 @@ import { useColorScheme } from 'nativewind';
 import { DrawerToggleButton } from '@react-navigation/drawer';
 
 /**
- * Universal Header Props that can be passed manually or injected by Navigators 
+ * Universal Header Props that can be passed manually or injected by Navigators
  * (Stack, Tabs, Drawer).
  */
 export type CustomHeaderProps = {
@@ -23,15 +23,7 @@ export type CustomHeaderProps = {
  * It manually handles the safe area and matches the app's premium design system.
  */
 export const HeaderComponent = (props: any) => {
-  const {
-    title,
-    subtitle,
-    rightElement,
-    backButton,
-    isDrawer,
-    options,
-    route,
-  } = props;
+  const { title, subtitle, rightElement, backButton, isDrawer, options, route } = props;
 
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -42,7 +34,7 @@ export const HeaderComponent = (props: any) => {
   const displayTitle =
     title ?? options?.headerTitle?.toString() ?? options?.title ?? route?.name ?? '';
 
-  // 2. Resolve Navigation Actions: 
+  // 2. Resolve Navigation Actions:
   // If we are in a stack and can go back, show back button by default
   const showBackButton = backButton ?? (router.canGoBack() && !isDrawer);
 
@@ -50,7 +42,6 @@ export const HeaderComponent = (props: any) => {
     <View
       style={{ paddingTop: insets.top }}
       className="z-50 flex-row items-center justify-between border-b border-zinc-100 bg-white px-4 pb-4 dark:border-zinc-800/50 dark:bg-[#09090b]">
-
       {/* --- Left Action Area --- */}
       <View className="w-12 items-start justify-center">
         {showBackButton ? (
@@ -83,9 +74,7 @@ export const HeaderComponent = (props: any) => {
       </View>
 
       {/* --- Right Action Area --- */}
-      <View className="w-12 items-end justify-center">
-        {rightElement}
-      </View>
+      <View className="w-12 items-end justify-center">{rightElement}</View>
     </View>
   );
 };
