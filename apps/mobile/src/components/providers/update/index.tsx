@@ -28,7 +28,7 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const update = await Updates.checkForUpdateAsync();
 
       if (update.isAvailable) {
-        toast.info('Downloading update...');
+        toast.wiggle('Downloading update...');
         await Updates.fetchUpdateAsync();
         setShowUpdateDialog(true);
       }

@@ -5,29 +5,33 @@ import { UserT } from '@securevault/types';
 import { http, logger } from '@securevault/utils-native';
 import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { authenticateWithBiometric } from '@/src/utils/biometricLock';
 import { DeviceStoreManager } from '@/src/store/device';
-import { isExpoGo } from '@/src/utils/helper/checkIsExpo';
+import { LoadingScreen } from '../../common/LoadingScreen';
+import { BioMetricLock } from '../../common/BiometricLock';
 
 type Props = { children: React.ReactNode };
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
-  const { setIsLoading, isLoading, setUser, isAuthenticated, setIsAuthenticated, setHasMek } =
-    useAuthStore();
+  const { setIsLoading, isLoading, setUser, setIsAuthenticated, setHasMek } = useAuthStore();
   const [biometricPassed, setBiometricPassed] = useState(false);
   const [biometricRequired, setBiometricRequired] = useState(false);
 
-  const { isPending, mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: () => http.get<UserT>(AUTH_ENDPOINT.GET_ME),
     onSuccess: async (data) => {
+      logger.info('Auth initialization successful');
       if (data.success && data?.data) {
         setUser(data.data);
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
       }
       setIsLoading(false);
     },
-    onError: () => {
+    onError: (error) => {
+      logger.error('Auth initialization failed', error);
+      setIsAuthenticated(false);
       setIsLoading(false);
     },
   });
@@ -42,10 +46,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   useEffect(() => {
     async function init() {
       try {
+        setIsLoading(true);
         await tokenManager.init();
         const access = await tokenManager.getAccessToken();
         const refreshToken = await tokenManager.getRefreshToken();
-
         const hasTokens = !!(access && refreshToken);
 
         // Check biometric requirement only if we have an active session
@@ -53,77 +57,46 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           const biometricEnabled = await DeviceStoreManager.getBiometricEnabled();
           if (biometricEnabled) {
             setBiometricRequired(true);
-            // Prompt immediately
             const success = await authenticateWithBiometric();
             if (success) {
               setBiometricPassed(true);
+            } else {
+              // Biometric failed or cancelled, we still need to clear initial loading
+              // but the biometric gate will handle the UI
+              setIsLoading(false);
             }
           } else {
-            setBiometricPassed(true); // No biometric required
+            setBiometricPassed(true);
           }
         } else {
-          setBiometricPassed(true); // Not logged in, no biometric needed
+          setBiometricPassed(true);
         }
 
-        // Check MEK
         const mek = await DeviceStoreManager.getMek();
-        if (mek) {
-          setHasMek(true);
-        } else {
-          setHasMek(false);
-        }
+        setHasMek(!!mek);
 
-        if (access && refreshToken) {
-          setIsAuthenticated(true);
-          if (!isPending) {
-            mutate();
-          }
+        if (hasTokens) {
+          mutate();
         } else {
           setIsLoading(false);
         }
       } catch (e) {
         setIsLoading(false);
-        logger.error('Error initializing token manager', e);
+        logger.error('Error initializing auth provider', e);
       }
     }
 
     init();
-  }, [setIsLoading, mutate, setIsAuthenticated, setHasMek]); // Only on mount
+  }, []); // Run once on mount
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      mutate();
-    }
-  }, [isAuthenticated, mutate]);
-
-  useEffect(() => {
-    if (isPending && !isLoading) {
-      setIsLoading(isPending);
-    }
-  }, [isPending, isLoading, setIsLoading]);
-
+  // Removed redundant effects that caused race conditions and stuck loading states
   // Biometric gate — show lock screen if biometric is required but not passed
   if (biometricRequired && !biometricPassed) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-[#09090b]">
-        <View className="items-center">
-          <View className="mb-6 h-20 w-20 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
-            <Ionicons name="finger-print" size={48} color="#10b981" />
-          </View>
-          <Text className="mb-2 text-2xl font-bold text-zinc-900 dark:text-white">
-            SecureVault Locked
-          </Text>
-          <Text className="mb-8 text-center text-zinc-500 dark:text-zinc-400">
-            Authenticate to access your vault
-          </Text>
-          <TouchableOpacity
-            className="rounded-2xl bg-emerald-500 px-8 py-4 shadow-xl shadow-emerald-500/20 active:scale-95"
-            onPress={promptBiometric}>
-            <Text className="text-lg font-bold text-[#022c22]">Unlock</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
+    return <BioMetricLock onPressUnlock={promptBiometric} />;
+  }
+
+  if (isLoading || isPending) {
+    return <LoadingScreen />;
   }
 
   return <>{children}</>;

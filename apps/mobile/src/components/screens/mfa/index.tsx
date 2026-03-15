@@ -2,18 +2,17 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-nativ
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import { useAuthStore } from '../../../store/auth';
+import { useAuthStore } from '@/src/store/auth';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { verifyOtpSchema } from '@securevault/validators';
-import { tokenManager } from '@securevault/libs';
+import { DeviceStoreManager, tokenManager } from '@securevault/libs';
 import { useMutation } from '@tanstack/react-query';
 import { http, logger } from '@securevault/utils-native';
 import { AUTH_ENDPOINT, DEVICE_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { generateDeviceKeyPair } from '@securevault/crypto';
-import { getDeviceIdentifier } from '../../../utils/deviceId';
-import * as SecureStore from 'expo-secure-store';
+import { getDeviceIdentifier } from '@/src/utils/deviceId';
 import * as Device from 'expo-device';
 
 type FormValue = {
@@ -55,7 +54,8 @@ export default function MfaScreen() {
           // Generate Device KeyPair and Register Device
           try {
             const keyPair = await generateDeviceKeyPair();
-            await SecureStore.setItemAsync('SV_DEVICE_PRIVATE_KEY', keyPair.privateKey);
+            // await SecureStore.setItemAsync('SV_DEVICE_PRIVATE_KEY', keyPair.privateKey);
+            await DeviceStoreManager.setDevicePrivateKey(keyPair.privateKey);
 
             const dName =
               Device.deviceName ||
@@ -70,8 +70,10 @@ export default function MfaScreen() {
 
             if (res.data?.id) {
               logger.log('[MFA] Registration successful. Device UUID:', res.data.id);
-              await SecureStore.setItemAsync('SV_DEVICE_ID', res.data.id);
-              await SecureStore.setItemAsync('SV_DEVICE_ID_RESERVE', devId); // Store hardware ID as reserve
+              // await SecureStore.setItemAsync('SV_DEVICE_ID', res.data.id);
+              await DeviceStoreManager.setDeviceId(res.data.id);
+              // await SecureStore.setItemAsync('SV_DEVICE_ID_RESERVE', devId); // Store hardware ID as reserve
+              await DeviceStoreManager.setDeviceIdReserve(devId);
             } else {
               logger.warn('[MFA] Device registration response missing ID:', res.data);
             }

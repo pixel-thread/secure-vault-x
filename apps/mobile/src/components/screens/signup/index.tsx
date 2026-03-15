@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
@@ -17,8 +10,6 @@ import { http } from '@securevault/utils-native';
 import { AUTH_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { useState } from 'react';
-import { PasswordStrength } from '../../common/PasswordStrength';
-import { ScrollView } from 'react-native-gesture-handler';
 
 type FormValue = {
   email: string;
