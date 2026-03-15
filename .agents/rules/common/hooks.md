@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Hooks System
 
 ## Hook Types
