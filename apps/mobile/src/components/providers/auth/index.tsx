@@ -102,7 +102,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   }, [isPending, isLoading, setIsLoading]);
 
-
   // Biometric gate — show lock screen if biometric is required but not passed
   if (biometricRequired && !biometricPassed) {
     return (

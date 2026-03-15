@@ -31,4 +31,3 @@ export default function Redirect({ children }: Props) {
 
   return <>{children}</>;
 }
-
