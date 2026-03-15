@@ -1,16 +1,16 @@
 name: Deploy UAT Web Application to Vercel
 
-on:
-  push:
-    branches:
-      - uat
-    paths:
-      - "apps/web/**"
-      - "packages/**"
-      - "!packages/ui-native/**"
-      - "!packages/utils-native/**"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
+# on:
+#   push:
+#     branches:
+#       - uat
+#     paths:
+#       - "apps/web/**"
+#       - "packages/**"
+#       - "!packages/ui-native/**"
+#       - "!packages/utils-native/**"
+#       - "pnpm-lock.yaml"
+#       - "pnpm-workspace.yaml"
 
 # This workflow automates the deployment of the '@securevault/web' application to a Vercel Preview environment.
 # It is specifically targeted for the 'uat' branch and uses a "Build then Deploy" strategy.
