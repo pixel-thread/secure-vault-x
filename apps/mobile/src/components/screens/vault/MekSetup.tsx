@@ -10,12 +10,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
 import { passwordLoginSchema } from '@securevault/validators';
+import { useForm, Controller } from 'react-hook-form';
+import z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 const schema = passwordLoginSchema.pick({ password: true });
+
+type PasswordFormValues = z.infer<typeof schema>;
 
 export function MekSetup() {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const [password, setPassword] = useState('');
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<PasswordFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      password: '',
+    },
+  });
+
+  const password = watch('password');
   const [showPassword, setShowPassword] = useState(false);
   const { setHasMek } = useAuthStore();
 
@@ -30,36 +47,20 @@ export function MekSetup() {
 
   const isLoading = isGettingSalt || isSettingSalt;
 
-  const handleSetup = () => {
-    const result = schema.safeParse({ password });
-
-    if (!result.success) {
-      toast.error('Invalid Password', {
-        description: result.error.message,
-      });
-      return;
-    }
-
-    if (!password || password.length < 8) {
-      toast.error('Invalid Password', {
-        description: 'Password must be at least 8 characters long.',
-      });
-      return;
-    }
-
+  const onHandleSetup = (data: PasswordFormValues) => {
     getSalt(undefined, {
-      onSuccess: async (data) => {
+      onSuccess: async (saltData) => {
         try {
-          let currentSalt = data?.data?.salt;
+          let currentSalt = saltData?.data?.salt;
           let mekData: { mek: string; salt: string };
 
           if (currentSalt) {
             // Salt exists, derive MEK
-            mekData = await generateMEK(password, currentSalt);
+            mekData = await generateMEK(data.password, currentSalt);
             finishSetup(mekData.mek);
           } else {
             // Generates new MEK and a new salt
-            mekData = await generateMEK(password);
+            mekData = await generateMEK(data.password);
 
             // Save the new salt to the backend
             setSalt(mekData.salt, {
@@ -117,32 +118,45 @@ export function MekSetup() {
           <Text className="ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             Master Password
           </Text>
-          <View className="flex-row items-center rounded-2xl border border-zinc-200 bg-zinc-50 pr-2 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <TextInput
-              className="flex-1 px-5 py-4 text-black focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
-              placeholder="Enter your Master Password"
-              placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity
-              className="p-3"
-              onPressIn={() => setShowPassword(true)}
-              onPressOut={() => setShowPassword(false)}
-              delayPressIn={0}>
-              <Ionicons
-                name={showPassword ? 'eye' : 'eye-off'}
-                size={22}
-                color={showPassword ? '#10b981' : '#71717a'}
-              />
-            </TouchableOpacity>
-          </View>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View
+                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                  errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                }`}>
+                <TextInput
+                  className="flex-1 px-5 py-4 text-black focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
+                  placeholder="Enter your Master Password"
+                  placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  className="p-3"
+                  onPressIn={() => setShowPassword(true)}
+                  onPressOut={() => setShowPassword(false)}
+                  delayPressIn={0}>
+                  <Ionicons
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={22}
+                    color={showPassword ? '#10b981' : '#71717a'}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+          {errors.password && (
+            <Text className="ml-1 mt-1 text-sm text-red-500">{errors.password.message}</Text>
+          )}
         </View>
 
         <TouchableOpacity
           className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
-          onPress={handleSetup}
+          onPress={handleSubmit(onHandleSetup)}
           disabled={isLoading || password.length < 8}>
           {isLoading ? (
             <ActivityIndicator color="#ffffff" />
