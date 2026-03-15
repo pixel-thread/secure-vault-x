@@ -6,7 +6,9 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "build": "pnpm -r build",
-    "generate": "pnpm -r generate"
+    "generate": "pnpm -r generate",
+    "eas-build-pre-install": "pnpm install --frozen-lockfile",
+    "eas-build-post-install": "pnpm run build && pnpm run generate"
   },
   "devDependencies": {
     "turbo": "latest"
