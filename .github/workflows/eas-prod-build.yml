@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout repo
@@ -33,13 +34,20 @@ jobs:
       - name: Generate shared dependencies
         run: pnpm run generate
 
-      - name: Install Expo + EAS
-        run: npm install -g expo eas-cli
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EAS_ACCESS_TOKEN }}
 
-      - name: Login to Expo
-        run: npx eas whoami
-        env:
-          EAS_ACCESS_TOKEN: ${{ secrets.EAS_ACCESS_TOKEN }}
+      - name: Validate Authentication
+        run: |
+          if [ -z "${{ secrets.EAS_ACCESS_TOKEN }}" ]; then
+            echo "Error: EAS_ACCESS_TOKEN is not set. Please add it to SecureVault GitHub Secrets."
+            exit 1
+          fi
+          npx eas whoami
 
       - name: Check app.json version change
         id: version_check
