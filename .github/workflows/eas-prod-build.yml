@@ -78,7 +78,6 @@ jobs:
         working-directory: apps/mobile
         run: |
           eas update \
-            --branch production \
             --channel production \
             --message "v${{ steps.version_check.outputs.current_version }} — ${{ github.event.head_commit.message }}" \
             --non-interactive
