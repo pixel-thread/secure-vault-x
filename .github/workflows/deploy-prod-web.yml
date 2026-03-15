@@ -49,7 +49,7 @@ jobs:
 
       - name: Generate Prisma Clients
         # Generates all database clients across the monorepo.
-        run: pnpm run generate
+        run: pnpm turbo run db:generate --filter=@securevault/web
 
       - name: Build Workspace
         # Builds all packages and apps in the monorepo.
