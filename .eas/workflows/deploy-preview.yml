@@ -1,0 +1,62 @@
+name: EAS Preview Build
+
+on:
+  push:
+    branches: ["uat"]
+    paths:
+      - "apps/mobile/**"
+      - "packages/**/**"
+      - "!packages/ui/**"
+
+jobs:
+  fingerprint:
+    name: 📋 Calculate fingerprint
+    type: fingerprint
+    environment: preview
+    working_directory: apps/mobile
+
+  check_existing_build:
+    name: 🔍 Check existing build
+    type: get-build
+    environment: preview
+    working_directory: apps/mobile
+    needs: [fingerprint]
+    params:
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+      profile: preview
+
+  build_new:
+    name: 🏗️ Create new build
+    type: build
+    environment: preview
+    working_directory: apps/mobile
+    needs: [check_existing_build, fingerprint]
+    if: ${{ !needs.check_existing_build.outputs.build_id && github.event_name != 'pull_request' }}
+    params:
+      platform: android
+      profile: preview
+
+  publish_ota:
+    name: ⚡ Publish OTA Update
+    type: update
+    environment: preview
+    working_directory: apps/mobile
+    needs: [fingerprint]
+    params:
+      platform: android
+      branch: preview
+      channel: preview
+      message: "UI/JS changes: ${{ github.event.head_commit.message }}"
+
+  notify_summary:
+    name: 📊 Deployment Summary
+    type: slack
+    needs: [build_new, publish_ota]
+    if: ${{ always() }}
+    params:
+      webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      message: |
+        🚀 PROD Deploy
+        OTA: ✅ Always (UI/JS)
+        Native Build: ${{ needs.build_new.outputs.build_id && '✅ New' || '❎ Skipped' }}
+        Fingerprint: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
