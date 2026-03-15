@@ -32,6 +32,7 @@ generated
 
 expo-env.d.ts
 *.apk
+*.abb
 .vercel/.env.preview.local
 .vercel/.env.development.local
 .vercel

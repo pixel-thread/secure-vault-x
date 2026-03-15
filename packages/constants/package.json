@@ -2,7 +2,9 @@
   "name": "@securevault/constants",
   "version": "1.0.0",
   "main": "./dist/index.js",
-  "types": "./dist/index.js",
+  "react-native": "./src/index.ts",
+  "source": "./src/index.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -24,4 +26,3 @@
     "typescript": "^5.3.3"
   }
 }
-
