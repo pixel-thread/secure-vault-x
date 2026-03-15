@@ -22,8 +22,7 @@
     "splash": {
       "image": "./assets/splashscreen/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#001010",
-      "icons": ["./assets/splashscreen/splash-icon.png"]
+      "backgroundColor": "#001010"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
