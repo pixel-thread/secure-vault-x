@@ -1,8 +1,9 @@
 import * as Updates from 'expo-updates';
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Alert, AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import { toast } from 'sonner-native';
 import { logger } from '@securevault/utils-native';
+import { OTAUpdateDialog } from '../../common/OTAUpdateDialog';
 
 interface UpdateContextType {
  isChecking: boolean;
@@ -17,6 +18,7 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
  const [isChecking, setIsChecking] = useState(false);
  const [isDownloading, setIsDownloading] = useState(false);
  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+ const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
  const onFetchUpdateAsync = useCallback(async () => {
   if (isDownloading) return;
@@ -28,20 +30,7 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
    if (update.isAvailable) {
     toast.info('Downloading update...');
     await Updates.fetchUpdateAsync();
-
-    Alert.alert(
-     'Update Ready',
-     'A new version of SecureVault is ready. Would you like to restart and apply it now?',
-     [
-      { text: 'Later', style: 'cancel' },
-      {
-       text: 'Update Now',
-       onPress: async () => {
-        await Updates.reloadAsync();
-       }
-      },
-     ]
-    );
+    setShowUpdateDialog(true);
    }
   } catch (error) {
    logger.error('Error fetching latest Expo update:', error);
@@ -77,6 +66,16 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }
  }, [isChecking, onFetchUpdateAsync]);
 
+ const handleUpdate = async () => {
+  try {
+   setShowUpdateDialog(false);
+   await Updates.reloadAsync();
+  } catch (error) {
+   logger.error('Failed to reload app for update:', error);
+   toast.error('Failed to apply update. Please restart the app manually.');
+  }
+ };
+
  // Handle App Launch Check
  useEffect(() => {
   checkForUpdates(true);
@@ -105,6 +104,11 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
    }}
   >
    {children}
+   <OTAUpdateDialog
+    isVisible={showUpdateDialog}
+    onUpdate={handleUpdate}
+    onCancel={() => setShowUpdateDialog(false)}
+   />
   </UpdateContext.Provider>
  );
 };
