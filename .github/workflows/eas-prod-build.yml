@@ -39,8 +39,12 @@ jobs:
           packager: pnpm
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: 📦 Install dependencies & build shared packages
+        run: |
+          # EAS pre-install hook
+          pnpm run eas-build-pre-install
+          # EAS post-install hook
+          pnpm run eas-build-post-install
 
       - name: 🔖 Check app.json version change
         id: version_check

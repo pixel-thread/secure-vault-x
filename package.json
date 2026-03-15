@@ -2,13 +2,11 @@
   "name": "securevault-x",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "generate": "turbo run generate",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "eas-build-pre-install": "pnpm install --frozen-lockfile",
-    "eas-build-post-install": "pnpm run build && pnpm run generate"
+    "build": "pnpm -r build",
+    "generate": "pnpm -r generate"
   },
   "devDependencies": {
     "turbo": "latest"
