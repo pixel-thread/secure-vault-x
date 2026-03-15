@@ -2,7 +2,8 @@ name: EAS Production Build
 
 on:
   push:
-    branches: ["master"]
+    branches:
+      - master
     paths:
       - "apps/mobile/**"
       - "packages/**"
