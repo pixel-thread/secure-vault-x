@@ -6,6 +6,7 @@ const KEYS = {
   DEVICE_ID: "SV_DEVICE_ID",
   DEVICE_ID_RESERVE: "SV_DEVICE_ID_RESERVE",
   DEVICE_PRIVATE_KEY: "SV_DEVICE_PRIVATE_KEY",
+  DEVICE_USER_KEY: "SV_DEVICE_USER_KEY",
 } as const;
 
 export const DeviceStoreManager = {
@@ -43,6 +44,15 @@ export const DeviceStoreManager = {
   removeDevicePrivateKey: async () =>
     await SecureStore.deleteItemAsync(KEYS.DEVICE_PRIVATE_KEY),
 
+  // User Persistence
+  getUser: async () => {
+    const user = await SecureStore.getItemAsync(KEYS.DEVICE_USER_KEY);
+    return user ? JSON.parse(user) : null;
+  },
+  setUser: async (user: any) =>
+    await SecureStore.setItemAsync(KEYS.DEVICE_USER_KEY, JSON.stringify(user)),
+  removeUser: async () => await SecureStore.deleteItemAsync(KEYS.DEVICE_USER_KEY),
+
   // Biometric Settings
   getBiometricEnabled: async () =>
     (await SecureStore.getItemAsync("SV_BIOMETRIC_ENABLED")) === "true",
@@ -62,6 +72,7 @@ export const DeviceStoreManager = {
       SecureStore.deleteItemAsync(KEYS.DEVICE_ID),
       SecureStore.deleteItemAsync(KEYS.DEVICE_ID_RESERVE),
       SecureStore.deleteItemAsync(KEYS.DEVICE_PRIVATE_KEY),
+      SecureStore.deleteItemAsync(KEYS.DEVICE_USER_KEY),
       SecureStore.deleteItemAsync("SV_BIOMETRIC_ENABLED"),
     ]);
   },
