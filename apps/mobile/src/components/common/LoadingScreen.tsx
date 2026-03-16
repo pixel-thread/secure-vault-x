@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { BlurView } from 'expo-blur';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -14,6 +13,7 @@ import Animated, {
 type Props = {
   message?: string;
 };
+
 export const LoadingScreen = ({ message = 'Securing your vault...' }: Props) => {
   const scale = useSharedValue(1);
 
@@ -37,12 +37,12 @@ export const LoadingScreen = ({ message = 'Securing your vault...' }: Props) => 
         {/* Icon Container - Matching LoginScreen Style */}
         <Animated.View
           style={animatedIconStyle}
-          className="mb-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
+          className="mb-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-2 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
           <Image
             source={require('../../../assets/icon.png')}
             width={100}
             height={100}
-            className="max-h-[150px] max-w-[150px]"
+            className="max-h-[150px] max-w-[150px] rounded-3xl"
           />
         </Animated.View>
 
@@ -59,9 +59,6 @@ export const LoadingScreen = ({ message = 'Securing your vault...' }: Props) => 
           </Text>
         </Animated.View>
       </View>
-
-      {/* Enhanced Glassmorphism Overlay */}
-      <BlurView intensity={20} style={StyleSheet.absoluteFill} className="z-[-1]" tint="default" />
     </View>
   );
 };
