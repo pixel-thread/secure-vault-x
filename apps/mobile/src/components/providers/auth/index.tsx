@@ -95,9 +95,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     return <BioMetricLock onPressUnlock={promptBiometric} />;
   }
 
-  if (isLoading || isPending) {
-    return <LoadingScreen />;
-  }
+  // TODO: Re-enable this when the issue is fix
+  // Issue App crash feel like something to do with this
+  // if (isLoading || isPending) {
+  //   return <LoadingScreen />;
+  // }
 
   return <>{children}</>;
 };

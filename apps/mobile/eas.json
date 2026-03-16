@@ -12,13 +12,33 @@
         "buildType": "apk"
       },
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "cache": {
+        "key": "android-cache-v1",
+        "paths": [
+          "android/.gradle",
+          "~/.gradle/caches",
+          "~/.gradle/wrapper",
+          "~/.pnpm-store",
+          "~/.expo"
+        ]
+      }
     },
     "production": {
       "android": {
         "buildType": "apk"
       },
-      "channel": "production"
+      "channel": "production",
+      "cache": {
+        "key": "android-cache-v1",
+        "paths": [
+          "android/.gradle",
+          "~/.gradle/caches",
+          "~/.gradle/wrapper",
+          "~/.pnpm-store",
+          "~/.expo"
+        ]
+      }
     }
   }
 }

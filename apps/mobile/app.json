@@ -6,6 +6,7 @@
     "scheme": ["securevaultx"],
     "platforms": ["ios", "android"],
     "newArchEnabled": true,
+    "jsEngine": "hermes",
     "web": {
       "bundler": "metro",
       "output": "static",
