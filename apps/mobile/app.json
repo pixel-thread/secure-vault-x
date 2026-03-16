@@ -2,10 +2,11 @@
   "expo": {
     "name": "Secure Vault X",
     "slug": "secure-vault-x",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "scheme": ["securevaultx"],
     "platforms": ["ios", "android"],
     "newArchEnabled": true,
+    "jsEngine": "hermes",
     "web": {
       "bundler": "metro",
       "output": "static",
