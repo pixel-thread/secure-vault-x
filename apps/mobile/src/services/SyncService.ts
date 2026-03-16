@@ -1,9 +1,9 @@
 import { SYNC_ENDPOINT } from '@securevault/constants';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
-import * as schema from '../libs/database/schema';
+import * as schema from '@libs/database/schema';
 import { eq, gt, and } from 'drizzle-orm';
 import { http, logger } from '@securevault/utils-native';
-import { SyncStoreManager } from '../store/sync';
+import { SyncStoreManager } from '@store/sync';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 
