@@ -3,16 +3,16 @@ import * as SQLite from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import * as Updates from 'expo-updates';
-import { useAuthStore } from '@/src/store/auth';
+import { useAuthStore } from '@store/auth';
 import { logger } from '@securevault/utils-native';
-import * as schema from '@/src/libs/database/schema';
-import migrations from '@/src/libs/database/drizzle/migrations/migrations.js';
-import { SyncServiceT, VaultServiceT } from '@/src/types/db';
-import { DrizzleContext } from '@/src/libs/context/DBContext';
-import { SyncServiceContext } from '@/src/libs/context/SyncContext';
-import { VaultServiceContext } from '@/src/libs/context/VaultContext';
-import { MigrationErrorScreen } from '../../common/MigrationErrorScreen';
-import { LoadingScreen } from '../../common/LoadingScreen';
+import * as schema from '@libs/database/schema';
+import migrations from '@libs/database/drizzle/migrations/migrations.js';
+import { SyncServiceT, VaultServiceT } from '@src/types/db';
+import { DrizzleContext } from '@libs/context/DBContext';
+import { SyncServiceContext } from '@libs/context/SyncContext';
+import { VaultServiceContext } from '@libs/context/VaultContext';
+import { MigrationErrorScreen } from '@components/common/MigrationErrorScreen';
+import { LoadingScreen } from '@components/common/LoadingScreen';
 
 // 1. Initialize the connection OUTSIDE the component to prevent
 // multiple connections/re-initialization during re-renders.

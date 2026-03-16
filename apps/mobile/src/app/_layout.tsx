@@ -1,15 +1,11 @@
 import './global.css';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
-
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
-import { Wrapper } from '../components/providers';
+import { Wrapper } from '@components/providers';
 import React, { useEffect } from 'react';
-
-import { Toaster } from 'sonner-native';
-import { useColorScheme } from 'nativewind';
-import { useSyncTrigger } from '../hooks/useSyncTrigger';
+import { useSyncTrigger } from '@hooks/useSyncTrigger';
 
 function AppSyncManager() {
   useSyncTrigger();
@@ -30,7 +26,6 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const [isMounted, setIsMounted] = React.useState(false);
-  const { colorScheme } = useColorScheme();
 
   useEffect(() => {
     if (!isMounted) {

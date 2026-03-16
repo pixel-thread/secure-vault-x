@@ -7,8 +7,8 @@ import { http, logger } from '@securevault/utils-native';
 import { tokenManager } from '@securevault/libs';
 import { toast } from 'sonner-native';
 import { router } from 'expo-router';
-import { useAuthStore } from '@/src/store/auth';
-import { DeviceStoreManager } from '@/src/store/device';
+import { useAuthStore } from '@store/auth';
+import { DeviceStoreManager } from '@store/device';
 
 export default function SignOutButton() {
   const { colorScheme } = useColorScheme();

@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordRegisterSchema } from '@securevault/validators';
 import { useMutation } from '@tanstack/react-query';
@@ -38,16 +38,6 @@ export default function SignupScreen() {
       password: process.env.PASSWORD || '',
       confirmPassword: process.env.PASSWORD || '',
     },
-  });
-
-  const password = useWatch({
-    control,
-    name: 'password',
-  });
-
-  const confirmPassword = useWatch({
-    control,
-    name: 'confirmPassword',
   });
 
   const { mutate, isPending } = useMutation({

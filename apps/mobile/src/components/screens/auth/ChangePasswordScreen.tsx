@@ -6,7 +6,7 @@ import { useColorScheme } from 'nativewind';
 import { http, logger } from '@securevault/utils-native';
 import { toast } from 'sonner-native';
 import { AUTH_ENDPOINT } from '@securevault/constants';
-import { PasswordStrength } from '../../common/PasswordStrength';
+import { PasswordStrength } from '@components/common/PasswordStrength';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';

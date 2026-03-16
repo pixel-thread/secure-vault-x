@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import { useAuthStore } from '../../../store/auth';
+import { useAuthStore } from '@store/auth';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordLoginSchema } from '@securevault/validators';
@@ -12,7 +12,7 @@ import { http, logger } from '@securevault/utils-native';
 import { AUTH_ENDPOINT, DEVICE_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { generateDeviceKeyPair } from '@securevault/crypto';
-import { getDeviceIdentifier } from '../../../utils/deviceId';
+import { getDeviceIdentifier } from '@utils/deviceId';
 import * as Device from 'expo-device';
 import { useState } from 'react';
 

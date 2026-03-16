@@ -7,11 +7,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { generatePassword } from '@securevault/utils';
 import { useColorScheme } from 'nativewind';
 import { toast } from 'sonner-native';
-import { DeviceStoreManager } from '../../../store/device';
+import { DeviceStoreManager } from '@store/device';
 import { encryptData } from '@securevault/crypto';
 import * as Crypto from 'expo-crypto';
 import { logger } from '@securevault/utils-native';
-import { usePasswordMutation, MutationMode } from '@/src/hooks/usePasswordMutation';
+import { usePasswordMutation, MutationMode } from '@hooks/usePasswordMutation';
 
 // --- Validation Schema ---
 const passwordSchema = z.object({
@@ -168,7 +168,6 @@ export function AddPasswordForm({ onSuccess, onCancel, mode = 'create', initialV
     const newPass = generatePassword(32);
     logger.log('[AddPasswordForm] Generated new password');
     setValue('password', newPass, { shouldDirty: true });
-    toast.info('New Password Generated', { description: "Don't forget to save!" });
   }, [setValue]);
 
   // --- Render ---

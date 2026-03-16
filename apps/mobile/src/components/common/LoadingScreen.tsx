@@ -10,7 +10,6 @@ import Animated, {
   FadeIn,
   FadeOut,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
   message?: string;

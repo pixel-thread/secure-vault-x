@@ -4,11 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useVaultService } from '@/src/hooks/useVaultService';
-import { useSyncService } from '@/src/hooks/useSyncService';
-import { DeviceStoreManager } from '../../../store/device';
+import { useVaultService } from '@hooks/useVaultService';
+import { useSyncService } from '@hooks/useSyncService';
+import { DeviceStoreManager } from '@store/device';
 import { encryptData } from '@securevault/crypto';
 import * as Crypto from 'expo-crypto';
 import { toast } from 'sonner-native';
@@ -53,7 +52,7 @@ export function AddBankCardForm({ onSuccess }: Props) {
     defaultValues: { serviceName: '', cardName: '', cardNumber: '', exp: '', cvv: '', note: '' },
   });
 
-  const { mutate, isPending } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: async (data: SaveDTO) => {
       if (!vaultService) throw new Error('Vault Service not initialized');
       return await vaultService.saveVaultItem(data);

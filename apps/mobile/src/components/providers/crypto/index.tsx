@@ -1,5 +1,5 @@
 import React from 'react';
-import { isExpoGo } from '@/src/utils/helper/checkIsExpo';
+import { isExpoGo } from '@utils/helper/checkIsExpo';
 import { logger } from '@securevault/utils-native';
 
 const isExpo = isExpoGo();

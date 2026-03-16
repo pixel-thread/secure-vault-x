@@ -1,9 +1,9 @@
 import * as Updates from 'expo-updates';
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { toast } from 'sonner-native';
 import { logger } from '@securevault/utils-native';
-import { OTAUpdateDialog } from '../../common/OTAUpdateDialog';
+import { OTAUpdateDialog } from '@components/common/OTAUpdateDialog';
 
 interface UpdateContextType {
   isChecking: boolean;

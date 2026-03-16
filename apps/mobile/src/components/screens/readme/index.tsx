@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from 'react-native';
-import Header from '../../common/Header';
+import Header from '@components/common/Header';
 
 const Divider = () => <View className="my-6 h-px w-full bg-zinc-200 dark:bg-zinc-800" />;
 
