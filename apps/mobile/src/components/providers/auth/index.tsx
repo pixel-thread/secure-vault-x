@@ -34,14 +34,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     },
     onError: async (error: any) => {
       logger.error('Auth background verification failed', error);
-      
+
       // If it's a definitive auth failure (401/403), clear session
       if (error?.status === 401 || error?.status === 403) {
         setIsAuthenticated(false);
         await tokenManager.removeAllTokens();
         await DeviceStoreManager.removeUser();
       } else {
-        // For network errors or other non-auth failures, 
+        // For network errors or other non-auth failures,
         // keep current state if we have a user
         const storedUser = await DeviceStoreManager.getUser();
         if (storedUser) {

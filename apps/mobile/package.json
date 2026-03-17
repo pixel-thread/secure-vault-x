@@ -1,6 +1,6 @@
 {
   "name": "@securevault/mobile",
-  "version": "1.0.0",
+  "version": "0.0.7",
   "main": "expo-router/entry",
   "scripts": {
     "build:local:android": "eas build --profile development --platform android --local",
@@ -49,6 +49,7 @@
     "expo-local-authentication": "~17.0.8",
     "expo-network": "~8.0.8",
     "expo-router": "~6.0.10",
+    "expo-screen-capture": "~8.0.9",
     "expo-secure-store": "~15.0.8",
     "expo-sharing": "^14.0.8",
     "expo-sqlite": "^16.0.10",
