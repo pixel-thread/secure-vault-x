@@ -1,14 +1,14 @@
-import { useAuthStore } from '@/src/store/auth';
+import { useAuthStore } from '@store/auth';
 import { AUTH_ENDPOINT } from '@securevault/constants';
 import { tokenManager } from '@securevault/libs';
 import { UserT } from '@securevault/types';
 import { http, logger, isConnectedToNetwork } from '@securevault/utils-native';
 import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
-import { authenticateWithBiometric } from '@/src/utils/biometricLock';
-import { DeviceStoreManager } from '@/src/store/device';
-import { LoadingScreen } from '../../common/LoadingScreen';
-import { BioMetricLock } from '../../common/BiometricLock';
+import { authenticateWithBiometric } from '@utils/biometricLock';
+import { DeviceStoreManager } from '@store/device';
+import { LoadingScreen } from '@components/common/LoadingScreen';
+import { BioMetricLock } from '@components/common/BiometricLock';
 
 type Props = { children: React.ReactNode };
 

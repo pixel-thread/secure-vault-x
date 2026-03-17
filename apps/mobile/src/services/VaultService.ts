@@ -1,12 +1,12 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
-import * as schema from '../libs/database/schema';
+import * as schema from '@libs/database/schema';
 import { eq, desc, isNull, and } from 'drizzle-orm';
-import { VaultSecretT } from '../types/vault';
+import { VaultSecretT } from '@src/types/vault';
 import { decryptData } from '@securevault/crypto';
-import { DeviceStoreManager } from '../store/device';
+import { DeviceStoreManager } from '@store/device';
 import { logger } from '@securevault/utils-native';
 import { z } from 'zod';
-import { VaultItemSchema } from '../utils/validators/vault';
+import { VaultItemSchema } from '@utils/validators/vault';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 

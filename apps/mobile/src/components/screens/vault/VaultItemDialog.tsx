@@ -1,4 +1,4 @@
-import { VaultSecretT } from '@/src/types/vault';
+import { VaultSecretT } from '@src/types/vault';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
@@ -6,10 +6,10 @@ import { useColorScheme } from 'nativewind';
 import { Modal, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { useSyncService } from '@/src/hooks/useSyncService';
-import { useVaultService } from '@/src/hooks/useVaultService';
+import { useSyncService } from '@hooks/useSyncService';
+import { useVaultService } from '@hooks/useVaultService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEditMode } from '@/src/hooks/useEditMode';
+import { useEditMode } from '@hooks/useEditMode';
 import { AddPasswordForm } from './AddPasswordForm';
 
 type Props = {
@@ -32,7 +32,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
       return await vaultService.deleteVaultItem(id);
     },
     onSuccess: () => {
-      toast.success('Secret deleted locally');
+      toast.success('Secret deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['vault'] });
       onValueChange(false);
 

@@ -1,1 +1,1 @@
-export { default } from '../../../components/screens/generator';
+export { default } from '@components/screens/generator';

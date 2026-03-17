@@ -1,17 +1,17 @@
 import { View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Header from '../../common/Header';
-import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '../../../store/auth';
+import Header from '@components/common/Header';
+import { useState, useCallback } from 'react';
+import { useAuthStore } from '@store/auth';
 import { useQuery } from '@tanstack/react-query';
 import { VaultItem } from './VaultItem';
 import { VaultItemDialog } from './VaultItemDialog';
 import { AddSecretDialog } from './AddSecretDialog';
 import { VaultEmpty } from './VaultEmpty';
 import { MekSetup } from './MekSetup';
-import { VaultSecretT } from '@/src/types/vault';
-import { useVaultService } from '@/src/hooks/useVaultService';
-import { useSyncService } from '@/src/hooks/useSyncService';
+import { VaultSecretT } from '@src/types/vault';
+import { useVaultService } from '@hooks/useVaultService';
+import { useSyncService } from '@hooks/useSyncService';
 import { logger } from '@securevault/utils-native';
 
 /**

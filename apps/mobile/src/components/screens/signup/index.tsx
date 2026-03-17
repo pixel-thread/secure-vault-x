@@ -1,8 +1,8 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordRegisterSchema } from '@securevault/validators';
 import { useMutation } from '@tanstack/react-query';
@@ -40,16 +40,6 @@ export default function SignupScreen() {
     },
   });
 
-  const password = useWatch({
-    control,
-    name: 'password',
-  });
-
-  const confirmPassword = useWatch({
-    control,
-    name: 'confirmPassword',
-  });
-
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_PASSWORD_REGISTER, data),
     onSuccess: async (data) => {
@@ -69,8 +59,13 @@ export default function SignupScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-white p-8 dark:bg-[#09090b]">
       <View className="mb-12 items-center">
-        <View className="mb-4 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
-          <Ionicons name="person-add" size={48} color="#10b981" />
+        <View className="mb-4 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-2 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
+          <Image
+            source={require('../../../../assets/icon.png')}
+            width={100}
+            height={100}
+            className="max-h-[150px] max-w-[150px] rounded-2xl"
+          />
         </View>
         <Text className="text-4xl font-extrabold tracking-tighter text-zinc-900 dark:text-white">
           Create Account

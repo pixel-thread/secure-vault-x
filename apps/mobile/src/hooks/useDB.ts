@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { DrizzleContext } from '../libs/context/DBContext';
+import { DrizzleContext } from '@libs/context/DBContext';
 
 export const useDB = () => {
   const context = useContext(DrizzleContext);
