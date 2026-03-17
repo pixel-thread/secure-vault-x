@@ -15,6 +15,9 @@ export const VaultItem = ({
 }) => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+
+  if (!item) return null;
+
   return (
     <TouchableOpacity
       key={item.id}

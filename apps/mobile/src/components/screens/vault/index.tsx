@@ -42,8 +42,9 @@ export default function VaultScreen() {
       if (!vaultService) return [];
       try {
         const items = await vaultService.getVaultItems();
-        logger.log('[VaultScreen] Fetched local vault items', { count: items.length });
-        return items;
+        const validItems = items.filter(Boolean);
+        logger.log('[VaultScreen] Fetched local vault items', { count: validItems.length });
+        return validItems;
       } catch (err) {
         logger.error('[VaultScreen] Failed to fetch vault items', { error: err });
         return [];

@@ -145,7 +145,16 @@ export class VaultService {
 
         try {
           const payload = await decryptData<any>(entry.encryptedData, entry.iv, mek);
-          decryptedItems.push(this.transformToVaultSecret(entry.id, payload));
+          
+          if (!payload) {
+            logger.warn('Decryption returned null payload', { vaultId: entry.id });
+            continue;
+          }
+
+          const transformed = this.transformToVaultSecret(entry.id, payload);
+          if (transformed) {
+            decryptedItems.push(transformed);
+          }
         } catch (err) {
           logger.error('Failed to decrypt vault entry', {
             id: entry.id,
@@ -171,30 +180,37 @@ export class VaultService {
    * Centralizes mapping logic for easier maintenance.
    */
   private transformToVaultSecret(id: string, payload: any): VaultSecretT {
-    const isCard = !!payload.cardNumber;
+    if (!payload) return null as any; // Should be handled by caller
 
-    if (isCard) {
+    try {
+      const isCard = !!payload.cardNumber;
+
+      if (isCard) {
+        return {
+          id,
+          type: 'card',
+          serviceName: payload.serviceName || 'Unknown Card',
+          cardholderName: payload.cardName || payload.cardholderName || '',
+          cardNumber: payload.cardNumber || '',
+          expirationDate: payload.exp || payload.expirationDate || '',
+          cvv: payload.cvv || '',
+          note: payload.note || '',
+        };
+      }
+
       return {
         id,
-        type: 'card',
-        serviceName: payload.serviceName || 'Unknown Card',
-        cardholderName: payload.cardName || '',
-        cardNumber: payload.cardNumber || '',
-        expirationDate: payload.exp || '',
-        cvv: payload.cvv || '',
-        note: payload.note,
+        type: 'password',
+        serviceName: payload.serviceName || 'Unknown',
+        website: payload.url ?? payload.website ?? '',
+        username: payload.username ?? '',
+        secretInfo: payload.password ?? payload.secretInfo ?? '',
+        note: payload.note || '',
       };
+    } catch (err) {
+      logger.error('Transformation failed for vault item', { id, error: err });
+      return null as any;
     }
-
-    return {
-      id,
-      type: 'password',
-      serviceName: payload.serviceName || 'Unknown',
-      website: payload.url ?? '',
-      username: payload.username ?? '',
-      secretInfo: payload.password ?? '',
-      note: payload.note,
-    };
   }
 
   /**
