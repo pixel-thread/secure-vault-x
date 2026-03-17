@@ -9,6 +9,9 @@
       },
       "distribution": "internal",
       "channel": "development",
+      "env": {
+        "APP_VARIANT": "development"
+      },
       "cache": {
         "key": "android-cache-v2",
         "paths": ["android/.gradle"]
@@ -20,6 +23,9 @@
       },
       "distribution": "internal",
       "channel": "preview",
+      "env": {
+        "APP_VARIANT": "preview"
+      },
       "cache": {
         "key": "android-cache-v2",
         "paths": ["android/.gradle"]
@@ -30,6 +36,9 @@
         "buildType": "apk"
       },
       "channel": "production",
+      "env": {
+        "APP_VARIANT": "production"
+      },
       "cache": {
         "key": "android-cache-v2",
         "paths": ["android/.gradle"]

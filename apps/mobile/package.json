@@ -7,7 +7,7 @@
     "build:preview:android": "eas build --profile preview --platform android --local",
     "build:prod:android": "eas build --profile production --platform android --local",
     "start": "expo start",
-    "dev": "expo start -c",
+    "dev": "APP_VARIANT=development expo start -c",
     "prebuild": "expo prebuild",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
