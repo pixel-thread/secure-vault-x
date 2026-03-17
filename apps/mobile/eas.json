@@ -7,14 +7,8 @@
       "distribution": "internal",
       "channel": "development",
       "cache": {
-        "key": "android-cache-v1",
-        "paths": [
-          "android/.gradle",
-          "~/.gradle/caches",
-          "~/.gradle/wrapper",
-          "~/.pnpm-store",
-          "~/.expo"
-        ]
+        "key": "android-cache-v2",
+        "paths": ["android/.gradle"]
       }
     },
     "preview": {
@@ -24,14 +18,8 @@
       "distribution": "internal",
       "channel": "preview",
       "cache": {
-        "key": "android-cache-v1",
-        "paths": [
-          "android/.gradle",
-          "~/.gradle/caches",
-          "~/.gradle/wrapper",
-          "~/.pnpm-store",
-          "~/.expo"
-        ]
+        "key": "android-cache-v2",
+        "paths": ["android/.gradle"]
       }
     },
     "production": {
@@ -40,14 +28,8 @@
       },
       "channel": "production",
       "cache": {
-        "key": "android-cache-v1",
-        "paths": [
-          "android/.gradle",
-          "~/.gradle/caches",
-          "~/.gradle/wrapper",
-          "~/.pnpm-store",
-          "~/.expo"
-        ]
+        "key": "android-cache-v2",
+        "paths": ["android/.gradle"]
       }
     }
   }
