@@ -17,8 +17,8 @@ type Props = {
 export const Wrapper = ({ children }: Props) => {
   const { colorScheme } = useColorScheme();
   return (
-    <TQueryProvider>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <TQueryProvider>
         <UpdateProvider>
           <CryptoProvider>
             <DBProvider>
@@ -33,7 +33,7 @@ export const Wrapper = ({ children }: Props) => {
           </CryptoProvider>
         </UpdateProvider>
         <Toaster duration={1000} theme={colorScheme as 'light' | 'dark'} />
-      </ErrorBoundary>
-    </TQueryProvider>
+      </TQueryProvider>
+    </ErrorBoundary>
   );
 };
