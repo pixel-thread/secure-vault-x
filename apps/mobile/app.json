@@ -2,7 +2,7 @@
   "expo": {
     "name": "Secure Vault X",
     "slug": "secure-vault-x",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "scheme": ["securevaultx"],
     "platforms": ["ios", "android"],
     "newArchEnabled": true,
@@ -28,14 +28,16 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pixelthread.securevaultx"
+      "bundleIdentifier": "com.pixelthread.securevaultx",
+      "buildNumber": "7"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#001010"
       },
-      "package": "com.pixelthread.securevaultx"
+      "package": "com.pixelthread.securevaultx",
+      "versionCode": 7
     },
     "extra": {
       "router": {},

@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@components/common/ErrorBoundary';
 import { Toaster } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
 import { DBProvider } from './db';
+import { ScreenCaptureProvider } from './capture';
 
 type Props = {
   children: React.ReactNode;
@@ -23,7 +24,9 @@ export const Wrapper = ({ children }: Props) => {
             <DBProvider>
               <Suspense>
                 <AuthProvider>
-                  <Redirect>{children}</Redirect>
+                  <ScreenCaptureProvider>
+                    <Redirect>{children}</Redirect>
+                  </ScreenCaptureProvider>
                 </AuthProvider>
               </Suspense>
             </DBProvider>
