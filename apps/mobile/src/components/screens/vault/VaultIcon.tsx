@@ -7,6 +7,8 @@ import { logger } from '@securevault/utils-native';
 export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   const [imgError, setImgError] = useState(false);
 
+  if (!item) return null;
+
   const renderIcon = () => {
     if (item.type === 'password' && item.website && !imgError) {
       let domain = item.website;
