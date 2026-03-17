@@ -1,1 +1,1 @@
-export { default } from '../../components/screens/mfa';
+export { default } from '@components/screens/mfa';

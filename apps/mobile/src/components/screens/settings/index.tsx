@@ -1,5 +1,5 @@
 import { View, ScrollView } from 'react-native';
-import Header from '../../common/Header';
+import Header from '@components/common/Header';
 import { useState } from 'react';
 import AppAppearanceSection from './AppAppearanceSection';
 import SecurityControlsSection from './SecurityControlsSection';

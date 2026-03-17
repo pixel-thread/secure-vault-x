@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
-import Redirect from '../common/Redirect';
+import Redirect from '@components/common/Redirect';
 import { TQueryProvider } from './query';
 import { AuthProvider } from './auth';
 import { CryptoProvider } from './crypto';
 import { UpdateProvider } from './update';
-import { ErrorBoundary } from '../common/ErrorBoundary';
+import { ErrorBoundary } from '@components/common/ErrorBoundary';
 import { Toaster } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
 import { DBProvider } from './db';

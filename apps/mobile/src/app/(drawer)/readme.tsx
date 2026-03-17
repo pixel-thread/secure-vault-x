@@ -1,1 +1,1 @@
-export { default } from '../../components/screens/readme';
+export { default } from '@components/screens/readme';

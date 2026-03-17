@@ -1,1 +1,1 @@
-export { default } from '../../../components/screens/vault';
+export { default } from '@components/screens/vault';

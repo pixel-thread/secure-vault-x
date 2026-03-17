@@ -1,1 +1,1 @@
-export { default } from '../../components/screens/auth/ChangePasswordScreen';
+export { default } from '@components/screens/auth/ChangePasswordScreen';

@@ -1,8 +1,8 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import { useAuthStore } from '../../../store/auth';
+import { useAuthStore } from '@store/auth';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordLoginSchema } from '@securevault/validators';
@@ -12,7 +12,7 @@ import { http, logger } from '@securevault/utils-native';
 import { AUTH_ENDPOINT, DEVICE_ENDPOINT } from '@securevault/constants';
 import { toast } from 'sonner-native';
 import { generateDeviceKeyPair } from '@securevault/crypto';
-import { getDeviceIdentifier } from '../../../utils/deviceId';
+import { getDeviceIdentifier } from '@utils/deviceId';
 import * as Device from 'expo-device';
 import { useState } from 'react';
 
@@ -117,8 +117,13 @@ export default function LoginScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-white p-8 dark:bg-[#09090b]">
       <View className="mb-12 items-center">
-        <View className="mb-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
-          <Ionicons name="shield-checkmark" size={48} color="#10b981" />
+        <View className="mb-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-2 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
+          <Image
+            source={require('../../../../assets/icon.png')}
+            width={100}
+            height={100}
+            className="max-h-[150px] max-w-[150px] rounded-2xl"
+          />
         </View>
         <Text className="text-4xl font-extrabold tracking-tighter text-zinc-900 dark:text-white">
           SecureVault <Text className="text-emerald-500">X</Text>

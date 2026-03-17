@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCallback } from 'react';
 import { toast } from 'sonner-native';
 import { router } from 'expo-router';
-import { useAuthStore } from '../../../store/auth';
+import { useAuthStore } from '@store/auth';
 
 export default function DangerZoneSection() {
   const purgeLocalEnclave = useAuthStore((state) => state.purgeLocalEnclave);

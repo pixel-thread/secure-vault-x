@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Switch } from 'react-native';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import Header from '../../common/Header';
+import Header from '@components/common/Header';
 import { generatePassword } from '@securevault/utils';
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';

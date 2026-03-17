@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useAuthStore } from '../../../store/auth';
+import { useAuthStore } from '@store/auth';
 import { useMutation } from '@tanstack/react-query';
 import { http, logger } from '@securevault/utils-native';
 import { AUTH_ENDPOINT } from '@securevault/constants';

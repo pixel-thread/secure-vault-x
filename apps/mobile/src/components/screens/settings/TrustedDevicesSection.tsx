@@ -6,8 +6,8 @@ import { DEVICE_ENDPOINT } from '@securevault/constants';
 import { http, logger } from '@securevault/utils-native';
 import { toast } from 'sonner-native';
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '../../../store/auth';
-import { DeviceStoreManager } from '../../../store/device';
+import { useAuthStore } from '@store/auth';
+import { DeviceStoreManager } from '@store/device';
 import { signDevicePayload } from '@securevault/crypto';
 
 export interface DeviceItem {
@@ -40,7 +40,7 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
     // Fallback: If ID is missing, try to find it by hardware identifier in the fetched list
     if (!id && (devices?.length ?? 0) > 0) {
       const hwId = (await DeviceStoreManager.getDeviceIdReserve()) || ''; // We'll store hardware ID as a reserve
-      const hardwareId = hwId || (await require('@/src/utils/deviceId').getDeviceIdentifier());
+      const hardwareId = hwId || (await require('@utils/deviceId').getDeviceIdentifier());
 
       const matched = (devices as DeviceItem[] | undefined)?.find(
         (d) => d.deviceIdentifier === hardwareId

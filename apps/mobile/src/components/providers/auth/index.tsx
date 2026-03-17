@@ -1,14 +1,14 @@
-import { useAuthStore } from '@/src/store/auth';
+import { useAuthStore } from '@store/auth';
 import { AUTH_ENDPOINT } from '@securevault/constants';
 import { tokenManager } from '@securevault/libs';
 import { UserT } from '@securevault/types';
 import { http, logger, isConnectedToNetwork } from '@securevault/utils-native';
 import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
-import { authenticateWithBiometric } from '@/src/utils/biometricLock';
-import { DeviceStoreManager } from '@/src/store/device';
-import { LoadingScreen } from '../../common/LoadingScreen';
-import { BioMetricLock } from '../../common/BiometricLock';
+import { authenticateWithBiometric } from '@utils/biometricLock';
+import { DeviceStoreManager } from '@store/device';
+import { LoadingScreen } from '@components/common/LoadingScreen';
+import { BioMetricLock } from '@components/common/BiometricLock';
 
 type Props = { children: React.ReactNode };
 
@@ -34,14 +34,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     },
     onError: async (error: any) => {
       logger.error('Auth background verification failed', error);
-      
+
       // If it's a definitive auth failure (401/403), clear session
       if (error?.status === 401 || error?.status === 403) {
         setIsAuthenticated(false);
         await tokenManager.removeAllTokens();
         await DeviceStoreManager.removeUser();
       } else {
-        // For network errors or other non-auth failures, 
+        // For network errors or other non-auth failures,
         // keep current state if we have a user
         const storedUser = await DeviceStoreManager.getUser();
         if (storedUser) {

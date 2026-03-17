@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from 'react-native';
-import Header from '../../common/Header';
+import Header from '@components/common/Header';
 
 export default function AboutScreen() {
   return (

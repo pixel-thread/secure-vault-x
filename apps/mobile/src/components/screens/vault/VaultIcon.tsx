@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Image, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { VaultSecretT } from '@/src/types/vault';
-import { logger } from '@securevault/utils';
+import { VaultSecretT } from '@src/types/vault';
+import { logger } from '@securevault/utils-native';
 
 export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   const [imgError, setImgError] = useState(false);
