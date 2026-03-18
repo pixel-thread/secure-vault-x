@@ -162,11 +162,19 @@ export class VaultService {
             error: err instanceof Error ? err.message : String(err),
           });
 
-          // Mark as corrupted to avoid trying again
-          await this.db.update(schema.vault)
-            .set({ isCorrupted: true })
-            .where(eq(schema.vault.id, entry.id))
-            .execute();
+          try {
+            // Mark as corrupted to avoid trying again
+            await this.db
+              .update(schema.vault)
+              .set({ isCorrupted: true })
+              .where(eq(schema.vault.id, entry.id))
+              .execute();
+          } catch (error) {
+            logger.error('Failed to mark vault entry as corrupted', {
+              id: entry.id,
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
         }
       }
 
