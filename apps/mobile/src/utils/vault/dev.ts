@@ -63,10 +63,10 @@ export async function seedVaultItems(
 }
 
 /**
- * Clears all items from the vault.
+ * Remove all provided vault items by calling the supplied deletion callback for each item.
  *
- * @param vaultItems - Current items in the vault
- * @param deleteVaultItem - Function to delete an item by ID
+ * @param vaultItems - Array of vault items to delete; each item must contain an `id` property
+ * @param deleteVaultItem - Function invoked with an item's `id` to delete that item
  */
 export async function clearVaultItems(
   vaultItems: { id: string }[],
