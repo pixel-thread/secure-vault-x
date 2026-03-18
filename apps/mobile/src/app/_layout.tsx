@@ -6,15 +6,23 @@ import { Stack } from 'expo-router';
 import { Wrapper } from '@components/providers';
 import React, { useEffect } from 'react';
 import { useSyncTrigger } from '@hooks/useSyncTrigger';
+import * as SplashScreen from 'expo-splash-screen';
 
-function AppSyncManager() {
+const AppSyncManager = ({ children }: { children: React.ReactNode }) => {
   useSyncTrigger();
-  return null;
-}
+  return <>{children}</>;
+};
+
+SplashScreen.setOptions({
+  fade: true,
+  duration: 1000,
+});
 
 // Suppress the "[Reanimated] Reading from `value` during component render" warning.
 // This is triggered internally by @react-navigation/drawer v7 and is a known issue
 // in the library, not in our application code.
+SplashScreen.preventAutoHideAsync();
+
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
@@ -30,10 +38,12 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isMounted) {
       setIsMounted(true);
+      SplashScreen.hideAsync();
     }
   }, [isMounted]);
 
   if (!isMounted) {
+    // something is still loading and will not need to break the ui when it not mounted
     return null;
   }
 
@@ -41,32 +51,33 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider className="bg-white dark:bg-[#09090b]">
         <Wrapper>
-          <AppSyncManager />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}>
-            <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-            <Stack.Screen name="auth/index" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="auth/mfa"
-              options={{
-                presentation: 'modal',
-                title: 'Two-Factor Authentication',
+          <AppSyncManager>
+            <Stack
+              screenOptions={{
                 headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="auth/signup/index"
-              options={{
-                presentation: 'modal',
-                title: 'Sign Up',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen name="+not-found" />
-          </Stack>
+                contentStyle: { backgroundColor: 'transparent' },
+              }}>
+              <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+              <Stack.Screen name="auth/index" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="auth/mfa"
+                options={{
+                  presentation: 'modal',
+                  title: 'Two-Factor Authentication',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="auth/signup/index"
+                options={{
+                  presentation: 'modal',
+                  title: 'Sign Up',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </AppSyncManager>
         </Wrapper>
       </SafeAreaProvider>
     </GestureHandlerRootView>

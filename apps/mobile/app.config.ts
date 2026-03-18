@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: configVars.name,
   slug: 'secure-vault-x',
-  version: '0.0.7',
+  version: '0.0.8',
   scheme: ['securevaultx'],
   platforms: ['ios', 'android'],
   newArchEnabled: true,
@@ -47,9 +47,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
   splash: {
-    image: './assets/splashscreen/splash.png',
+    image: './assets/splashscreen/splash-icon.png',
     resizeMode: 'contain',
-    backgroundColor: '#001010',
+    backgroundColor: '#ffffff',
+    dark: {
+      backgroundColor: '#09090b',
+    },
   },
   assetBundlePatterns: ['**/*'],
   ios: {
@@ -64,6 +67,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     package: configVars.identifier,
     versionCode: 7,
+    softwareKeyboardLayoutMode: 'resize',
   },
   extra: {
     router: {},

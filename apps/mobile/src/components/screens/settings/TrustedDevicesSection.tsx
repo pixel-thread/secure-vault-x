@@ -98,8 +98,10 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
       if (data.success) {
         toast.success(data.message);
         refetchDevices();
+        return data.data;
       }
       toast.error(data.message);
+      return data;
     },
     onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to remove device'),
   });

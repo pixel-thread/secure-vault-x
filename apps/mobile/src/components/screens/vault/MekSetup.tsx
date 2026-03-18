@@ -13,6 +13,8 @@ import { passwordLoginSchema } from '@securevault/validators';
 import { useForm, Controller } from 'react-hook-form';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ScreenContainer } from '@src/components/common/ScreenContainer';
+
 const schema = passwordLoginSchema.pick({ password: true });
 
 type PasswordFormValues = z.infer<typeof schema>;
@@ -33,6 +35,7 @@ export function MekSetup() {
   });
 
   const password = watch('password');
+
   const [showPassword, setShowPassword] = useState(false);
   const { setHasMek } = useAuthStore();
 
@@ -99,83 +102,85 @@ export function MekSetup() {
   };
 
   return (
-    <View className="flex-1 items-center justify-center gap-y-8 bg-white px-6 dark:bg-[#09090b]">
-      <View className="items-center gap-y-4">
-        <View className="items-center justify-center rounded-full bg-emerald-100 p-6 dark:bg-emerald-900/30">
-          <Ionicons name="lock-closed" size={48} color="#10b981" />
-        </View>
-        <Text className="text-center text-2xl font-bold text-black dark:text-white">
-          Vault Encryption Setup
-        </Text>
-        <Text className="text-center text-base text-zinc-500 dark:text-zinc-400">
-          Your vault is protected by a Master Encryption Key (MEK) derived from your Master
-          Password. Enter your Master Password below to unlock or setup your vault.
-        </Text>
-      </View>
-
-      <View className="w-full gap-y-4">
-        <View className="gap-y-2">
-          <Text className="ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Master Password
+    <ScreenContainer>
+      <View className="flex-1 items-center justify-center gap-y-8 bg-white px-6 dark:bg-[#09090b]">
+        <View className="items-center gap-y-4">
+          <View className="items-center justify-center rounded-full bg-emerald-100 p-6 dark:bg-emerald-900/30">
+            <Ionicons name="lock-closed" size={48} color="#10b981" />
+          </View>
+          <Text className="text-center text-2xl font-bold text-black dark:text-white">
+            Vault Encryption Setup
           </Text>
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View
-                className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
-                  errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                }`}>
-                <TextInput
-                  className="flex-1 px-5 py-4 text-black focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
-                  placeholder="Enter your Master Password"
-                  placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                  secureTextEntry={!showPassword}
-                />
-                <TouchableOpacity
-                  className="p-3"
-                  onPressIn={() => setShowPassword(true)}
-                  onPressOut={() => setShowPassword(false)}
-                  delayPressIn={0}>
-                  <Ionicons
-                    name={showPassword ? 'eye' : 'eye-off'}
-                    size={22}
-                    color={showPassword ? '#10b981' : '#71717a'}
+          <Text className="text-center text-base text-zinc-500 dark:text-zinc-400">
+            Your vault is protected by a Master Encryption Key (MEK) derived from your Master
+            Password. Enter your Master Password below to unlock or setup your vault.
+          </Text>
+        </View>
+
+        <View className="w-full gap-y-4">
+          <View className="gap-y-2">
+            <Text className="ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Master Password
+            </Text>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View
+                  className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                    errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                  }`}>
+                  <TextInput
+                    className="flex-1 px-5 py-4 text-black focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
+                    placeholder="Enter your Master Password"
+                    placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    secureTextEntry={!showPassword}
                   />
-                </TouchableOpacity>
-              </View>
+                  <TouchableOpacity
+                    className="p-3"
+                    onPressIn={() => setShowPassword(true)}
+                    onPressOut={() => setShowPassword(false)}
+                    delayPressIn={0}>
+                    <Ionicons
+                      name={showPassword ? 'eye' : 'eye-off'}
+                      size={22}
+                      color={showPassword ? '#10b981' : '#71717a'}
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+            {errors.password && (
+              <Text className="ml-1 mt-1 text-sm text-red-500">{errors.password.message}</Text>
             )}
-          />
-          {errors.password && (
-            <Text className="ml-1 mt-1 text-sm text-red-500">{errors.password.message}</Text>
-          )}
-        </View>
+          </View>
 
-        <TouchableOpacity
-          className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
-          onPress={handleSubmit(onHandleSetup)}
-          disabled={isLoading || password.length < 8}>
-          {isLoading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <>
-              <Ionicons name="key" size={20} color="#ffffff" />
-              <Text className="ml-2 text-lg font-bold text-white">Generate MEK</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
+            onPress={handleSubmit(onHandleSetup)}
+            disabled={isLoading || password.length < 8}>
+            {isLoading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <>
+                <Ionicons name="key" size={20} color="#ffffff" />
+                <Text className="ml-2 text-lg font-bold text-white">Generate MEK</Text>
+              </>
+            )}
+          </TouchableOpacity>
 
-        <View className="px-4 text-center">
-          <Text className="text-center text-xs italic text-zinc-500 dark:text-zinc-400">
-            Your **Master Password** secures your vault. We never store or see it. It is used to
-            generate your encryption key. If you lose your device, you will need this password to
-            recover your vault. Keep it safe.
-          </Text>
+          <View className="px-4 text-center">
+            <Text className="text-center text-xs italic text-zinc-500 dark:text-zinc-400">
+              Your **Master Password** secures your vault. We never store or see it. It is used to
+              generate your encryption key. If you lose your device, you will need this password to
+              recover your vault. Keep it safe.
+            </Text>
+          </View>
         </View>
       </View>
-    </View>
+    </ScreenContainer>
   );
 }

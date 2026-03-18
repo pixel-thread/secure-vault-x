@@ -19,21 +19,21 @@ export const Wrapper = ({ children }: Props) => {
   return (
     <ErrorBoundary>
       <TQueryProvider>
-        <UpdateProvider>
-          <CryptoProvider>
-            <DBProvider>
-              <Suspense>
-                <AuthProvider>
-                  <ScreenCaptureProvider>
-                    <Redirect>{children}</Redirect>
-                  </ScreenCaptureProvider>
-                </AuthProvider>
-              </Suspense>
-            </DBProvider>
-          </CryptoProvider>
-        </UpdateProvider>
-        <Toaster duration={1000} theme={colorScheme as 'light' | 'dark'} />
+        <AuthProvider>
+          <Redirect>
+            <UpdateProvider>
+              <CryptoProvider>
+                <DBProvider>
+                  <Suspense>
+                    <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
+                  </Suspense>
+                </DBProvider>
+              </CryptoProvider>
+            </UpdateProvider>
+          </Redirect>
+        </AuthProvider>
       </TQueryProvider>
+      <Toaster duration={1000} theme={colorScheme as 'light' | 'dark'} />
     </ErrorBoundary>
   );
 };
