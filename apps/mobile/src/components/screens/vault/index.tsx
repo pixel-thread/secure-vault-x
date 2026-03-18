@@ -17,9 +17,13 @@ import { Ternary } from '@src/components/common/Ternary';
 import { Alert } from 'react-native';
 
 /**
- * VaultScreen Component
- * The main screen for displaying and managing encrypted vault items.
- * Handles data fetching, synchronization, and item presentation.
+ * Renders the vault screen for viewing and managing end-to-end encrypted secrets.
+ *
+ * Shows a list of vault items, a floating action button to add secrets, and dialogs for adding and inspecting items.
+ * If the app variant is not production, exposes developer tools for seeding, clearing, and manually syncing items.
+ * Short-circuits to the MEK setup screen when MEK is not configured.
+ *
+ * @returns The rendered Vault screen JSX element.
  */
 export default function VaultScreen() {
   // --- UI State Management ---

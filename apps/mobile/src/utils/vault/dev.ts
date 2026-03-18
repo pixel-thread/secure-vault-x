@@ -4,10 +4,13 @@ import * as Crypto from 'expo-crypto';
 import { logger } from '@securevault/utils-native';
 
 /**
- * Seeds the vault with mock password items for development and testing.
+ * Seed the vault with mock items for development and testing.
  *
- * @param addVaultItem - The function to call for each item persistence
- * @param count - Number of items to generate (default 100)
+ * Generates `count` mock entries (every 10th entry is a card, others are password/secret entries), encrypts each payload with the device MEK, and persists them by calling `addVaultItem` for every item.
+ *
+ * @param addVaultItem - Called for each persisted item with an object containing `id`, `encryptedData`, and `iv`
+ * @param count - Number of items to generate (default 10)
+ * @throws Error if the device MEK is not available in the device store
  */
 export async function seedVaultItems(
   addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>,

@@ -35,6 +35,13 @@ interface Props {
   onSuccess?: () => void;
 }
 
+/**
+ * A form component for collecting bank card details and saving them encrypted into the vault.
+ *
+ * Validates input, encrypts the submitted card data with the device's Master Encryption Key, creates a vault item, and triggers a background sync. If the MEK is not available a user-facing error toast is shown. On successful save the optional `onSuccess` callback is invoked.
+ *
+ * @param onSuccess - Optional callback invoked after the card is successfully saved to the vault
+ */
 export function AddBankCardForm({ onSuccess }: Props) {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';

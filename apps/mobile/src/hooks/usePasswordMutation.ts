@@ -11,6 +11,15 @@ type SaveDTO = {
 
 export type MutationMode = 'create' | 'edit';
 
+/**
+ * Creates a mutation function that saves or updates a vault password entry and exposes a combined pending flag.
+ *
+ * @param mode - Either `"create"` to add a new vault item or `"edit"` to update an existing one.
+ * @param onSuccess - Optional callback invoked after a successful save or update.
+ * @returns An object with:
+ *  - `mutate` — a function accepting a `SaveDTO` to save or update the vault item (returns a Promise that resolves when the operation completes).
+ *  - `isPending` — `true` when a local mutation is in progress or the context reports a save in progress, `false` otherwise.
+ */
 export function usePasswordMutation(mode: MutationMode, onSuccess?: () => void) {
   const { addVaultItem, updateVaultItem, isLoading, sync } = useVaultContext();
   const [isPending, setIsPending] = useState(false);
