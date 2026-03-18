@@ -8,7 +8,7 @@ export const POST = withValidation({ body: logSchema }, async ({ body }) => {
   const isBackend = body.isBackend ?? false;
 
   // Handle batch of logs
-  if (body.logs && Array.isArray(body.logs)) {
+  if (Array.isArray(body.logs) && body.logs.length > 0) {
     for (const logItem of body.logs) {
       if (logItem.type !== "LOG") {
         await LoggerService.log({
