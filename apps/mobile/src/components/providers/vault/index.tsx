@@ -77,7 +77,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   const { mutateAsync: saveItem, isPending: isSaving } = useMutation({
     mutationFn: async (data: any) => {
       if (!vaultService) throw new Error('Service not ready');
-      return await vaultService.saveVaultItem(data);
+      return await vaultService.updateVaultItem(data);
     },
     onSuccess: () => {
       toast.success('Vault updated');
