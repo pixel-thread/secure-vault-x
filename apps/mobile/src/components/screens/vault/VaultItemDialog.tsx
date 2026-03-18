@@ -9,6 +9,7 @@ import { toast } from 'sonner-native';
 import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { useEditMode } from '@hooks/useEditMode';
 import { AddPasswordForm } from './AddPasswordForm';
+import { logger } from '@securevault/utils-native';
 
 type Props = {
   open: boolean;
@@ -31,6 +32,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
 
       sync().catch((e) => toast.error('Sync failed', { description: e.message }));
     } catch (error) {
+      logger.error('[VaultItemDialog] Delete failed', { error });
       // Error handled by provider
     }
   };
@@ -53,14 +55,6 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
 
                 <View className="flex-row items-center gap-2">
                   {/* Edit button — password type only */}
-                  {selectedSecret.type === 'password' && !isEditing && (
-                    <TouchableOpacity
-                      onPress={() => setIsEditing(true)}
-                      className="rounded-full bg-zinc-200 p-2 dark:bg-zinc-800/80">
-                      <Ionicons name="pencil-outline" size={20} color="#10b981" />
-                    </TouchableOpacity>
-                  )}
-
                   <TouchableOpacity
                     onPress={handleClose}
                     className="rounded-full bg-zinc-200 p-2 dark:bg-zinc-800/80">
@@ -226,30 +220,33 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                       </View>
                     ) : null}
 
-                    <TouchableOpacity
-                      disabled={isDeleting}
-                      className="mb-4 mt-2 w-full flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 py-4 shadow-xl active:scale-[0.98] dark:border-red-500/20 dark:bg-red-500/10"
-                      onPress={() => {
-                        Alert.alert(
-                          'Delete Secret',
-                          'Are you sure you want to delete this item? This action cannot be undone.',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                              text: 'Delete',
-                              style: 'destructive',
-                              onPress: () => handleDelete(),
-                            },
-                          ]
-                        );
-                      }}>
-                      <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                      <Text className="ml-2 text-lg font-bold text-red-500">
-                        {isDeleting
-                          ? 'Deleting...'
-                          : `Delete ${selectedSecret.type === 'password' ? 'Password' : 'Card'}`}
-                      </Text>
-                    </TouchableOpacity>
+                    <View className="flex-1 flex-row gap-3">
+                      <TouchableOpacity
+                        onPress={() => setIsEditing(true)}
+                        className="mb-4 mt-2 flex-1 flex-row items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/10 py-4  active:scale-[0.98] dark:border-blue-500/20 dark:bg-blue-500/10">
+                        <Text className="ml-2 text-lg font-bold text-blue-500">Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        disabled={isDeleting}
+                        // Removed 'w-auto' and used 'px-6' (padding) to keep the delete button compact
+                        className="mb-4 mt-2 flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-4 active:scale-[0.98] dark:border-red-500/20 dark:bg-red-500/10"
+                        onPress={() => {
+                          Alert.alert(
+                            'Delete Secret',
+                            'Are you sure you want to delete this item? This action cannot be undone.',
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              {
+                                text: 'Delete',
+                                style: 'destructive',
+                                onPress: () => handleDelete(),
+                              },
+                            ]
+                          );
+                        }}>
+                        <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
                   </>
                 )}
               </ScrollView>

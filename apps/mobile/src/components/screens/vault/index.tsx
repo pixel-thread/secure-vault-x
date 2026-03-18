@@ -15,6 +15,7 @@ import { toast } from 'sonner-native';
 import { seedVaultItems, clearVaultItems } from '@utils/vault/dev';
 import { Ternary } from '@src/components/common/Ternary';
 import { Alert } from 'react-native';
+import { LoadingScreen } from '@src/components/common/LoadingScreen';
 
 /**
  * Renders the vault screen for viewing and managing end-to-end encrypted secrets.
@@ -34,8 +35,15 @@ export default function VaultScreen() {
   const isDev = process.env.APP_VARIANT !== 'production';
 
   // --- External Stores & Services ---
-  const { hasMek } = useAuthStore();
-  const { vaultItems: vaults, isLoading: contextLoading, addVaultItem, deleteVaultItem, sync } = useVaultContext();
+  const { hasMek, isLoading } = useAuthStore();
+  const isAuthLoading = isLoading;
+  const {
+    vaultItems: vaults,
+    isLoading: contextLoading,
+    addVaultItem,
+    deleteVaultItem,
+    sync,
+  } = useVaultContext();
 
   // Consolidate loading state for UI feedback
   const isSyncingOrLoading = contextLoading.isPending;
@@ -147,6 +155,9 @@ export default function VaultScreen() {
     setAddModalVisible(true);
   }, []);
 
+  if (isAuthLoading) {
+    return <LoadingScreen message="Loading your vault" />;
+  }
   // --- Security Check: Ensure MEK is set up ---
   if (!hasMek) {
     return <MekSetup />;
