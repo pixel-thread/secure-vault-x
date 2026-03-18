@@ -6,11 +6,10 @@ import { useColorScheme } from 'nativewind';
 import { Modal, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { useSyncService } from '@hooks/useSyncService';
-import { useVaultService } from '@hooks/useVaultService';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { useEditMode } from '@hooks/useEditMode';
 import { AddPasswordForm } from './AddPasswordForm';
+import { logger } from '@securevault/utils-native';
 
 type Props = {
   open: boolean;
@@ -21,32 +20,20 @@ type Props = {
 export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: Props) => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const queryClient = useQueryClient();
-  const vaultService = useVaultService();
-  const syncService = useSyncService();
+  const { deleteVaultItem, isLoading } = useVaultContext();
   const { isEditing, setIsEditing } = useEditMode();
 
-  const { mutate: deleteItem, isPending: isDeleting } = useMutation({
-    mutationFn: async (id: string) => {
-      if (!vaultService) throw new Error('Vault Service not initialized');
-      return await vaultService.deleteVaultItem(id);
-    },
-    onSuccess: () => {
-      toast.success('Secret deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['vault'] });
-      onValueChange(false);
+  const isDeleting = isLoading.isDeleting;
 
-      // Trigger background sync
-      if (syncService) {
-        syncService.sync();
-      }
-    },
-    onError: (error: any) => {
-      toast.error('Failed to delete secret', {
-        description: error.message || 'Please try again.',
-      });
-    },
-  });
+  const handleDelete = async () => {
+    try {
+      await deleteVaultItem(selectedSecret.id);
+      onValueChange(false);
+    } catch (error) {
+      logger.error('[VaultItemDialog] Delete failed', { error });
+      // Error handled by provider
+    }
+  };
 
   const handleClose = () => {
     setIsEditing(false);
@@ -66,14 +53,6 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
 
                 <View className="flex-row items-center gap-2">
                   {/* Edit button — password type only */}
-                  {selectedSecret.type === 'password' && !isEditing && (
-                    <TouchableOpacity
-                      onPress={() => setIsEditing(true)}
-                      className="rounded-full bg-zinc-200 p-2 dark:bg-zinc-800/80">
-                      <Ionicons name="pencil-outline" size={20} color="#10b981" />
-                    </TouchableOpacity>
-                  )}
-
                   <TouchableOpacity
                     onPress={handleClose}
                     className="rounded-full bg-zinc-200 p-2 dark:bg-zinc-800/80">
@@ -239,30 +218,33 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                       </View>
                     ) : null}
 
-                    <TouchableOpacity
-                      disabled={isDeleting}
-                      className="mb-4 mt-2 w-full flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 py-4 shadow-xl active:scale-[0.98] dark:border-red-500/20 dark:bg-red-500/10"
-                      onPress={() => {
-                        Alert.alert(
-                          'Delete Secret',
-                          'Are you sure you want to delete this item? This action cannot be undone.',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                              text: 'Delete',
-                              style: 'destructive',
-                              onPress: () => deleteItem(selectedSecret.id),
-                            },
-                          ]
-                        );
-                      }}>
-                      <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                      <Text className="ml-2 text-lg font-bold text-red-500">
-                        {isDeleting
-                          ? 'Deleting...'
-                          : `Delete ${selectedSecret.type === 'password' ? 'Password' : 'Card'}`}
-                      </Text>
-                    </TouchableOpacity>
+                    <View className="flex-1 flex-row gap-3">
+                      <TouchableOpacity
+                        onPress={() => setIsEditing(true)}
+                        className="mb-4 mt-2 flex-1 flex-row items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/10 py-4  active:scale-[0.98] dark:border-blue-500/20 dark:bg-blue-500/10">
+                        <Text className="ml-2 text-lg font-bold text-blue-500">Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        disabled={isDeleting}
+                        // Removed 'w-auto' and used 'px-6' (padding) to keep the delete button compact
+                        className="mb-4 mt-2 flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-4 active:scale-[0.98] dark:border-red-500/20 dark:bg-red-500/10"
+                        onPress={() => {
+                          Alert.alert(
+                            'Delete Secret',
+                            'Are you sure you want to delete this item? This action cannot be undone.',
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              {
+                                text: 'Delete',
+                                style: 'destructive',
+                                onPress: () => handleDelete(),
+                              },
+                            ]
+                          );
+                        }}>
+                        <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
                   </>
                 )}
               </ScrollView>

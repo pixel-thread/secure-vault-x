@@ -7,10 +7,7 @@ import { useAuthStore } from '@store/auth';
 import { logger } from '@securevault/utils-native';
 import * as schema from '@libs/database/schema';
 import migrations from '@libs/database/drizzle/migrations/migrations.js';
-import { SyncServiceT, VaultServiceT } from '@src/types/db';
 import { DrizzleContext } from '@libs/context/DBContext';
-import { SyncServiceContext } from '@libs/context/SyncContext';
-import { VaultServiceContext } from '@libs/context/VaultContext';
 import { MigrationErrorScreen } from '@components/common/MigrationErrorScreen';
 import { LoadingScreen } from '@components/common/LoadingScreen';
 
@@ -20,39 +17,13 @@ const expoDb = SQLite.openDatabaseSync('app.db');
 const drizzleInstance = drizzle(expoDb, { schema });
 
 export const DBProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [syncService, setSyncService] = useState<SyncServiceT | null>(null);
-  const [vaultService, setVaultService] = useState<VaultServiceT | null>(null);
   const user = useAuthStore((state) => state.user);
 
   // 2. useMigrations handles the progress state for us.
   const { success, error: migrationError } = useMigrations(drizzleInstance, migrations);
 
   useEffect(() => {
-    // 3. Only initialize services once migrations are successful and user exists
-    if (success && user?.id) {
-      let isMounted = true;
-
-      const initServices = async () => {
-        const [{ SyncService }, { VaultService }] = await Promise.all([
-          import('../../../services/SyncService'),
-          import('../../../services/VaultService'),
-        ]);
-
-        if (isMounted) {
-          setSyncService(new SyncService(drizzleInstance, user.id));
-          setVaultService(new VaultService(drizzleInstance, user.id));
-        }
-      };
-
-      initServices();
-
-      return () => {
-        isMounted = false;
-      };
-    } else {
-      setSyncService(null);
-      setVaultService(null);
-    }
+    // 3. Services are now initialized in VaultProvider
   }, [success, user?.id]);
 
   const handleReset = async () => {
@@ -75,10 +46,6 @@ export const DBProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // 6. Ready State
   return (
-    <DrizzleContext.Provider value={drizzleInstance}>
-      <SyncServiceContext.Provider value={syncService}>
-        <VaultServiceContext.Provider value={vaultService}>{children}</VaultServiceContext.Provider>
-      </SyncServiceContext.Provider>
-    </DrizzleContext.Provider>
+    <DrizzleContext.Provider value={drizzleInstance}>{children}</DrizzleContext.Provider>
   );
 };

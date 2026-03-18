@@ -10,8 +10,18 @@ export const passwordSchema = z
   .regex(/[@$!%*?&]/, "Must contain a special character");
 
 export const logSchema = z.object({
-  type: z.enum(["ERROR", "WARN", "INFO", "LOG"]),
-  message: z.string().min(1, "Message is required"),
-  content: z.any().optional(), // Can be string, object, array, etc.
+  type: z.enum(["ERROR", "WARN", "INFO", "LOG"]).optional(),
+  message: z.string().min(1, "Message is required").optional(),
+  content: z.any().optional(),
   isBackend: z.boolean().default(false),
+  logs: z
+    .array(
+      z.object({
+        type: z.enum(["ERROR", "WARN", "INFO", "LOG"]),
+        message: z.string().min(1, "Message is required"),
+        content: z.any().optional(),
+        timestamp: z.number().optional(),
+      }),
+    )
+    .optional(),
 });

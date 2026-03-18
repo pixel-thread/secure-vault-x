@@ -5,15 +5,33 @@ import { SuccessResponse } from "@/utils/next-response";
 import { withValidation } from "@/utils/middleware/withValidiation";
 
 export const POST = withValidation({ body: logSchema }, async ({ body }) => {
-  // The content might come in as any type, we'll let LoggerService handle the stringification
-  // Only save log if the type is LOG
-  if (body.type !== "LOG") {
-    await LoggerService.log({
-      type: body.type,
-      message: body.message,
-      content: body.content ?? "", // default empty string if no content
-      isBackend: body.isBackend,
-    });
+  const isBackend = body.isBackend ?? false;
+
+  // Handle batch of logs
+  if (Array.isArray(body.logs) && body.logs.length > 0) {
+    for (const logItem of body.logs) {
+      if (logItem.type !== "LOG") {
+        await LoggerService.log({
+          type: logItem.type,
+          message: logItem.message,
+          content: logItem.content ?? "",
+          isBackend: isBackend,
+        });
+      }
+    }
   }
-  return SuccessResponse({ message: "Log saved successfully" });
+
+  // Handle legacy single log
+  else if (body.type && body.message) {
+    if (body.type !== "LOG") {
+      await LoggerService.log({
+        type: body.type,
+        message: body.message,
+        content: body.content ?? "",
+        isBackend: isBackend,
+      });
+    }
+  }
+
+  return SuccessResponse({ message: "Logs processed successfully" });
 });

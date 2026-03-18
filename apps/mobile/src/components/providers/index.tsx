@@ -9,6 +9,7 @@ import { Toaster } from 'sonner-native';
 import { useColorScheme } from 'nativewind';
 import { DBProvider } from './db';
 import { ScreenCaptureProvider } from './capture';
+import { VaultProvider } from './vault';
 
 type Props = {
   children: React.ReactNode;
@@ -24,9 +25,11 @@ export const Wrapper = ({ children }: Props) => {
             <UpdateProvider>
               <CryptoProvider>
                 <DBProvider>
-                  <Suspense>
-                    <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
-                  </Suspense>
+                  <VaultProvider>
+                    <Suspense>
+                      <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
+                    </Suspense>
+                  </VaultProvider>
                 </DBProvider>
               </CryptoProvider>
             </UpdateProvider>

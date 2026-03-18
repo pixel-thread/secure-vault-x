@@ -58,37 +58,60 @@ export class SyncService {
    * Push local changes to server
    */
   private async push() {
+    logger.log('[Sync] Push started');
     const lastSyncedAt = await this.getLastSyncedAt();
-
-    // Buffer for clock drift (30s)
     const sinceDate = new Date(lastSyncedAt - 30000);
 
-    // Security: Only push changes belonging to the current user
     const localChanges = await this.db
       .select()
       .from(schema.vault)
-      .where(and(gt(schema.vault.updatedAt, sinceDate), eq(schema.vault.userId, this.userId)));
+      .where(
+        and(
+          gt(schema.vault.updatedAt, sinceDate),
+          eq(schema.vault.userId, this.userId),
+          eq(schema.vault.isCorrupted, false) // OWASP: Only push healthy data
+        )
+      );
 
     if (localChanges.length === 0) {
       logger.log('[Sync] No local changes to push');
       return;
     }
 
-    logger.info(`[Sync] Pushing ${localChanges.length} items`);
+    logger.info(`[Sync] Pushing ${localChanges.length} items to server`);
 
     try {
-      await http.post(SYNC_ENDPOINT.POST_SYNC_PUSH, {
-        items: localChanges.map((item) => ({
-          id: item.id,
-          encryptedData: item.encryptedData,
-          iv: item.iv,
-          version: item.version,
-          updatedAt: item.updatedAt.getTime(),
-          deletedAt: item.deletedAt?.getTime() ?? null,
-        })),
+      const response = await http.post(SYNC_ENDPOINT.POST_SYNC_PUSH, {
+        items: localChanges.map((item) => {
+          // Robust handling of updatedAt which might be Date or timestamp
+          const updatedTs = item.updatedAt instanceof Date 
+            ? item.updatedAt.getTime() 
+            : typeof item.updatedAt === 'number' 
+              ? item.updatedAt 
+              : Date.parse(String(item.updatedAt));
+
+          const deletedTs = item.deletedAt 
+            ? (item.deletedAt instanceof Date ? item.deletedAt.getTime() : typeof item.deletedAt === 'number' ? item.deletedAt : Date.parse(String(item.deletedAt)))
+            : null;
+
+          return {
+            id: item.id,
+            encryptedData: item.encryptedData,
+            iv: item.iv,
+            version: item.version,
+            updatedAt: updatedTs,
+            deletedAt: deletedTs,
+          };
+        }),
       });
+
+      if (!response.success) {
+        logger.error('[Sync] Push request failed', { message: response.message, error: response.error });
+      } else {
+        logger.info('[Sync] Push successful');
+      }
     } catch (error) {
-      logger.error('[Sync] Failed to push changes', {
+      logger.error('[Sync] Failed to push changes (exception)', {
         error: error instanceof Error ? error.message : String(error),
       });
     }
@@ -98,59 +121,75 @@ export class SyncService {
    * Pull server changes to local database
    */
   private async pull() {
+    logger.log('[Sync] Pull started');
     const lastSyncedAt = await this.getLastSyncedAt();
+    const url = SYNC_ENDPOINT.GET_SYNC.replace(':since', lastSyncedAt.toString());
 
-    const response = await http.get<{ items: any[]; serverTime: number }>(
-      SYNC_ENDPOINT.GET_SYNC.replace(':since', lastSyncedAt.toString())
-    );
+    logger.info(`[Sync] Requesting pull from: ${url}`);
 
-    if (!response?.data) return;
+    const response = await http.get<{ items: any[]; serverTime: number }>(url);
+
+    if (!response.success || !response.data) {
+      logger.error('[Sync] Pull request failed', {
+        message: response.message,
+        error: response.error,
+        success: response.success,
+      });
+      return;
+    }
 
     const { items, serverTime } = response.data;
-    if (items.length === 0) return;
+    logger.log(`[Sync] Received ${items.length} items from server`);
 
-    logger.info(`[Sync] Pulling ${items.length} items`, {
-      id: !!this.userId,
-      dataLength: items.length,
-    });
+    if (items.length > 0) {
+      await this.db.transaction(async (tx) => {
+        for (const item of items) {
+          const existing = await tx.query.vault.findFirst({
+            where: and(eq(schema.vault.id, item.id), eq(schema.vault.userId, this.userId)),
+          });
 
-    await this.db.transaction(async (tx) => {
-      for (const item of items) {
-        // Enforce user isolation during update (OWASP A01)
-        const existing = await tx.query.vault.findFirst({
-          where: and(eq(schema.vault.id, item.id), eq(schema.vault.userId, this.userId)),
-        });
+          // If item is already marked as corrupted locally, skip it to honor user's directive
+          if (existing?.isCorrupted) {
+            logger.log(`[Sync] Skipping pull for corrupted item`, { id: item.id });
+            continue;
+          }
 
-        // Simple Last-Write-Wins (LWW) resolution
-        const shouldUpdate = !existing || new Date(item.updatedAt) > new Date(existing.updatedAt);
+          const shouldUpdate = !existing || new Date(item.updatedAt) > new Date(existing.updatedAt);
 
-        if (shouldUpdate) {
-          await tx
-            .insert(schema.vault)
-            .values({
-              id: item.id,
-              userId: this.userId,
-              encryptedData: item.encryptedData,
-              iv: item.iv,
-              version: item.version,
-              updatedAt: new Date(item.updatedAt),
-              deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
-            })
-            .onConflictDoUpdate({
-              target: schema.vault.id,
-              set: {
+          if (shouldUpdate) {
+            await tx
+              .insert(schema.vault)
+              .values({
+                id: item.id,
+                userId: this.userId,
                 encryptedData: item.encryptedData,
                 iv: item.iv,
                 version: item.version,
                 updatedAt: new Date(item.updatedAt),
                 deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
-              },
-            });
+              })
+              .onConflictDoUpdate({
+                target: schema.vault.id,
+                set: {
+                  encryptedData: item.encryptedData,
+                  iv: item.iv,
+                  version: item.version,
+                  updatedAt: new Date(item.updatedAt),
+                  deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
+                },
+              });
+          }
         }
-      }
-    });
+      });
+      logger.info(`[Sync] Successfully processed ${items.length} pull items`);
+    } else {
+      logger.info('[Sync] No server changes to pull');
+    }
 
-    await this.setLastSyncedAt(serverTime);
+    if (serverTime) {
+      await this.setLastSyncedAt(serverTime);
+      logger.info(`[Sync] Updated lastSyncedAt to ${serverTime}`);
+    }
   }
 
   private async getLastSyncedAt(): Promise<number> {

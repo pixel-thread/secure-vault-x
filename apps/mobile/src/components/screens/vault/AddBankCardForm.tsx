@@ -4,13 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useVaultService } from '@hooks/useVaultService';
-import { useSyncService } from '@hooks/useSyncService';
+import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { DeviceStoreManager } from '@store/device';
 import { encryptData } from '@securevault/crypto';
 import * as Crypto from 'expo-crypto';
 import { toast } from 'sonner-native';
+import { logger } from '@securevault/utils-native';
 
 const cardSchema = z.object({
   serviceName: z.string().min(1, 'Service name is required'),
@@ -36,12 +35,17 @@ interface Props {
   onSuccess?: () => void;
 }
 
+/**
+ * A form component for collecting bank card details and saving them encrypted into the vault.
+ *
+ * Validates input, encrypts the submitted card data with the device's Master Encryption Key, creates a vault item, and triggers a background sync. If the MEK is not available a user-facing error toast is shown. On successful save the optional `onSuccess` callback is invoked.
+ *
+ * @param onSuccess - Optional callback invoked after the card is successfully saved to the vault
+ */
 export function AddBankCardForm({ onSuccess }: Props) {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const queryClient = useQueryClient();
-  const vaultService = useVaultService();
-  const syncService = useSyncService();
+  const { addVaultItem, isLoading, sync } = useVaultContext();
 
   const {
     control,
@@ -52,37 +56,25 @@ export function AddBankCardForm({ onSuccess }: Props) {
     defaultValues: { serviceName: '', cardName: '', cardNumber: '', exp: '', cvv: '', note: '' },
   });
 
-  const { mutate } = useMutation({
-    mutationFn: async (data: SaveDTO) => {
-      if (!vaultService) throw new Error('Vault Service not initialized');
-      return await vaultService.saveVaultItem(data);
-    },
-    onSuccess: () => {
-      toast.success('Card added locally');
-      queryClient.invalidateQueries({ queryKey: ['vault'] });
-      onSuccess?.();
-
-      // Trigger background sync
-      if (syncService) {
-        syncService.sync();
-      }
-    },
-    onError: (error: any) => {
-      toast.error('Failed to save card locally', {
-        description: error.message || 'Please try again.',
-      });
-    },
-  });
-
   const onSubmitForm = async (data: CardFormValues) => {
     const mek = await DeviceStoreManager.getMek();
     if (!mek) {
       toast.error('Encryption Error', { description: 'Master Encryption Key not found.' });
       return;
     }
-    const { encryptedData, iv } = await encryptData(data, mek);
-    const id = Crypto.randomUUID();
-    mutate({ id, encryptedData, iv });
+
+    try {
+      const { encryptedData, iv } = await encryptData(data, mek);
+      const id = Crypto.randomUUID();
+      
+      await addVaultItem({ id, encryptedData, iv });
+      
+      onSuccess?.();
+      // Trigger background sync
+      sync().catch((e) => logger.error('Sync failed', { error: e }));
+    } catch (error) {
+      // Error is handled in VaultProvider, but we can do extra logic here if needed
+    }
   };
 
   return (

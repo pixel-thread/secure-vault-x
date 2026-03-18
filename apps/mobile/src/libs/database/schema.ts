@@ -13,6 +13,7 @@ export const vault = sqliteTable('vault', {
     .notNull()
     .$defaultFn(() => new Date()),
   deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  isCorrupted: integer('is_corrupted', { mode: 'boolean' }).default(false).notNull(),
 });
 
 export type Vault = typeof vault.$inferSelect;
