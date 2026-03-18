@@ -11,7 +11,7 @@ export const passwordSchema = z
 
 export const logSchema = z.object({
   type: z.enum(["ERROR", "WARN", "INFO", "LOG"]).optional(),
-  message: z.string().optional(),
+  message: z.string().min(1, "Message is required").optional(),
   content: z.any().optional(),
   isBackend: z.boolean().default(false),
   logs: z
