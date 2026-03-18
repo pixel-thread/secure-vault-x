@@ -1,0 +1,1 @@
+ALTER TABLE `vault` ADD `is_corrupted` integer DEFAULT false NOT NULL;

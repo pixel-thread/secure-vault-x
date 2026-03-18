@@ -23,3 +23,20 @@ interface CardSecret extends BaseSecret {
 }
 
 export type VaultSecretT = PasswordSecret | CardSecret;
+
+export type VaultContextT = {
+  isLoading: {
+    isPending: boolean;
+    isSaving: boolean;
+    isFetching: boolean;
+    isDeleting: boolean;
+    isSyncing: boolean;
+  };
+  sync: () => Promise<void>;
+  addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>;
+  updateVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>;
+  deleteVaultItem: (id: string) => Promise<void>;
+  getVaultItems: () => Promise<VaultSecretT[]>;
+  getVaultItem: (id: string) => Promise<VaultSecretT | null>;
+  vaultItems: VaultSecretT[]; // Expose the reactive items list
+};

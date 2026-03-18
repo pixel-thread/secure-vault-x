@@ -1,8 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 import { logger } from '@securevault/utils-native';
-import { useVaultService } from './useVaultService';
-import { useSyncService } from './useSyncService';
+import { useVaultContext } from './vault/useVaultContext';
+import { useState } from 'react';
 
 type SaveDTO = {
   id: string;
@@ -13,44 +12,37 @@ type SaveDTO = {
 export type MutationMode = 'create' | 'edit';
 
 export function usePasswordMutation(mode: MutationMode, onSuccess?: () => void) {
-  const queryClient = useQueryClient();
-  const vaultService = useVaultService();
-  const syncService = useSyncService();
+  const { addVaultItem, updateVaultItem, isLoading, sync } = useVaultContext();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (data: SaveDTO) => {
-      if (!vaultService) throw new Error('Vault Service not initialized');
-
+  const mutate = async (data: SaveDTO) => {
+    setIsPending(true);
+    try {
       if (mode === 'edit') {
         logger.info('[usePasswordMutation] Updating vault item', { id: data.id });
-        return await vaultService.updateVaultItem(data);
+        await updateVaultItem(data);
       } else {
         logger.info('[usePasswordMutation] Saving new vault item', { id: data.id });
-        return await vaultService.saveVaultItem(data);
+        await addVaultItem(data);
       }
-    },
-    onSuccess: () => {
+
       const message =
         mode === 'edit' ? 'Password updated successfully' : 'Password added successfully';
       logger.info(`[usePasswordMutation] ${message}`);
-      toast.success(message);
-      queryClient.invalidateQueries({ queryKey: ['vault'] });
+      // toast is already handled in VaultProvider, but we can add another one or rely on that
       onSuccess?.();
 
-      if (syncService) {
-        logger.log('[usePasswordMutation] Triggering background sync');
-        syncService
-          .sync()
-          .catch((err) =>
-            logger.error('[usePasswordMutation] Background sync failed', { error: err })
-          );
-      }
-    },
-    onError: (error: any) => {
+      logger.log('[usePasswordMutation] Triggering background sync');
+      sync().catch((err) =>
+        logger.error('[usePasswordMutation] Background sync failed', { error: err })
+      );
+    } catch (error: any) {
       logger.error('[usePasswordMutation] Failed to save secret', { error: error.message });
-      toast.error('Failed to save secret', {
-        description: error.message || 'Please try again.',
-      });
-    },
-  });
+      // Error toast is also handled in VaultProvider
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { mutate, isPending: isPending || isLoading.isSaving };
 }

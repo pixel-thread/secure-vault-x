@@ -116,7 +116,8 @@ export class VaultService {
         .where(
           and(
             isNull(schema.vault.deletedAt),
-            eq(schema.vault.userId, this.userId) // Security: Enforce user isolation
+            eq(schema.vault.userId, this.userId), // Security: Enforce user isolation
+            eq(schema.vault.isCorrupted, false) // Only fetch healthy items
           )
         )
         .orderBy(desc(schema.vault.updatedAt));
@@ -145,7 +146,7 @@ export class VaultService {
 
         try {
           const payload = await decryptData<any>(entry.encryptedData, entry.iv, mek);
-          
+
           if (!payload) {
             logger.warn('Decryption returned null payload', { vaultId: entry.id });
             continue;
@@ -156,16 +157,19 @@ export class VaultService {
             decryptedItems.push(transformed);
           }
         } catch (err) {
-          logger.error('Failed to decrypt vault entry', {
+          logger.error('Failed to decrypt vault entry - marking as corrupted', {
             id: entry.id,
             error: err instanceof Error ? err.message : String(err),
           });
+
+          // Mark as corrupted to avoid trying again
+          await this.db.update(schema.vault)
+            .set({ isCorrupted: true })
+            .where(eq(schema.vault.id, entry.id))
+            .execute();
         }
       }
 
-      logger.info(`Successfully processed ${decryptedItems.length}/${entries.length} items`, {
-        dataLength: decryptedItems.length,
-      });
       return decryptedItems;
     } catch (error) {
       logger.error('Failed to retrieve vault items', {

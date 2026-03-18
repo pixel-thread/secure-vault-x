@@ -8,6 +8,13 @@
       "when": 1773331832716,
       "tag": "0000_huge_valkyrie",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1773852324586,
+      "tag": "0001_zippy_emma_frost",
+      "breakpoints": true
     }
   ]
 }

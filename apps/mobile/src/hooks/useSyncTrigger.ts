@@ -1,22 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { useSyncService } from './useSyncService';
+import { useVaultContext } from './vault/useVaultContext';
 import * as Network from 'expo-network';
+import { logger } from '@securevault/utils-native';
 
 export const useSyncTrigger = () => {
-  const syncService = useSyncService();
+  const { sync } = useVaultContext();
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
-    if (!syncService) return;
-
     // Trigger sync on mount
-    syncService.sync();
+    sync();
 
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         console.log('App has come to the foreground, triggering sync');
-        syncService.sync();
+        sync();
       }
       appState.current = nextAppState;
     };
@@ -26,22 +25,23 @@ export const useSyncTrigger = () => {
     return () => {
       subscription.remove();
     };
-  }, [syncService]);
+  }, [sync]);
 
   // Network listener
   useEffect(() => {
-    if (!syncService) return;
-
     const checkNetAndSync = async () => {
       const netInfo = await Network.getNetworkStateAsync();
       if (netInfo.isConnected && netInfo.isInternetReachable) {
-        console.log('Network is up, triggering sync');
-        syncService.sync();
+        logger.log('Network is up, triggering sync', {
+          isConnected: netInfo.isConnected,
+          isInternetReachable: netInfo.isInternetReachable,
+        });
+        sync();
       }
     };
 
     // Note: In a real app we'd use NetInfo to subscribe,
     // but for now we rely on foregrounding or periodic checks.
     checkNetAndSync();
-  }, [syncService]);
+  }, [sync]);
 };

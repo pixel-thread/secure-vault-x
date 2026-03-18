@@ -6,9 +6,7 @@ import { useColorScheme } from 'nativewind';
 import { Modal, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { toast } from 'sonner-native';
 
-import { useSyncService } from '@hooks/useSyncService';
-import { useVaultService } from '@hooks/useVaultService';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { useEditMode } from '@hooks/useEditMode';
 import { AddPasswordForm } from './AddPasswordForm';
 
@@ -21,32 +19,21 @@ type Props = {
 export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: Props) => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const queryClient = useQueryClient();
-  const vaultService = useVaultService();
-  const syncService = useSyncService();
+  const { deleteVaultItem, isLoading, sync } = useVaultContext();
   const { isEditing, setIsEditing } = useEditMode();
 
-  const { mutate: deleteItem, isPending: isDeleting } = useMutation({
-    mutationFn: async (id: string) => {
-      if (!vaultService) throw new Error('Vault Service not initialized');
-      return await vaultService.deleteVaultItem(id);
-    },
-    onSuccess: () => {
-      toast.success('Secret deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['vault'] });
+  const isDeleting = isLoading.isDeleting;
+
+  const handleDelete = async () => {
+    try {
+      await deleteVaultItem(selectedSecret.id);
       onValueChange(false);
 
-      // Trigger background sync
-      if (syncService) {
-        syncService.sync();
-      }
-    },
-    onError: (error: any) => {
-      toast.error('Failed to delete secret', {
-        description: error.message || 'Please try again.',
-      });
-    },
-  });
+      sync().catch((e) => toast.error('Sync failed', { description: e.message }));
+    } catch (error) {
+      // Error handled by provider
+    }
+  };
 
   const handleClose = () => {
     setIsEditing(false);
@@ -251,7 +238,7 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
                             {
                               text: 'Delete',
                               style: 'destructive',
-                              onPress: () => deleteItem(selectedSecret.id),
+                              onPress: () => handleDelete(),
                             },
                           ]
                         );

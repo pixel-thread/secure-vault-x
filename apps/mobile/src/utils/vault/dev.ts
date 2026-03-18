@@ -1,0 +1,78 @@
+import { DeviceStoreManager } from '@store/device';
+import { encryptData } from '@securevault/crypto';
+import * as Crypto from 'expo-crypto';
+import { logger } from '@securevault/utils-native';
+
+/**
+ * Seeds the vault with mock password items for development and testing.
+ *
+ * @param addVaultItem - The function to call for each item persistence
+ * @param count - Number of items to generate (default 100)
+ */
+export async function seedVaultItems(
+  addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>,
+  count: number = 10
+) {
+  const mek = await DeviceStoreManager.getMek();
+
+  if (!mek) {
+    throw new Error(
+      'MEK not found in device store. Please ensure you are logged in and have set up your vault.'
+    );
+  }
+
+  const promises = Array.from({ length: count }).map(async (_, i) => {
+    const id = Crypto.randomUUID();
+    const isCard = i % 10 === 0; // Every 10th item is a card
+
+    const data = isCard
+      ? {
+          serviceName: `Dev Card ${i / 10 + 1}`,
+          cardholderName: `Tester ${i + 1}`,
+          cardNumber: `4111${Math.floor(Math.random() * 8999) + 1000}${Math.floor(Math.random() * 8999) + 1000}${Math.floor(Math.random() * 8999) + 1000}`,
+          expirationDate: '12/28',
+          cvv: '123',
+          type: 'card' as const,
+          note: 'Seeded test card',
+        }
+      : {
+          serviceName: `Dev Secret ${i + 1}`,
+          username: `dev_user_${i + 1}`,
+          password: `pass_${Math.random().toString(36).substring(7)}`,
+          url: `https://dev-test-${i + 1}.io`,
+          type: 'password' as const,
+          note: 'Seeded test password',
+        };
+
+    // Encrypt the payload using the real MEK
+    const encrypted = await encryptData(data, mek);
+
+    // items must match the database schema (id, encryptedData, iv)
+    return addVaultItem({
+      id,
+      encryptedData: encrypted.encryptedData,
+      iv: encrypted.iv,
+    });
+  });
+
+  await Promise.all(promises);
+  logger.info(`[DevUtils] Successfully seeded ${count} authentic items`);
+}
+
+/**
+ * Clears all items from the vault.
+ *
+ * @param vaultItems - Current items in the vault
+ * @param deleteVaultItem - Function to delete an item by ID
+ */
+export async function clearVaultItems(
+  vaultItems: { id: string }[],
+  deleteVaultItem: (id: string) => Promise<void>
+) {
+  logger.info(`[DevUtils] Clearing ${vaultItems.length} items`);
+
+  const promises = vaultItems.map((item) => deleteVaultItem(item.id));
+  await Promise.all(promises);
+
+  logger.info('[DevUtils] Vault cleared successfully');
+}

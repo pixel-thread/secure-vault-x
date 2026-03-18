@@ -1,4 +1,4 @@
 import { createContext } from 'react';
-import { VaultServiceT } from '@src/types/db';
+import { VaultContextT } from '@src/types/vault';
 
-export const VaultServiceContext = createContext<VaultServiceT | null>(null);
+export const VaultContext = createContext<VaultContextT | null>(null);

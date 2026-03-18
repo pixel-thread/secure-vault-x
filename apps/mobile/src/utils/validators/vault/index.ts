@@ -8,5 +8,6 @@ export const VaultItemSchema = z.object({
   encryptedData: z.string().min(1),
   iv: z.string().min(1),
   version: z.number().int().optional().default(1),
+  isCorrupted: z.boolean().optional().default(false),
   deletedAt: z.date().nullable().optional(),
 });

@@ -3,16 +3,18 @@ import { Ionicons } from '@expo/vector-icons';
 import Header from '@components/common/Header';
 import { useState, useCallback } from 'react';
 import { useAuthStore } from '@store/auth';
-import { useQuery } from '@tanstack/react-query';
+import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { VaultItem } from './VaultItem';
 import { VaultItemDialog } from './VaultItemDialog';
 import { AddSecretDialog } from './AddSecretDialog';
 import { VaultEmpty } from './VaultEmpty';
 import { MekSetup } from './MekSetup';
 import { VaultSecretT } from '@src/types/vault';
-import { useVaultService } from '@hooks/useVaultService';
-import { useSyncService } from '@hooks/useSyncService';
 import { logger } from '@securevault/utils-native';
+import { toast } from 'sonner-native';
+import { seedVaultItems, clearVaultItems } from '@utils/vault/dev';
+import { Ternary } from '@src/components/common/Ternary';
+import { Alert } from 'react-native';
 
 /**
  * VaultScreen Component
@@ -24,77 +26,94 @@ export default function VaultScreen() {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedSecret, setSelectedSecret] = useState<VaultSecretT | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const isDev = process.env.APP_VARIANT !== 'production';
 
   // --- External Stores & Services ---
-  const { isAuthenticated, hasMek } = useAuthStore();
-  const vaultService = useVaultService();
-  const syncService = useSyncService();
-
-  // --- Data Fetching (Vault Items) ---
-  const {
-    data: vaults = [],
-    isLoading,
-    isFetching,
-    refetch: triggerRefresh,
-  } = useQuery<VaultSecretT[]>({
-    queryKey: ['vault'],
-    queryFn: async (): Promise<VaultSecretT[]> => {
-      if (!vaultService) return [];
-      try {
-        const items = await vaultService.getVaultItems();
-        const validItems = items.filter(Boolean);
-        logger.log('[VaultScreen] Fetched local vault items', { count: validItems.length });
-        return validItems;
-      } catch (err) {
-        logger.error('[VaultScreen] Failed to fetch vault items', { error: err });
-        return [];
-      }
-    },
-    enabled: isAuthenticated && hasMek && !!vaultService,
-    refetchOnMount: true,
-    networkMode: 'offlineFirst',
-  });
+  const { hasMek } = useAuthStore();
+  const { vaultItems: vaults, isLoading: contextLoading, addVaultItem, deleteVaultItem, sync } = useVaultContext();
 
   // Consolidate loading state for UI feedback
-  const isSyncingOrLoading = isLoading || isFetching;
-
-  // --- User Actions ---
+  const isSyncingOrLoading = contextLoading.isPending;
 
   /**
    * Triggers a manual synchronization with the server
    */
   const onManualSync = useCallback(async () => {
-    if (!syncService) {
-      logger.warn('[VaultScreen] Sync attempted but SyncService is missing', {
-        manualSync: true,
-      });
-      return;
-    }
-
-    if (syncService.isSyncing) {
+    if (contextLoading.isSyncing) {
       logger.log('[VaultScreen] Manual sync skipped: already in progress', {
         manualSync: true,
-        isSyncing: syncService.isSyncing,
       });
       return;
     }
 
     logger.info('[VaultScreen] Manual sync initiated');
     try {
-      await syncService.sync();
-      triggerRefresh();
-      logger.info('[VaultScreen] Manual sync completed and data refreshed', {
+      await sync();
+      logger.info('[VaultScreen] Manual sync completed', {
         manualSync: true,
-        isSyncing: syncService.isSyncing,
       });
     } catch (error) {
       logger.error('[VaultScreen] Manual sync failed', {
         manualSync: true,
-        isSyncing: syncService.isSyncing,
         error,
       });
     }
-  }, [syncService, triggerRefresh]);
+  }, [sync, contextLoading.isSyncing]);
+
+  const onSeedDevItems = useCallback(async () => {
+    if (isSeeding) return;
+
+    setIsSeeding(true);
+
+    try {
+      await seedVaultItems(addVaultItem);
+
+      toast.success('Successfully seeded 100 dev items');
+
+      await sync();
+    } catch (error: any) {
+      logger.error('[VaultScreen] Seeding failed', { error });
+      toast.error(error.message || 'Seeding failed');
+    } finally {
+      setIsSeeding(false);
+    }
+  }, [addVaultItem, isSeeding, sync]);
+
+  /**
+   * Dev helper: Clears all items from the vault
+   */
+  const onClearDevItems = useCallback(async () => {
+    if (vaults.length === 0) {
+      toast.error('Vault is already empty');
+      return;
+    }
+
+    Alert.alert(
+      'Dev Tool: Clear Vault',
+      `Are you sure you want to delete all ${vaults.length} items? This will also trigger sync for each deletion.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            setIsSeeding(true); // Reuse seeding state for loading
+            try {
+              // We use deleteVaultItem from the hook scope
+              await clearVaultItems(vaults, deleteVaultItem);
+              await sync();
+            } catch (error: any) {
+              logger.error('[VaultScreen] Clear failed', { error });
+              toast.error(error.message || 'Clear failed');
+            } finally {
+              setIsSeeding(false);
+            }
+          },
+        },
+      ]
+    );
+  }, [vaults, deleteVaultItem, sync]);
 
   /**
    * Handles opening the detail dialog for a specific secret
@@ -136,15 +155,57 @@ export default function VaultScreen() {
         title="My Vault"
         subtitle="End-to-End Encrypted"
         rightElement={
-          <TouchableOpacity
-            className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 shadow-md active:bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-900/80 dark:active:bg-zinc-800"
-            onPress={onManualSync}>
-            {isSyncingOrLoading ? (
-              <ActivityIndicator color="#10b981" />
-            ) : (
-              <Ionicons name="sync" size={24} color="#10b981" />
-            )}
-          </TouchableOpacity>
+          <Ternary
+            condition={isDev}
+            ifTrue={
+              <View className="flex-row">
+                {/* Dev seed tool */}
+                <TouchableOpacity
+                  className="mr-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 shadow-md active:bg-amber-200 dark:border-amber-800 dark:bg-amber-900/80 dark:active:bg-amber-800"
+                  onPress={onSeedDevItems}
+                  disabled={isSeeding}>
+                  {isSeeding ? (
+                    <ActivityIndicator color="#f59e0b" />
+                  ) : (
+                    <Ionicons name="flask" size={24} color="#f59e0b" />
+                  )}
+                </TouchableOpacity>
+
+                {/* Dev clear tool */}
+                <TouchableOpacity
+                  className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 shadow-md active:bg-red-200 dark:border-red-800 dark:bg-red-900/80 dark:active:bg-red-800"
+                  onPress={onClearDevItems}
+                  disabled={isSeeding}>
+                  {isSeeding ? (
+                    <ActivityIndicator color="#ef4444" />
+                  ) : (
+                    <Ionicons name="trash-outline" size={24} color="#ef4444" />
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 shadow-md active:bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-900/80 dark:active:bg-zinc-800"
+                  onPress={onManualSync}>
+                  {isSyncingOrLoading ? (
+                    <ActivityIndicator color="#10b981" />
+                  ) : (
+                    <Ionicons name="sync" size={24} color="#10b981" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            }
+            ifFalse={
+              <TouchableOpacity
+                className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 shadow-md active:bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-900/80 dark:active:bg-zinc-800"
+                onPress={onManualSync}>
+                {isSyncingOrLoading ? (
+                  <ActivityIndicator color="#10b981" />
+                ) : (
+                  <Ionicons name="sync" size={24} color="#10b981" />
+                )}
+              </TouchableOpacity>
+            }
+          />
         }
       />
 
