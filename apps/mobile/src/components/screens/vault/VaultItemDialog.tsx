@@ -20,7 +20,7 @@ type Props = {
 export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: Props) => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const { deleteVaultItem, isLoading, sync } = useVaultContext();
+  const { deleteVaultItem, isLoading } = useVaultContext();
   const { isEditing, setIsEditing } = useEditMode();
 
   const isDeleting = isLoading.isDeleting;
@@ -29,8 +29,6 @@ export const VaultItemDialog = ({ open, onValueChange, item: selectedSecret }: P
     try {
       await deleteVaultItem(selectedSecret.id);
       onValueChange(false);
-
-      sync().catch((e) => toast.error('Sync failed', { description: e.message }));
     } catch (error) {
       logger.error('[VaultItemDialog] Delete failed', { error });
       // Error handled by provider
