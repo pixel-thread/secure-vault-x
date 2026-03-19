@@ -6,22 +6,15 @@ import { Stack } from 'expo-router';
 import { Wrapper } from '@components/providers';
 import React, { useEffect } from 'react';
 import { useSyncTrigger } from '@hooks/useSyncTrigger';
-import * as SplashScreen from 'expo-splash-screen';
 
 const AppSyncManager = ({ children }: { children: React.ReactNode }) => {
   useSyncTrigger();
   return <>{children}</>;
 };
 
-SplashScreen.setOptions({
-  fade: true,
-  duration: 1000,
-});
-
 // Suppress the "[Reanimated] Reading from `value` during component render" warning.
 // This is triggered internally by @react-navigation/drawer v7 and is a known issue
 // in the library, not in our application code.
-SplashScreen.preventAutoHideAsync();
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -38,12 +31,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isMounted) {
       setIsMounted(true);
-      SplashScreen.hideAsync();
     }
   }, [isMounted]);
 
   if (!isMounted) {
-    // something is still loading and will not need to break the ui when it not mounted
     return null;
   }
 

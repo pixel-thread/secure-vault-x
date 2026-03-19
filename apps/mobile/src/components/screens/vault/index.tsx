@@ -2,7 +2,6 @@ import { View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@components/common/Header';
 import { useState, useCallback } from 'react';
-import { useAuthStore } from '@store/auth';
 import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { VaultItem } from './VaultItem';
 import { VaultItemDialog } from './VaultItemDialog';
@@ -14,7 +13,6 @@ import { toast } from 'sonner-native';
 import { seedVaultItems, clearVaultItems } from '@utils/vault/dev';
 import { Ternary } from '@src/components/common/Ternary';
 import { Alert } from 'react-native';
-import { LoadingScreen } from '@src/components/common/LoadingScreen';
 
 /**
  * Renders the vault screen for viewing and managing end-to-end encrypted secrets.
@@ -34,8 +32,6 @@ export default function VaultScreen() {
   const isDev = process.env.APP_VARIANT !== 'production';
 
   // --- External Stores & Services ---
-  const { hasMek, isLoading } = useAuthStore();
-  const isAuthLoading = isLoading;
   const {
     vaultItems: vaults,
     isLoading: contextLoading,

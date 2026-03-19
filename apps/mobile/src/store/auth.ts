@@ -7,6 +7,8 @@ interface AuthState {
   user: UserT | null;
   isLoading: boolean;
   hasMek: boolean;
+  isHydrating: boolean;
+  _hydrate: () => void;
   // Actions
   logout: () => void;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
@@ -19,6 +21,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   isAuthenticated: false,
+  isHydrating: true,
   user: null,
   hasMek: false,
   setIsLoading: (isLoading: boolean) => set({ isLoading }),
@@ -31,5 +34,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     // This permanently bricks local Vault access on this device until re-registered.
     await DeviceStoreManager.clearAll();
     set({ isAuthenticated: false, user: null, hasMek: false });
+  },
+  _hydrate: () => {
+    // TODO: hydrate and initialize user from storage into state
   },
 }));

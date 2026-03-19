@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import * as SQLite from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
@@ -45,7 +45,5 @@ export const DBProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   }
 
   // 6. Ready State
-  return (
-    <DrizzleContext.Provider value={drizzleInstance}>{children}</DrizzleContext.Provider>
-  );
+  return <DrizzleContext.Provider value={drizzleInstance}>{children}</DrizzleContext.Provider>;
 };

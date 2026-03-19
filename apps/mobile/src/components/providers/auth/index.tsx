@@ -7,17 +7,16 @@ import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import { authenticateWithBiometric } from '@utils/biometricLock';
 import { DeviceStoreManager } from '@store/device';
-import { LoadingScreen } from '@components/common/LoadingScreen';
 import { BioMetricLock } from '@components/common/BiometricLock';
 
 type Props = { children: React.ReactNode };
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
-  const { setIsLoading, isLoading, setUser, setIsAuthenticated, setHasMek } = useAuthStore();
+  const { setIsLoading, setUser, setIsAuthenticated, setHasMek } = useAuthStore();
   const [biometricPassed, setBiometricPassed] = useState(false);
   const [biometricRequired, setBiometricRequired] = useState(false);
 
-  const { mutate, isPending } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: () => http.get<UserT>(AUTH_ENDPOINT.GET_ME),
     onSuccess: async (data) => {
       logger.info('Auth background verification successful');
@@ -124,10 +123,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // Biometric gate — show lock screen if biometric is required but not passed
   if (biometricRequired && !biometricPassed) {
     return <BioMetricLock onPressUnlock={promptBiometric} />;
-  }
-
-  if (isLoading || isPending) {
-    return <LoadingScreen />;
   }
 
   return <>{children}</>;
