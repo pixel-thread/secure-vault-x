@@ -32,6 +32,7 @@ const flushLogs = async () => {
       body: JSON.stringify({
         logs: batch,
         isBackend: false,
+        message: "Logging to the server",
       }),
     });
   } catch (error) {
@@ -40,7 +41,7 @@ const flushLogs = async () => {
   }
 };
 
-const sendLog = (payload: Omit<LogPayload, 'timestamp'>) => {
+const sendLog = (payload: Omit<LogPayload, "timestamp">) => {
   if (payload.type === "LOG") return;
 
   logQueue.push({

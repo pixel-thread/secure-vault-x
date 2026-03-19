@@ -226,7 +226,9 @@ export default function VaultScreen() {
 
       {/* Main List of Secrets */}
       <FlatList
-        data={vaults}
+        data={vaults ?? []}
+        refreshing={isSyncingOrLoading}
+        onRefresh={sync}
         keyExtractor={(item) => item.id}
         contentContainerClassName="px-6 py-6 pb-32"
         className="flex-1"

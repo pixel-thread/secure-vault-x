@@ -14,7 +14,7 @@ import { logger } from '@securevault/utils-native';
  */
 export async function seedVaultItems(
   addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>,
-  count: number = 10
+  count: number = 100
 ) {
   const mek = await DeviceStoreManager.getMek();
 
