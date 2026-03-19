@@ -9,7 +9,7 @@ type Props = {
 export default function Redirect({ children }: Props) {
   const segments = useSegments();
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, hasMek } = useAuthStore();
 
   useEffect(() => {
     if (isLoading) return;
@@ -28,6 +28,15 @@ export default function Redirect({ children }: Props) {
       router.replace('/');
     }
   }, [isAuthenticated, isLoading, segments, router]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (!hasMek && isAuthenticated) {
+      // Redirect to the MEK setup page
+      router.replace('/mek');
+    }
+  }, [isLoading, hasMek, isAuthenticated, router]);
 
   return <>{children}</>;
 }

@@ -19,7 +19,7 @@ const schema = passwordLoginSchema.pick({ password: true });
 
 type PasswordFormValues = z.infer<typeof schema>;
 
-export function MekSetup() {
+export default function MekSetup() {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const {

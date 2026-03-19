@@ -8,7 +8,6 @@ import { VaultItem } from './VaultItem';
 import { VaultItemDialog } from './VaultItemDialog';
 import { AddSecretDialog } from './AddSecretDialog';
 import { VaultEmpty } from './VaultEmpty';
-import { MekSetup } from './MekSetup';
 import { VaultSecretT } from '@src/types/vault';
 import { logger } from '@securevault/utils-native';
 import { toast } from 'sonner-native';
@@ -155,14 +154,6 @@ export default function VaultScreen() {
     setAddModalVisible(true);
   }, []);
 
-  if (isAuthLoading) {
-    return <LoadingScreen message="Loading your vault" />;
-  }
-  // --- Security Check: Ensure MEK is set up ---
-  if (!hasMek) {
-    return <MekSetup />;
-  }
-
   return (
     <View className="flex-1 bg-white dark:bg-[#09090b]">
       {/* Page Header */}
@@ -225,15 +216,21 @@ export default function VaultScreen() {
       />
 
       {/* Main List of Secrets */}
-      <FlatList
-        data={vaults ?? []}
-        refreshing={isSyncingOrLoading}
-        onRefresh={sync}
-        keyExtractor={(item) => item.id}
-        contentContainerClassName="px-6 py-6 pb-32"
-        className="flex-1"
-        ListEmptyComponent={<VaultEmpty />}
-        renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
+      <Ternary
+        condition={vaults.length > 0}
+        ifTrue={
+          <FlatList
+            data={vaults ?? []}
+            refreshing={isSyncingOrLoading}
+            onRefresh={sync}
+            keyExtractor={(item) => item.id}
+            contentContainerClassName="px-6 py-6 pb-32"
+            className="flex-1"
+            ListEmptyComponent={<VaultEmpty />}
+            renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
+          />
+        }
+        ifFalse={<VaultEmpty />}
       />
 
       {/* Floating Action Button for Adding Secrets */}
