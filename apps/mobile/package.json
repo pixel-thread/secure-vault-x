@@ -3,7 +3,7 @@
   "version": "0.0.7",
   "main": "expo-router/entry",
   "scripts": {
-    "build:local:android": "eas build --profile development --platform android --local",
+    "build:local:android": "eas build --profile development --platform android --local --non-interactive",
     "build:preview:android": "eas build --profile preview --platform android --local",
     "build:prod:android": "eas build --profile production --platform android --local",
     "start": "expo start",
