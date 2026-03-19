@@ -71,6 +71,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: 'b09a2c96-90ae-4795-b42f-c88731de08ee',
     },
+    environment: APP_VARIANT,
   },
   owner: 'pixel-thread',
   runtimeVersion: {

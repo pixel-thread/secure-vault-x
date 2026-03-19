@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { CustomDrawerContent } from '@src/components/common/CustomDrawer';
 import { Drawer } from 'expo-router/drawer';
 import { useColorScheme } from 'nativewind';
-import { Text, View } from 'react-native';
 
 const DrawerLayout = () => {
   const { colorScheme } = useColorScheme();
