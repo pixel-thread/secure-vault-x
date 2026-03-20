@@ -6,40 +6,41 @@ import { CryptoProvider } from './crypto';
 import { UpdateProvider } from './update';
 import { ErrorBoundary } from '@components/common/ErrorBoundary';
 import { Toaster } from 'sonner-native';
-import { useColorScheme } from 'nativewind';
 import { DBProvider } from './db';
 import { ScreenCaptureProvider } from './capture';
 import { VaultProvider } from './vault';
-import { StatusBar } from "expo-status-bar"
+import { StatusBar } from 'expo-status-bar';
+import { ThemeProvider } from './theme';
+import { useThemeStore } from '@src/store/theme';
 
-type Props = {
-  children: React.ReactNode;
-};
+type Props = { children: React.ReactNode };
 
 export const Wrapper = ({ children }: Props) => {
-  const { colorScheme } = useColorScheme();
+  const { isDarkMode } = useThemeStore();
 
   return (
     <ErrorBoundary>
-      <TQueryProvider>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        <AuthProvider>
-          <Redirect>
-            <UpdateProvider>
-              <CryptoProvider>
-                <DBProvider>
-                  <VaultProvider>
-                    <Suspense>
-                      <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
-                    </Suspense>
-                  </VaultProvider>
-                </DBProvider>
-              </CryptoProvider>
-            </UpdateProvider>
-          </Redirect>
-        </AuthProvider>
-      </TQueryProvider>
-      <Toaster duration={1000} theme={colorScheme as 'light' | 'dark'} />
+      <ThemeProvider>
+        <TQueryProvider>
+          <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+          <AuthProvider>
+            <Redirect>
+              <UpdateProvider>
+                <CryptoProvider>
+                  <DBProvider>
+                    <VaultProvider>
+                      <Suspense>
+                        <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
+                      </Suspense>
+                    </VaultProvider>
+                  </DBProvider>
+                </CryptoProvider>
+              </UpdateProvider>
+            </Redirect>
+          </AuthProvider>
+        </TQueryProvider>
+        <Toaster duration={1000} theme={isDarkMode ? 'light' : 'dark'} />
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };
