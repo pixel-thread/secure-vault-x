@@ -10,8 +10,6 @@ import { DBProvider } from './db';
 import { ScreenCaptureProvider } from './capture';
 import { VaultProvider } from './vault';
 import { StatusBar } from 'expo-status-bar';
-import { ThemeProvider } from './theme';
-import { useThemeStore } from '@src/store/theme';
 
 type Props = { children: React.ReactNode };
 
@@ -20,27 +18,25 @@ export const Wrapper = ({ children }: Props) => {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <TQueryProvider>
-          <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-          <AuthProvider>
-            <Redirect>
-              <UpdateProvider>
-                <CryptoProvider>
-                  <DBProvider>
-                    <VaultProvider>
-                      <Suspense>
-                        <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
-                      </Suspense>
-                    </VaultProvider>
-                  </DBProvider>
-                </CryptoProvider>
-              </UpdateProvider>
-            </Redirect>
-          </AuthProvider>
-        </TQueryProvider>
-        <Toaster duration={1000} theme={isDarkMode ? 'light' : 'dark'} />
-      </ThemeProvider>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <TQueryProvider>
+        <AuthProvider>
+          <Redirect>
+            <UpdateProvider>
+              <CryptoProvider>
+                <DBProvider>
+                  <VaultProvider>
+                    <Suspense>
+                      <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
+                    </Suspense>
+                  </VaultProvider>
+                </DBProvider>
+              </CryptoProvider>
+            </UpdateProvider>
+          </Redirect>
+        </AuthProvider>
+      </TQueryProvider>
+      <Toaster duration={1000} theme={colorScheme as 'light' | 'dark'} />
     </ErrorBoundary>
   );
 };

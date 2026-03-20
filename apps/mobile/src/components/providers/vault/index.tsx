@@ -155,6 +155,21 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       toast.error('Save failed', { description: err.message });
     },
   });
+  const { mutateAsync: saveItem, isPending: isSaving } = useMutation({
+    mutationFn: async (data: any) => {
+      if (!vaultService) throw new Error('Service not ready');
+      return await vaultService.saveVaultItem(data);
+    },
+    onSuccess: () => {
+      toast.success('Vault updated');
+      queryClient.invalidateQueries({ queryKey: ['vault'] });
+      // Trigger background sync
+      syncMutate().catch((e) => logger.error('Post-save sync failed', { error: e }));
+    },
+    onError: (err: any) => {
+      toast.error('Save failed', { description: err.message });
+    },
+  });
 
   /**
    * -------------------------------
@@ -179,9 +194,9 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateVaultItem = useCallback(
     async (input: any) => {
-      await saveItem(input);
+      await updateItem(input);
     },
-    [saveItem]
+    [updateItem]
   );
 
   const getVaultItem = useCallback(
@@ -215,7 +230,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
         isSaving,
         isDeleting,
         isSyncing,
-        isPending: isFetching || isSaving || isDeleting || isSyncing,
+        isPending: isFetching || isSaving || isDeleting || isSyncing || isUpdating,
       },
     }),
     [
@@ -231,6 +246,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       isSaving,
       isDeleting,
       isSyncing,
+      isUpdating,
     ]
   );
 

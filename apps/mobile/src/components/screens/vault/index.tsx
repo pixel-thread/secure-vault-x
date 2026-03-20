@@ -1,37 +1,27 @@
-import { View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Header from '@components/common/Header';
-import { useState, useCallback } from 'react';
-import { useVaultContext } from '@hooks/vault/useVaultContext';
-import { VaultItem } from './VaultItem';
-import { VaultItemDialog } from './VaultItemDialog';
-import { AddSecretDialog } from './AddSecretDialog';
-import { VaultEmpty } from './VaultEmpty';
-import { VaultSecretT } from '@src/types/vault';
+import { Container } from '@securevault/ui-native';
 import { logger } from '@securevault/utils-native';
+import { useRouter } from 'expo-router';
+import { useState, useCallback } from 'react';
+import { View, Alert, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { toast } from 'sonner-native';
-import { seedVaultItems, clearVaultItems } from '@utils/vault/dev';
+import Header from '@components/common/Header';
+import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import { Ternary } from '@src/components/common/Ternary';
-import { Alert } from 'react-native';
+import { useVaultContext } from '@hooks/vault/useVaultContext';
+import { VaultSecretT } from '@src/types/vault';
+import { seedVaultItems, clearVaultItems } from '@utils/vault/dev';
+import { VaultEmpty } from './VaultEmpty';
+import { VaultItem } from './VaultItem';
 
 /**
- * Renders the vault screen for viewing and managing end-to-end encrypted secrets.
- *
- * Shows a list of vault items, a floating action button to add secrets, and dialogs for adding and inspecting items.
- * If the app variant is not production, exposes developer tools for seeding, clearing, and manually syncing items.
- * Short-circuits to the MEK setup screen when MEK is not configured.
- *
- * @returns The rendered Vault screen JSX element.
+ * Renders the home vault screen with a list of all secured secrets.
  */
 export default function VaultScreen() {
-  // --- UI State Management ---
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [selectedSecret, setSelectedSecret] = useState<VaultSecretT | null>(null);
+  const router = useRouter();
   const [isSeeding, setIsSeeding] = useState(false);
   const isDev = process.env.APP_VARIANT !== 'production';
 
-  // --- External Stores & Services ---
   const {
     vaultItems: vaults,
     isLoading: contextLoading,
@@ -40,79 +30,48 @@ export default function VaultScreen() {
     sync,
   } = useVaultContext();
 
-  // Consolidate loading state for UI feedback
   const isSyncingOrLoading = contextLoading.isPending;
 
-  /**
-   * Triggers a manual synchronization with the server
-   */
-  const onManualSync = useCallback(async () => {
-    if (contextLoading.isSyncing) {
-      logger.log('[VaultScreen] Manual sync skipped: already in progress', {
-        manualSync: true,
-      });
-      return;
-    }
+  // --- HANDLERS ---
 
-    logger.info('[VaultScreen] Manual sync initiated');
+  const onManualSync = useCallback(async () => {
+    if (contextLoading.isSyncing) return;
     try {
       await sync();
-      logger.info('[VaultScreen] Manual sync completed', {
-        manualSync: true,
-      });
     } catch (error) {
-      logger.error('[VaultScreen] Manual sync failed', {
-        manualSync: true,
-        error,
-      });
+      logger.error('[VaultScreen] Sync failed', { error });
     }
   }, [sync, contextLoading.isSyncing]);
 
   const onSeedDevItems = useCallback(async () => {
     if (isSeeding) return;
-
     setIsSeeding(true);
-
     try {
       await seedVaultItems(addVaultItem);
-
-      toast.success('Successfully seeded 100 dev items');
-
+      toast.success('Seeded 100 items... manifesting success!');
       await sync();
     } catch (error: any) {
-      logger.error('[VaultScreen] Seeding failed', { error });
-      toast.error(error.message || 'Seeding failed');
+      toast.error('Seed failed, major L.');
     } finally {
       setIsSeeding(false);
     }
   }, [addVaultItem, isSeeding, sync]);
 
-  /**
-   * Dev helper: Clears all items from the vault
-   */
   const onClearDevItems = useCallback(async () => {
-    if (vaults.length === 0) {
-      toast.error('Vault is already empty');
-      return;
-    }
-
+    if (vaults.length === 0) return;
     Alert.alert(
-      'Dev Tool: Clear Vault',
-      `Are you sure you want to delete all ${vaults.length} items? This will also trigger sync for each deletion.`,
+      'Clear everything?',
+      `Delete all ${vaults.length} items? This is a total reset.`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Never mind', style: 'cancel' },
         {
-          text: 'Clear All',
+          text: 'Yeet them',
           style: 'destructive',
           onPress: async () => {
-            setIsSeeding(true); // Reuse seeding state for loading
+            setIsSeeding(true);
             try {
-              // We use deleteVaultItem from the hook scope
               await clearVaultItems(vaults, deleteVaultItem);
               await sync();
-            } catch (error: any) {
-              logger.error('[VaultScreen] Clear failed', { error });
-              toast.error(error.message || 'Clear failed');
             } finally {
               setIsSeeding(false);
             }
@@ -122,136 +81,75 @@ export default function VaultScreen() {
     );
   }, [vaults, deleteVaultItem, sync]);
 
-  /**
-   * Handles opening the detail dialog for a specific secret
-   */
-  const onSelectItem = useCallback((item: VaultSecretT) => {
-    logger.log('[VaultScreen] Secret selected', { id: item.id, type: item.type });
-    setSelectedSecret(item);
-    setDetailModalVisible(true);
-  }, []);
+  const onSelectItem = useCallback(
+    (item: VaultSecretT) => router.push(`/secret/${item.id}`),
+    [router]
+  );
 
-  /**
-   * Handles closing the detail dialog
-   */
-  const onCloseDetail = useCallback((isOpen: boolean) => {
-    if (!isOpen) {
-      logger.log('[VaultScreen] Detail dialog closed', {});
-      setSelectedSecret(null);
-    }
-    setDetailModalVisible(isOpen);
-  }, []);
+  const onOpenAdd = useCallback(() => router.push('/secret'), [router]);
 
-  /**
-   * Handles opening the add secret dialog
-   */
-  const onOpenAdd = useCallback(() => {
-    logger.log('[VaultScreen] Opening add secret dialog');
-    setAddModalVisible(true);
-  }, []);
+  // --- RENDER ---
 
   return (
-    <View className="flex-1 bg-white dark:bg-[#09090b]">
-      {/* Page Header */}
+    <Container>
       <Header
-        title="My Vault"
-        subtitle="End-to-End Encrypted"
+        title="My Stash"
+        subtitle="Safe as houses"
+        isSyncing={contextLoading.isSyncing}
         rightElement={
-          <Ternary
-            condition={isDev}
-            ifTrue={
-              <View className="flex-row">
-                {/* Dev seed tool */}
+          <View className="flex-row">
+            {isDev && (
+              <>
                 <TouchableOpacity
-                  className="mr-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 shadow-md active:bg-amber-200 dark:border-amber-800 dark:bg-amber-900/80 dark:active:bg-amber-800"
+                  className="mr-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/80"
                   onPress={onSeedDevItems}
                   disabled={isSeeding}>
-                  {isSeeding ? (
-                    <ActivityIndicator color="#f59e0b" />
-                  ) : (
-                    <Ionicons name="flask" size={24} color="#f59e0b" />
-                  )}
+                  {isSeeding ? <ActivityIndicator size="small" color="#f59e0b" /> : <Ionicons name="flask" size={24} color="#f59e0b" />}
                 </TouchableOpacity>
 
-                {/* Dev clear tool */}
                 <TouchableOpacity
-                  className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 shadow-md active:bg-red-200 dark:border-red-800 dark:bg-red-900/80 dark:active:bg-red-800"
+                  className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/80"
                   onPress={onClearDevItems}
                   disabled={isSeeding}>
-                  {isSeeding ? (
-                    <ActivityIndicator color="#ef4444" />
-                  ) : (
-                    <Ionicons name="trash-outline" size={24} color="#ef4444" />
-                  )}
+                  {isSeeding ? <ActivityIndicator size="small" color="#ef4444" /> : <Ionicons name="trash-outline" size={24} color="#ef4444" />}
                 </TouchableOpacity>
+              </>
+            )}
 
-                <TouchableOpacity
-                  className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 shadow-md active:bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-900/80 dark:active:bg-zinc-800"
-                  onPress={onManualSync}>
-                  {isSyncingOrLoading ? (
-                    <ActivityIndicator color="#10b981" />
-                  ) : (
-                    <Ionicons name="sync" size={24} color="#10b981" />
-                  )}
-                </TouchableOpacity>
-              </View>
-            }
-            ifFalse={
-              <TouchableOpacity
-                className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 shadow-md active:bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-900/80 dark:active:bg-zinc-800"
-                onPress={onManualSync}>
-                {isSyncingOrLoading ? (
-                  <ActivityIndicator color="#10b981" />
-                ) : (
-                  <Ionicons name="sync" size={24} color="#10b981" />
-                )}
-              </TouchableOpacity>
-            }
-          />
+            <TouchableOpacity
+              className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/80"
+              onPress={onManualSync}>
+              {isSyncingOrLoading ? <ActivityIndicator size="small" color="#10b981" /> : <Ionicons name="sync" size={24} color="#10b981" />}
+            </TouchableOpacity>
+          </View>
         }
       />
 
-      {/* Main List of Secrets */}
-      <Ternary
-        condition={vaults.length > 0}
-        ifTrue={
-          <FlatList
-            data={vaults ?? []}
-            refreshing={isSyncingOrLoading}
-            onRefresh={sync}
-            keyExtractor={(item) => item.id}
-            contentContainerClassName="px-6 py-6 pb-32"
-            className="flex-1"
-            ListEmptyComponent={<VaultEmpty />}
-            renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
-          />
-        }
-        ifFalse={<VaultEmpty />}
-      />
-
-      {/* Floating Action Button for Adding Secrets */}
-      <TouchableOpacity
-        className="absolute bottom-8 right-8 h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 active:scale-95"
-        onPress={onOpenAdd}>
-        <Ionicons name="add" size={32} color="#022c22" />
-      </TouchableOpacity>
-
-      {/* Dialogs */}
-      <AddSecretDialog
-        open={addModalVisible}
-        onValueChange={(isOpen) => {
-          if (!isOpen) logger.log('[VaultScreen] Add secret dialog closed');
-          setAddModalVisible(isOpen);
-        }}
-      />
-
-      {selectedSecret && (
-        <VaultItemDialog
-          onValueChange={onCloseDetail}
-          open={detailModalVisible}
-          item={selectedSecret}
+      <ScreenContainer>
+        <Ternary
+          condition={vaults.length > 0}
+          ifTrue={
+            <FlatList
+              data={vaults ?? []}
+              refreshing={isSyncingOrLoading}
+              onRefresh={sync}
+              keyExtractor={(item) => item.id}
+              contentContainerClassName="px-6 py-6 pb-32"
+              className="flex-1"
+              ListEmptyComponent={<VaultEmpty />}
+              renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
+            />
+          }
+          ifFalse={<VaultEmpty />}
         />
-      )}
-    </View>
+
+        <TouchableOpacity
+          className="absolute bottom-8 right-8 h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 active:scale-95"
+          onPress={onOpenAdd}>
+          <Ionicons name="add" size={32} color="#022c22" />
+        </TouchableOpacity>
+      </ScreenContainer>
+    </Container>
   );
 }
+

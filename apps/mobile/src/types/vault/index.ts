@@ -1,20 +1,31 @@
-type SecretType = 'password' | 'card';
+import { Secret, SecretType as NewSecretType } from '@securevault/types';
+
+export type SecretType = NewSecretType;
+
+type SecretMetaT = {
+  tags: string[];
+  environment: 'dev' | 'staging' | 'prod';
+  expiresAt: number;
+  createdAt: number;
+  updatedAt: number;
+};
 
 interface BaseSecret {
   id: string;
   type: SecretType;
   serviceName: string;
   note?: string;
+  meta: SecretMetaT;
 }
 
-interface PasswordSecret extends BaseSecret {
+export interface PasswordSecret extends BaseSecret {
   type: 'password';
   website: string;
   username: string;
   secretInfo: string;
 }
 
-interface CardSecret extends BaseSecret {
+export interface CardSecret extends BaseSecret {
   type: 'card';
   cardholderName: string;
   cardNumber: string;
@@ -22,7 +33,7 @@ interface CardSecret extends BaseSecret {
   cvv: string;
 }
 
-export type VaultSecretT = PasswordSecret;
+export type VaultSecretT = PasswordSecret | CardSecret | Secret;
 
 export type VaultContextT = {
   isLoading: {

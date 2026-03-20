@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
@@ -12,9 +19,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { changePasswordSchema, changePasswordWithOutOtpSchema } from '@securevault/validators';
 import { useMutation } from '@tanstack/react-query';
+import { Container } from '@securevault/ui-native';
+import { ScreenContainer } from '@src/components/common/ScreenContainer';
+import Header from '@src/components/common/Header';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StackHeader } from '@src/components/common/StackHeader';
 
 type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
+/**
+ * Screen for changing the user's master password.
+ * Follows the modern, Gen Z-friendly design language.
+ */
 const ChangePasswordScreen = () => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
@@ -64,7 +80,7 @@ const ChangePasswordScreen = () => {
     mutationFn: () => http.post(AUTH_ENDPOINT.POST_PASSWORD_RESET_REQUEST, {}),
     onSuccess: (res) => {
       if (res.success) {
-        toast.success(res.message);
+        toast.success('Code dropped in your inbox!');
         setIsOtpSent(true);
         return;
       } else {
@@ -83,7 +99,7 @@ const ChangePasswordScreen = () => {
       http.post<any>(AUTH_ENDPOINT.POST_PASSWORD_CHANGE, data),
     onSuccess: (res) => {
       if (res.success) {
-        toast.success(res.message);
+        toast.success('Password updated! Clean vibes.');
         router.back();
       } else {
         toast.error(res?.message || 'Failed to update password');
@@ -106,165 +122,175 @@ const ChangePasswordScreen = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTitle: 'Change Password',
-          title: 'Change Password',
-          headerStyle: { backgroundColor: isDarkMode ? '#09090b' : '#fff' },
-          headerTintColor: isDarkMode ? '#fff' : '#000',
-          headerTitleStyle: { color: isDarkMode ? '#fff' : '#000' },
-        }}
-      />
-      <View className="flex-1 bg-white p-6 dark:bg-[#09090b]">
-        <Text className="mb-6 text-zinc-500 dark:text-zinc-400">
-          Update your account password. If you already have a password set, you must provide it.
-        </Text>
+    <Container>
+      <ScreenContainer>
+        <StackHeader title="Change Password" />
+        <Header title="Update the Key" subtitle="Keep it fresh, keep it safe" />
 
-        <View className="gap-y-4">
-          <View>
-            <Text className="mb-2 text-sm font-semibold uppercase text-zinc-500">
-              Current Password
-            </Text>
-            <View className="relative justify-center">
-              <Controller
-                control={control}
-                name="currentPassword"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    secureTextEntry={!showCurrent}
-                    placeholder="Leave blank if no password is set"
-                    autoCapitalize="none"
-                    editable={!isOtpSent}
-                    placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                    className={`w-full rounded-2xl border px-5 py-4 pr-12 text-zinc-900 dark:text-white ${isOtpSent ? 'border-zinc-100 bg-zinc-100 text-zinc-400 dark:border-zinc-800/50 dark:bg-zinc-800/50 dark:text-zinc-500' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50'}`}
-                  />
-                )}
-              />
-              <TouchableOpacity
-                className="absolute right-4"
-                onPressIn={() => setShowCurrent(true)}
-                onPressOut={() => setShowCurrent(false)}>
-                <Ionicons name={showCurrent ? 'eye-off' : 'eye'} size={20} color="#a1a1aa" />
-              </TouchableOpacity>
-            </View>
-            {errors.currentPassword && (
-              <Text className="ml-1 mt-1 text-xs text-red-500">
-                {errors.currentPassword.message}
+        <ScrollView contentContainerClassName="p-6 pb-20" showsVerticalScrollIndicator={false}>
+          <Text className="mb-8 text-base font-medium text-zinc-500 dark:text-zinc-400">
+            Refreshing your security is a power move. Drop your current key and the new one below.
+          </Text>
+
+          <View className="gap-y-6">
+            <View>
+              <Text className="mb-3 ml-1 text-sm font-bold uppercase tracking-widest text-zinc-400">
+                The Old Key
               </Text>
-            )}
-          </View>
+              <View className="relative justify-center">
+                <Controller
+                  control={control}
+                  name="currentPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      secureTextEntry={!showCurrent}
+                      placeholder="Current password"
+                      autoCapitalize="none"
+                      editable={!isOtpSent}
+                      placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
+                      className={`w-full rounded-2xl border px-5 py-4 pr-12 text-zinc-900 dark:text-white ${isOtpSent ? 'border-zinc-100 bg-zinc-100/50 text-zinc-400 dark:border-zinc-800/30 dark:bg-zinc-800/30 dark:text-zinc-500' : 'border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/30'}`}
+                    />
+                  )}
+                />
+                <TouchableOpacity
+                  className="absolute right-4"
+                  onPressIn={() => setShowCurrent(true)}
+                  onPressOut={() => setShowCurrent(false)}>
+                  <Ionicons name={showCurrent ? 'eye' : 'eye-off'} size={20} color="#71717a" />
+                </TouchableOpacity>
+              </View>
+              {errors.currentPassword && (
+                <Text className="ml-1 mt-2 text-sm font-medium text-rose-500">
+                  {errors.currentPassword.message}
+                </Text>
+              )}
+            </View>
 
-          <View>
-            <Text className="mb-2 text-sm font-semibold uppercase text-zinc-500">New Password</Text>
-            <View className="relative justify-center">
+            <View>
+              <Text className="mb-3 ml-1 text-sm font-bold uppercase tracking-widest text-zinc-400">
+                The New Key
+              </Text>
+              <View className="relative justify-center">
+                <Controller
+                  control={control}
+                  name="newPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      secureTextEntry={!showNew}
+                      placeholder="New password"
+                      autoCapitalize="none"
+                      editable={!isOtpSent}
+                      placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
+                      className={`w-full rounded-2xl border px-5 py-4 pr-12 text-zinc-900 dark:text-white ${isOtpSent ? 'border-zinc-100 bg-zinc-100/50 text-zinc-400 dark:border-zinc-800/30 dark:bg-zinc-800/30 dark:text-zinc-500' : 'border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/30'}`}
+                    />
+                  )}
+                />
+                <TouchableOpacity
+                  onPressIn={() => setShowNew(true)}
+                  onPressOut={() => setShowNew(false)}
+                  className="absolute right-4">
+                  <Ionicons name={showNew ? 'eye' : 'eye-off'} size={20} color="#71717a" />
+                </TouchableOpacity>
+              </View>
+              {errors.newPassword && (
+                <Text className="ml-1 mt-2 text-sm font-medium text-rose-500">
+                  {errors.newPassword.message}
+                </Text>
+              )}
+            </View>
+
+            <View>
+              <Text className="mb-3 ml-1 text-sm font-bold uppercase tracking-widest text-zinc-400">
+                Confirm it
+              </Text>
               <Controller
                 control={control}
-                name="newPassword"
+                name="confirmPassword"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
                     secureTextEntry={!showNew}
-                    placeholder="New Password"
+                    placeholder="Repeat the new key"
                     autoCapitalize="none"
                     editable={!isOtpSent}
                     placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                    className={`w-full rounded-2xl border px-5 py-4 pr-12 text-zinc-900 dark:text-white ${isOtpSent ? 'border-zinc-100 bg-zinc-100 text-zinc-400 dark:border-zinc-800/50 dark:bg-zinc-800/50 dark:text-zinc-500' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50'}`}
+                    className={`w-full rounded-2xl border bg-zinc-50/50 px-5 py-4 text-zinc-900 dark:bg-zinc-900/30 dark:text-white ${isOtpSent ? 'border-zinc-100 bg-zinc-100/50 text-zinc-400 dark:border-zinc-800/30 dark:bg-zinc-800/30 dark:text-zinc-500' : 'border-zinc-200 dark:border-zinc-800'}`}
                   />
                 )}
               />
-              <TouchableOpacity
-                onPressIn={() => setShowNew(true)}
-                onPressOut={() => setShowNew(false)}
-                className="absolute right-4">
-                <Ionicons name={showNew ? 'eye-off' : 'eye'} size={20} color="#a1a1aa" />
-              </TouchableOpacity>
+              {errors.confirmPassword && (
+                <Text className="ml-1 mt-2 text-sm font-medium text-rose-500">
+                  {errors.confirmPassword.message}
+                </Text>
+              )}
             </View>
-            {errors.newPassword && (
-              <Text className="ml-1 mt-1 text-xs text-red-500">{errors.newPassword.message}</Text>
-            )}
-          </View>
 
-          <View>
-            <Text className="mb-2 text-sm font-semibold uppercase text-zinc-500">
-              Confirm New Password
-            </Text>
-            <Controller
-              control={control}
-              name="confirmPassword"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                  secureTextEntry={!showNew}
-                  placeholder="Confirm New Password"
-                  autoCapitalize="none"
-                  editable={!isOtpSent}
-                  placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                  className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-zinc-900 dark:bg-zinc-900/50 dark:text-white ${isOtpSent ? 'border-zinc-100 bg-zinc-100 text-zinc-400 dark:border-zinc-800/50 dark:bg-zinc-800/50 dark:text-zinc-500' : 'border-zinc-200 dark:border-zinc-800'}`}
+            {isOtpSent && (
+              <View className="mt-4 rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-6 dark:bg-emerald-500/10">
+                <Text className="mb-3 text-sm font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                  Magic Code
+                </Text>
+                <Controller
+                  control={control}
+                  name="otp"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      placeholder="000000"
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      placeholderTextColor={isDarkMode ? '#064e3b' : '#10b98150'}
+                      className="w-full rounded-2xl border border-emerald-500/30 bg-white/50 px-5 py-5 text-center font-mono text-3xl font-bold tracking-[10] text-emerald-600 dark:bg-zinc-950/30 dark:text-emerald-400"
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.confirmPassword && (
-              <Text className="ml-1 mt-1 text-xs text-red-500">
-                {errors.confirmPassword.message}
-              </Text>
+                {errors.otp && (
+                  <Text className="ml-1 mt-3 text-center text-sm font-medium text-rose-500">
+                    {errors.otp.message}
+                  </Text>
+                )}
+              </View>
             )}
+
+            {/* Strength Indicators */}
+            <View className="px-1">
+              <PasswordStrength
+                password={watchNewPassword}
+                confirmPassword={watchConfirmPassword}
+              />
+            </View>
           </View>
 
-          {isOtpSent && (
-            <View className="animate-in fade-in slide-in-from-top-2 mt-2">
-              <Text className="mb-2 text-sm font-semibold uppercase text-emerald-600 dark:text-emerald-500">
-                Verification Code
+          <TouchableOpacity
+            className={`mt-10 w-full flex-row items-center justify-center rounded-2xl py-4 shadow-xl ${
+              loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)
+                ? 'bg-zinc-200 dark:bg-zinc-800'
+                : 'bg-emerald-500 shadow-emerald-500/20 active:scale-[0.98]'
+            }`}
+            disabled={loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)}
+            onPress={handleSubmit(handleContinue)}>
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text
+                className={`text-lg font-bold ${loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6) ? 'text-zinc-400 dark:text-zinc-600' : 'text-white'}`}>
+                {isOtpSent ? 'Unlock New Key' : 'Send Code'}
               </Text>
-              <Controller
-                control={control}
-                name="otp"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    placeholder="6-digit OTP"
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
-                    className="w-full rounded-2xl border border-emerald-500/50 bg-emerald-50/50 px-5 py-4 text-center font-mono text-2xl tracking-widest text-zinc-900 dark:bg-emerald-500/10 dark:text-white"
-                  />
-                )}
-              />
-              {errors.otp && (
-                <Text className="ml-1 mt-1 text-xs text-red-500">{errors.otp.message}</Text>
-              )}
-            </View>
-          )}
-
-          {/* Strength Indicators */}
-          <PasswordStrength password={watchNewPassword} confirmPassword={watchConfirmPassword} />
-        </View>
-
-        <TouchableOpacity
-          className={`mt-8 w-full flex-row items-center justify-center rounded-2xl py-4 transition-transform active:scale-[0.98] ${
-            loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)
-              ? 'bg-zinc-300 dark:bg-zinc-700'
-              : 'bg-emerald-500 active:bg-emerald-600'
-          }`}
-          disabled={loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)}
-          onPress={handleSubmit(handleContinue)}>
-          <Text
-            className={`text-lg font-bold ${loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6) ? 'text-zinc-500 dark:text-zinc-400' : 'text-white'}`}>
-            {isOtpSent ? 'Verify & Change Password' : 'Request OTP'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </ScreenContainer>
+    </Container>
   );
 };
 

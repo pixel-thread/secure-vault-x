@@ -2,15 +2,46 @@ import { DeviceStoreManager } from '@store/device';
 import { encryptData } from '@securevault/crypto';
 import * as Crypto from 'expo-crypto';
 import { logger } from '@securevault/utils-native';
+import { SECRET_TEMPLATES } from '@securevault/constants';
+
+/**
+ * Helper to generate realistic mock values based on field label and type
+ */
+function generateMockValue(label: string, type: string, index: number): string {
+  const lowerLabel = label.toLowerCase();
+  
+  if (lowerLabel.includes('password') || lowerLabel.includes('key') || lowerLabel.includes('phrase')) {
+    return `pass_${Math.random().toString(36).substring(7)}_${index}`;
+  }
+  if (lowerLabel.includes('user')) {
+    return `user_${index + 1}`;
+  }
+  if (lowerLabel.includes('url') || lowerLabel.includes('website')) {
+    return `https://service-${index + 1}.io/auth`;
+  }
+  if (lowerLabel.includes('email')) {
+    return `dev-${index + 1}@example.com`;
+  }
+  if (lowerLabel.includes('card number')) {
+    return `4111${Math.floor(Math.random() * 8999) + 1000}${Math.floor(Math.random() * 8999) + 1000}${Math.floor(Math.random() * 8999) + 1000}`;
+  }
+  if (lowerLabel.includes('cvv')) {
+    return Math.floor(Math.random() * 899 + 100).toString();
+  }
+  if (lowerLabel.includes('address')) {
+    return `0x${Math.random().toString(16).substring(2, 42)}`;
+  }
+  
+  return `Mock ${label} ${index + 1}`;
+}
 
 /**
  * Seed the vault with mock items for development and testing.
  *
- * Generates `count` mock entries (every 10th entry is a card, others are password/secret entries), encrypts each payload with the device MEK, and persists them by calling `addVaultItem` for every item.
+ * Cycles through all available SECRET_TEMPLATES to ensure every type of secret is represented.
  *
  * @param addVaultItem - Called for each persisted item with an object containing `id`, `encryptedData`, and `iv`
- * @param count - Number of items to generate (default 10)
- * @throws Error if the device MEK is not available in the device store
+ * @param count - Number of items to generate (default 100)
  */
 export async function seedVaultItems(
   addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>,
@@ -24,42 +55,46 @@ export async function seedVaultItems(
     );
   }
 
-  const promises = Array.from({ length: count }).map(async (_, i) => {
-    const id = Crypto.randomUUID();
-    const isCard = i % 10 === 0; // Every 10th item is a card
+  logger.info(`[DevUtils] Seeding ${count} items across ${SECRET_TEMPLATES.length} types`);
 
-    const data = isCard
-      ? {
-          serviceName: `Dev Card ${i / 10 + 1}`,
-          cardholderName: `Tester ${i + 1}`,
-          cardNumber: `4111${Math.floor(Math.random() * 8999) + 1000}${Math.floor(Math.random() * 8999) + 1000}${Math.floor(Math.random() * 8999) + 1000}`,
-          expirationDate: '12/28',
-          cvv: '123',
-          type: 'card' as const,
-          note: 'Seeded test card',
-        }
-      : {
-          serviceName: `Dev Secret ${i + 1}`,
-          username: `dev_user_${i + 1}`,
-          password: `pass_${Math.random().toString(36).substring(7)}`,
-          url: `https://dev-test-${i + 1}.io`,
-          type: 'password' as const,
-          note: 'Seeded test password',
-        };
+  const promises = Array.from({ length: count }).map(async (_, i) => {
+    const template = SECRET_TEMPLATES[i % SECRET_TEMPLATES.length];
+    const id = Crypto.randomUUID();
+
+    // Map template fields to mock data
+    const fields = template.fields.map((f, fIdx) => ({
+      id: Crypto.randomUUID(),
+      label: f.label,
+      value: generateMockValue(f.label, f.type, i),
+      type: f.type,
+      masked: f.masked,
+      copyable: f.copyable,
+    }));
+
+    const secretPayload = {
+      id,
+      title: `Seeded ${template.label} ${Math.floor(i / SECRET_TEMPLATES.length) + 1}`,
+      type: template.type,
+      fields,
+      note: `Automatically generated test entry for ${template.label}.`,
+      meta: {
+        createdAt: Date.now() - Math.floor(Math.random() * 10000000), // Random past dates
+        updatedAt: Date.now(),
+      },
+    };
 
     // Encrypt the payload using the real MEK
-    const encrypted = await encryptData(data, mek);
+    const { encryptedData, iv } = await encryptData(secretPayload, mek);
 
-    // items must match the database schema (id, encryptedData, iv)
     return addVaultItem({
       id,
-      encryptedData: encrypted.encryptedData,
-      iv: encrypted.iv,
+      encryptedData,
+      iv,
     });
   });
 
   await Promise.all(promises);
-  logger.info(`[DevUtils] Successfully seeded ${count} authentic items`);
+  logger.info(`[DevUtils] Successfully seeded ${count} diverse items`);
 }
 
 /**

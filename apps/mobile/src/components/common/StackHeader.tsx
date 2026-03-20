@@ -90,7 +90,7 @@ export const StackHeader = (props: CustomHeaderProps) => {
   return (
     <Stack.Screen
       options={{
-        header: (headerProps) => <HeaderComponent {...headerProps} {...props} />,
+        ...props,
         headerShown: true,
         headerStyle: { backgroundColor: isDarkMode ? '#09090b' : '#fff' },
         headerTintColor: isDarkMode ? '#fff' : '#000',
