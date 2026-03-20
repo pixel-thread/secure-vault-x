@@ -13,7 +13,7 @@ import { LoadingScreen } from '@src/components/common/LoadingScreen';
 export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
   const db = useDB();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
 
   /**
    * -------------------------------
@@ -239,7 +239,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
    * 9. Render Guard (OPTIONAL but recommended)
    * -------------------------------
    */
-  if (!isReady) {
+  if (!isReady && isAuthenticated) {
     return <LoadingScreen message="Vault is loading..." />; // or splash screen
   }
 
