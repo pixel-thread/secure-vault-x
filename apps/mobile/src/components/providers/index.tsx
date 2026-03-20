@@ -10,6 +10,7 @@ import { useColorScheme } from 'nativewind';
 import { DBProvider } from './db';
 import { ScreenCaptureProvider } from './capture';
 import { VaultProvider } from './vault';
+import { StatusBar } from "expo-status-bar"
 
 type Props = {
   children: React.ReactNode;
@@ -17,9 +18,11 @@ type Props = {
 
 export const Wrapper = ({ children }: Props) => {
   const { colorScheme } = useColorScheme();
+
   return (
     <ErrorBoundary>
       <TQueryProvider>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         <AuthProvider>
           <Redirect>
             <UpdateProvider>

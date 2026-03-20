@@ -22,7 +22,7 @@ interface CardSecret extends BaseSecret {
   cvv: string;
 }
 
-export type VaultSecretT = PasswordSecret | CardSecret;
+export type VaultSecretT = PasswordSecret;
 
 export type VaultContextT = {
   isLoading: {
@@ -39,4 +39,5 @@ export type VaultContextT = {
   getVaultItems: () => Promise<VaultSecretT[]>;
   getVaultItem: (id: string) => Promise<VaultSecretT | null>;
   vaultItems: VaultSecretT[]; // Expose the reactive items list
+  isVaultReady: boolean;
 };

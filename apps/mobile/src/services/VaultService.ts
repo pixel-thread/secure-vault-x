@@ -116,8 +116,7 @@ export class VaultService {
         .where(
           and(
             isNull(schema.vault.deletedAt),
-            eq(schema.vault.userId, this.userId), // Security: Enforce user isolation
-            eq(schema.vault.isCorrupted, false) // Only fetch healthy items
+            eq(schema.vault.userId, this.userId) // Security: Enforce user isolation
           )
         )
         .orderBy(desc(schema.vault.updatedAt));
@@ -130,12 +129,12 @@ export class VaultService {
       }
 
       const mek = await DeviceStoreManager.getMek();
+
       if (!mek) {
         logger.error('Decryption aborted: Master Encryption Key (MEK) missing');
         return [];
       }
 
-      logger.log(`Beginning decryption for ${entries.length} items`);
       const decryptedItems: VaultSecretT[] = [];
 
       for (const entry of entries) {

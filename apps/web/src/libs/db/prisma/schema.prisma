@@ -20,6 +20,7 @@ model User {
   otpVerifications OtpVerification[]
   encryption       UserEncryption?
   auditLogs        AuditLog[]
+  vaults           Vault[]
 }
 
 model UserEncryption {
@@ -68,6 +69,7 @@ model Vault {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([id])

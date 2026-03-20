@@ -1,0 +1,16 @@
+POST {{EXPO_PUBLIC_API_URL}}/api/auth/password/login
+
+{
+  "email": "test@gmail.com",
+  "password": "password"
+}
+
+###
+
+POST {{EXPO_PUBLIC_API_URL}}/api/auth/password/register
+
+{
+  "email": "test@gmail.com",
+  "password": "password",
+  "confirmPassword": "password"
+}
