@@ -132,3 +132,109 @@ model Log {
   @@index([type, timestamp])
   @@index([timestamp])
 }
+
+enum EASBuildStatus {
+  FINISHED
+  ERRORED
+  CANCELED
+}
+
+enum AppVersionPlatform {
+  ANDROID
+  IOS
+}
+
+enum AppVersionTags {
+  BETA
+  STABLE
+  BUGFIX
+  PATCH
+}
+
+enum AppVersionType {
+  PTA
+  OTA
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+enum EASWebhookType {
+  BUILD
+  UPDATE
+  SUBMIT
+}
+
+model EASWebhook {
+  id                  String             @id @default(uuid()) @db.Uuid
+  easId               String             @unique // EAS build/update/submit id
+  type                EASWebhookType
+  accountName         String
+  projectName         String
+  appId               String?
+  platform            AppVersionPlatform?
+  status              EASBuildStatus
+  detailsPageUrl      String?
+
+  // Artifacts (Build specific)
+  buildUrl        String?
+  logsS3KeyPrefix String?
+
+  // Metadata subset (Build/Update specific)
+  appVersion       String?
+  appBuildVersion  String?
+  buildProfile     String?
+  distribution     String?
+  runtimeVersion   String?
+  channel          String?
+  gitCommitHash    String?
+  gitCommitMessage String?
+
+  // Update specific
+  updateMessage   String?
+  branch          String?
+
+  // Timestamps
+  createdAt   DateTime
+  enqueuedAt  DateTime?
+  completedAt DateTime?
+
+  // Error info
+  errorMessage String?
+  errorCode    String?
+
+  // Full payload
+  rawPayload Json
+
+  @@index([platform])
+  @@index([status])
+  @@index([type])
+  @@index([completedAt])
+}
+
+model AppVersion {
+  version             String               @unique
+  title               String
+  description         String[]
+  type                AppVersionType       @default(PTA)
+  platforms           AppVersionPlatform[] @default([ANDROID, IOS])
+  releaseNotesUrl     String?
+  downloadUrl         String?
+  releaseDate         DateTime             @default(now())
+  minSupportedVersion String?
+  author              String?
+  tags                AppVersionTags[]     @default([STABLE])
+  additionalInfo      Json?
+  status              Status               @default(ACTIVE)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  versionCode    Int?
+  buildNumber    String?
+  runtimeVersion String?
+
+  @@index([version])
+}
