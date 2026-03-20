@@ -10,6 +10,7 @@ import { DBProvider } from './db';
 import { ScreenCaptureProvider } from './capture';
 import { VaultProvider } from './vault';
 import { StatusBar } from 'expo-status-bar';
+import { useThemeStore } from '@src/store/theme';
 
 type Props = { children: React.ReactNode };
 
@@ -18,7 +19,7 @@ export const Wrapper = ({ children }: Props) => {
 
   return (
     <ErrorBoundary>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <TQueryProvider>
         <AuthProvider>
           <Redirect>
@@ -36,7 +37,7 @@ export const Wrapper = ({ children }: Props) => {
           </Redirect>
         </AuthProvider>
       </TQueryProvider>
-      <Toaster duration={1000} theme={colorScheme as 'light' | 'dark'} />
+      <Toaster duration={1000} theme={isDarkMode ? 'dark' : 'light'} />
     </ErrorBoundary>
   );
 };

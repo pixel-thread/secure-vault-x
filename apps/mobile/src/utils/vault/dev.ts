@@ -9,8 +9,12 @@ import { SECRET_TEMPLATES } from '@securevault/constants';
  */
 function generateMockValue(label: string, type: string, index: number): string {
   const lowerLabel = label.toLowerCase();
-  
-  if (lowerLabel.includes('password') || lowerLabel.includes('key') || lowerLabel.includes('phrase')) {
+
+  if (
+    lowerLabel.includes('password') ||
+    lowerLabel.includes('key') ||
+    lowerLabel.includes('phrase')
+  ) {
     return `pass_${Math.random().toString(36).substring(7)}_${index}`;
   }
   if (lowerLabel.includes('user')) {
@@ -31,7 +35,7 @@ function generateMockValue(label: string, type: string, index: number): string {
   if (lowerLabel.includes('address')) {
     return `0x${Math.random().toString(16).substring(2, 42)}`;
   }
-  
+
   return `Mock ${label} ${index + 1}`;
 }
 
@@ -45,7 +49,7 @@ function generateMockValue(label: string, type: string, index: number): string {
  */
 export async function seedVaultItems(
   addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>,
-  count: number = 100
+  count: number = 10
 ) {
   const mek = await DeviceStoreManager.getMek();
 
@@ -62,7 +66,7 @@ export async function seedVaultItems(
     const id = Crypto.randomUUID();
 
     // Map template fields to mock data
-    const fields = template.fields.map((f, fIdx) => ({
+    const fields = template.fields.map((f) => ({
       id: Crypto.randomUUID(),
       label: f.label,
       value: generateMockValue(f.label, f.type, i),

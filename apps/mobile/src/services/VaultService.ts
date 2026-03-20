@@ -116,7 +116,8 @@ export class VaultService {
         .where(
           and(
             isNull(schema.vault.deletedAt),
-            eq(schema.vault.userId, this.userId) // Security: Enforce user isolation
+            eq(schema.vault.userId, this.userId), // Security: Enforce user isolation
+            eq(schema.vault.isCorrupted, false)
           )
         )
         .orderBy(desc(schema.vault.updatedAt));
@@ -234,7 +235,7 @@ export class VaultService {
       // 3. Fallback to legacy Password format
       return {
         id,
-        type: 'password',
+        type: 'login',
         serviceName: data.serviceName || 'Unknown',
         website: data.url ?? data.website ?? '',
         username: data.username ?? '',

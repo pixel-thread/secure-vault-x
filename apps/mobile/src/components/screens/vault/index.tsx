@@ -13,6 +13,7 @@ import { VaultSecretT } from '@src/types/vault';
 import { seedVaultItems, clearVaultItems } from '@utils/vault/dev';
 import { VaultEmpty } from './VaultEmpty';
 import { VaultItem } from './VaultItem';
+import { ScrollView } from 'react-native-gesture-handler';
 
 /**
  * Renders the home vault screen with a list of all secured secrets.
@@ -59,26 +60,22 @@ export default function VaultScreen() {
 
   const onClearDevItems = useCallback(async () => {
     if (vaults.length === 0) return;
-    Alert.alert(
-      'Clear everything?',
-      `Delete all ${vaults.length} items? This is a total reset.`,
-      [
-        { text: 'Never mind', style: 'cancel' },
-        {
-          text: 'Yeet them',
-          style: 'destructive',
-          onPress: async () => {
-            setIsSeeding(true);
-            try {
-              await clearVaultItems(vaults, deleteVaultItem);
-              await sync();
-            } finally {
-              setIsSeeding(false);
-            }
-          },
+    Alert.alert('Clear everything?', `Delete all ${vaults.length} items? This is a total reset.`, [
+      { text: 'Never mind', style: 'cancel' },
+      {
+        text: 'Yeet them',
+        style: 'destructive',
+        onPress: async () => {
+          setIsSeeding(true);
+          try {
+            await clearVaultItems(vaults, deleteVaultItem);
+            await sync();
+          } finally {
+            setIsSeeding(false);
+          }
         },
-      ]
-    );
+      },
+    ]);
   }, [vaults, deleteVaultItem, sync]);
 
   const onSelectItem = useCallback(
@@ -104,14 +101,22 @@ export default function VaultScreen() {
                   className="mr-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/80"
                   onPress={onSeedDevItems}
                   disabled={isSeeding}>
-                  {isSeeding ? <ActivityIndicator size="small" color="#f59e0b" /> : <Ionicons name="flask" size={24} color="#f59e0b" />}
+                  {isSeeding ? (
+                    <ActivityIndicator size="small" color="#f59e0b" />
+                  ) : (
+                    <Ionicons name="flask" size={24} color="#f59e0b" />
+                  )}
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/80"
                   onPress={onClearDevItems}
                   disabled={isSeeding}>
-                  {isSeeding ? <ActivityIndicator size="small" color="#ef4444" /> : <Ionicons name="trash-outline" size={24} color="#ef4444" />}
+                  {isSeeding ? (
+                    <ActivityIndicator size="small" color="#ef4444" />
+                  ) : (
+                    <Ionicons name="trash-outline" size={24} color="#ef4444" />
+                  )}
                 </TouchableOpacity>
               </>
             )}
@@ -119,37 +124,38 @@ export default function VaultScreen() {
             <TouchableOpacity
               className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/80"
               onPress={onManualSync}>
-              {isSyncingOrLoading ? <ActivityIndicator size="small" color="#10b981" /> : <Ionicons name="sync" size={24} color="#10b981" />}
+              {isSyncingOrLoading ? (
+                <ActivityIndicator size="small" color="#10b981" />
+              ) : (
+                <Ionicons name="sync" size={24} color="#10b981" />
+              )}
             </TouchableOpacity>
           </View>
         }
       />
 
-      <ScreenContainer>
-        <Ternary
-          condition={vaults.length > 0}
-          ifTrue={
-            <FlatList
-              data={vaults ?? []}
-              refreshing={isSyncingOrLoading}
-              onRefresh={sync}
-              keyExtractor={(item) => item.id}
-              contentContainerClassName="px-6 py-6 pb-32"
-              className="flex-1"
-              ListEmptyComponent={<VaultEmpty />}
-              renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
-            />
-          }
-          ifFalse={<VaultEmpty />}
-        />
+      <Ternary
+        condition={vaults.length > 0}
+        ifTrue={
+          <FlatList
+            data={vaults ?? []}
+            refreshing={isSyncingOrLoading}
+            onRefresh={sync}
+            keyExtractor={(item) => item.id}
+            contentContainerClassName="px-6 py-6 pb-32"
+            className="flex-1"
+            ListEmptyComponent={<VaultEmpty />}
+            renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
+          />
+        }
+        ifFalse={<VaultEmpty />}
+      />
 
-        <TouchableOpacity
-          className="absolute bottom-8 right-8 h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 active:scale-95"
-          onPress={onOpenAdd}>
-          <Ionicons name="add" size={32} color="#022c22" />
-        </TouchableOpacity>
-      </ScreenContainer>
+      <TouchableOpacity
+        className="absolute bottom-8 right-8 h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 active:scale-95"
+        onPress={onOpenAdd}>
+        <Ionicons name="add" size={32} color="#022c22" />
+      </TouchableOpacity>
     </Container>
   );
 }
-

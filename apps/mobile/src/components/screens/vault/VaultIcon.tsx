@@ -12,24 +12,24 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   if (!item) return null;
 
   const renderIcon = () => {
-    // if (item.type === 'password' && !imgError) {
-    //   let domain = item.website;
-    //   try {
-    //     domain = new URL(item.website).hostname;
-    //   } catch (e) {
-    //     logger.error('Failed to parse URL', e);
-    //     domain = item.website;
-    //     // Fallback if not a strict URL format
-    //   }
-    //   return (
-    //     <Image
-    //       source={{ uri: `https://www.google.com/s2/favicons?domain=${domain}&sz=64` }}
-    //       style={{ width: 24, height: 24, borderRadius: 4 }}
-    //       onError={() => setImgError(true)}
-    //     />
-    //   );
-    // }
-    return <Ionicons name={getIcon(item?.type)} size={24} color="#10b981" />;
+    if (item.type === 'password' && !imgError) {
+      let domain = item.website;
+      try {
+        domain = new URL(item.website).hostname;
+      } catch (e) {
+        logger.error('Failed to parse URL', e);
+        domain = item.website;
+        // Fallback if not a strict URL format
+      }
+      return (
+        <Image
+          source={{ uri: `https://www.google.com/s2/favicons?domain=${domain}&sz=64` }}
+          style={{ width: 24, height: 24, borderRadius: 4 }}
+          onError={() => setImgError(true)}
+        />
+      );
+    }
+    return <Ionicons name={getIcon(item?.type as SecretType)} size={24} color="#10b981" />;
   };
 
   return (
