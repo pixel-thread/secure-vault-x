@@ -1,4 +1,3 @@
-import { toast } from 'sonner-native';
 import { logger } from '@securevault/utils-native';
 import { useVaultContext } from './vault/useVaultContext';
 import { useState } from 'react';

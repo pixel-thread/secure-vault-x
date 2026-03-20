@@ -6,14 +6,12 @@ import { useState, useCallback } from 'react';
 import { View, Alert, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { toast } from 'sonner-native';
 import Header from '@components/common/Header';
-import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import { Ternary } from '@src/components/common/Ternary';
 import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { VaultSecretT } from '@src/types/vault';
 import { seedVaultItems, clearVaultItems } from '@utils/vault/dev';
 import { VaultEmpty } from './VaultEmpty';
 import { VaultItem } from './VaultItem';
-import { ScrollView } from 'react-native-gesture-handler';
 
 /**
  * Renders the home vault screen with a list of all secured secrets.
