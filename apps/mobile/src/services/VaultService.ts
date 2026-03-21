@@ -154,7 +154,7 @@ export class VaultService {
             continue;
           }
 
-          const transformed = this.transformToVaultSecret(entry.id, payload);
+          const transformed = this.transformToVaultSecret(entry.id, payload, entry.version);
           if (transformed) {
             decryptedItems.push(transformed);
           }
@@ -193,7 +193,7 @@ export class VaultService {
    * Transforms raw decrypted payload into a structured VaultSecretT
    * Centralizes mapping logic for easier maintenance.
    */
-  private transformToVaultSecret(id: string, payload: any): VaultSecretT {
+  private transformToVaultSecret(id: string, payload: any, version: number): VaultSecretT {
     if (!payload) return null as any;
 
     try {
@@ -212,6 +212,7 @@ export class VaultService {
         return {
           ...data,
           id, // Ensure database ID matches the object ID
+          version,
         } as any;
       }
 
@@ -231,6 +232,7 @@ export class VaultService {
             createdAt: Date.now(),
             updatedAt: Date.now(),
           },
+          version,
         } as any;
       }
 
@@ -247,6 +249,7 @@ export class VaultService {
           createdAt: Date.now(),
           updatedAt: Date.now(),
         },
+        version,
       } as any;
     } catch (err) {
       logger.error('Transformation failed for vault item', { id, error: err });
@@ -270,6 +273,8 @@ export class VaultService {
         .set({
           encryptedData: data.encryptedData,
           iv: data.iv,
+          version: data.version,
+          deletedAt: data.deletedAt,
           updatedAt: new Date(),
           // userId intentionally excluded — IDOR protection
         })

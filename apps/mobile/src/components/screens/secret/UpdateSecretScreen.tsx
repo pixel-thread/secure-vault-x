@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,8 +8,8 @@ import { AddSecretForm } from '@src/components/screens/secret/AddSecretForm';
 import { SECRET_TEMPLATES } from '@securevault/constants';
 import { logger } from '@securevault/utils-native';
 import { StackHeader } from '@src/components/common/StackHeader';
-import Header from '@src/components/common/Header';
 import { Container } from '@securevault/ui-native';
+import { VaultItemIcon } from '../vault/VaultIcon';
 
 export default function UpdateSecretPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,12 +45,21 @@ export default function UpdateSecretPage() {
 
   return (
     <Container>
-      {/* Navigation & Page Headers */}
-      <StackHeader title={title} />
+      <StackHeader title="" />
 
-      <Header title={title} subtitle="Safe and sound in your vault" />
-
-      <ScrollView contentContainerClassName="p-6" showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerClassName="px-6 py-4 pb-12" showsVerticalScrollIndicator={false}>
+        {/* Robust Hero Section */}
+        <View className="mb-8 items-center justify-center pt-6">
+          <View className="mb-4 scale-125 transform">
+            <VaultItemIcon item={selectedSecret as any} />
+          </View>
+          <Text className="text-3xl font-extrabold capitalize text-zinc-900 dark:text-white">
+            Update {template.label}
+          </Text>
+          <Text className="mt-2 text-center text-base font-medium leading-6 text-zinc-500 dark:text-zinc-400">
+            Make changes to your {template.label.toLowerCase()}. All edits are encrypted locally.
+          </Text>
+        </View>
         <AddSecretForm
           mode="edit"
           template={template}

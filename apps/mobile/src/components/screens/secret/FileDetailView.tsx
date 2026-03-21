@@ -42,7 +42,7 @@ export function FileDetailView({ item }: Props) {
   };
 
   return (
-    <View className="mt-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900/50">
+    <View className="rounded-3xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900/40">
       <View className="mb-6 flex-row items-center">
         <View className="mr-4 h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10">
           <Ionicons name="document-text" size={32} color="#10b981" />

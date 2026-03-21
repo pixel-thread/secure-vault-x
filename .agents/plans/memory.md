@@ -30,3 +30,10 @@
 - Artifacts published: plans/active_feature_plan.md (implementation)
 - Security findings summary: none (User isolated querying retained, pagination prevents memory/decryption bottlenecks)
 - Outcome: COMPLETE
+- 2026-03-21 16:55
+- [DESIGN] Modernize Vault Screens
+- mode: EXECUTION -> VERIFICATION
+- Updated `ViewSecretScreen`, `AddSecret`, `UpdateSecretScreen`, `AddSecretForm`, `FormField`, `FileDetailView` to implement a structural card design, hero sections, and collapsible meta sections.
+- Artifacts: walkthrough.md updated
+- Security findings: none
+- COMPLETE

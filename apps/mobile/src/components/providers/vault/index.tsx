@@ -98,7 +98,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       queryClient.invalidateQueries({ queryKey: ['vault', user.id] });
 
       logger.info('Sync successful', {
-        userId: user.id,
+        userId: !!user.id,
         timeStamp: Date.now(),
       });
     },

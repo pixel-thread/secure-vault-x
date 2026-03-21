@@ -36,6 +36,7 @@ export interface SecretMeta {
   expiresAt?: number; // timestamp
   createdAt: number;
   updatedAt: number;
+  autoRotateDays?: number;
 }
 
 export interface Secret {
@@ -48,6 +49,7 @@ export interface Secret {
   note?: string;
 
   meta: SecretMeta;
+  version: number;
 }
 
 export interface SecretTemplate {

@@ -6,6 +6,7 @@ type SaveDTO = {
   id: string;
   encryptedData: string;
   iv: string;
+  version: number;
 };
 
 export type MutationMode = 'create' | 'edit';

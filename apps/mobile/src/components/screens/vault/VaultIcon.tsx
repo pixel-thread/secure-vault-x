@@ -53,7 +53,7 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   };
 
   return (
-    <View className="mr-5 h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
+    <View className="h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
       {renderIcon()}
     </View>
   );

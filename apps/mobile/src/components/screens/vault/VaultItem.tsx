@@ -24,7 +24,7 @@ export const VaultItem = ({
   return (
     <TouchableOpacity
       key={item.id}
-      className="mb-4 flex-row items-center rounded-3xl border border-zinc-200 bg-zinc-50 p-5 active:bg-zinc-200 dark:border-zinc-800/80 dark:bg-zinc-900/40 dark:active:bg-zinc-800/60"
+      className="mb-4 flex-row items-center gap-x-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 active:bg-zinc-200 dark:border-zinc-800/80 dark:bg-zinc-900/40 dark:active:bg-zinc-800/60"
       onPress={() => onSelectItem(item)}>
       <VaultItemIcon item={item} />
       <View className="flex-1">
@@ -43,10 +43,46 @@ export const VaultItem = ({
         ) : (
           /* Legacy Fallback */
           <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            {item.type === 'password'
+            {item.type === 'login'
               ? (item as any).username
-              : `•••• ${(item as any).cardNumber?.slice(-4)}`}
+              : `•••• ${(item as any).cardNumber?.slice(-4) || '****'}`}
           </Text>
+        )}
+
+        {/* Metadata Badges */}
+        {(item.meta?.environment || (item.meta?.tags && item.meta.tags.length > 0)) && (
+          <View className="mt-2 flex-row flex-wrap gap-1">
+            {item.meta?.environment && (
+              <View
+                className={`rounded-md border px-1.5 py-0.5 ${
+                  item.meta.environment === 'prod'
+                    ? 'border-red-500/20 bg-red-500/10'
+                    : item.meta.environment === 'staging'
+                      ? 'border-amber-500/20 bg-amber-500/10'
+                      : 'border-emerald-500/20 bg-emerald-500/10'
+                }`}>
+                <Text
+                  className={`text-[8px] font-black uppercase ${
+                    item.meta.environment === 'prod'
+                      ? 'text-red-600'
+                      : item.meta.environment === 'staging'
+                        ? 'text-amber-600'
+                        : 'text-emerald-600'
+                  }`}>
+                  {item.meta.environment}
+                </Text>
+              </View>
+            )}
+            {item.meta?.tags?.slice(0, 3).map((tag) => (
+              <View
+                key={tag}
+                className="rounded-md bg-zinc-200/50 px-1.5 py-0.5 dark:bg-zinc-800/80">
+                <Text className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400">
+                  #{tag}
+                </Text>
+              </View>
+            ))}
+          </View>
         )}
       </View>
       <TouchableOpacity
@@ -58,7 +94,7 @@ export const VaultItem = ({
             textToCopy = (item as any).fields[0]?.value || '';
           } else {
             textToCopy =
-              item.type === 'password' ? (item as any).secretInfo : (item as any).cardNumber;
+              item.type === 'login' ? (item as any).secretInfo : (item as any).cardNumber;
           }
           Clipboard.setStringAsync(textToCopy);
           toast.success('Copied to clipboard');
