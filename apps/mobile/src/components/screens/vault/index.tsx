@@ -19,7 +19,7 @@ import { VaultItem } from './VaultItem';
 export default function VaultScreen() {
   const router = useRouter();
   const [isSeeding, setIsSeeding] = useState(false);
-  const isDev = process.env.APP_VARIANT !== 'production' || process.env.NODE_ENV === 'development';
+  const isDev = process.env.NODE_ENV === 'development';
 
   const {
     vaultItems: vaults,
