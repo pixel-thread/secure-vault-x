@@ -1,4 +1,3 @@
-import { DatabaseViewScreen } from '@src/components/screens/dev/DatabaseViewScreen';
 import { Redirect } from 'expo-router';
 
 /**
@@ -13,5 +12,5 @@ export default function DatabaseRoute() {
     return <Redirect href="/" />;
   }
 
-  return <DatabaseViewScreen />;
+  return null;
 }
