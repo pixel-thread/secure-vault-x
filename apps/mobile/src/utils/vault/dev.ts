@@ -1,6 +1,7 @@
 import { DeviceStoreManager } from '@store/device';
 import { encryptData } from '@securevault/crypto';
 import * as Crypto from 'expo-crypto';
+import * as SQLite from 'expo-sqlite';
 import { logger } from '@securevault/utils-native';
 import { SECRET_TEMPLATES } from '@securevault/constants';
 
@@ -118,3 +119,23 @@ export async function clearVaultItems(
 
   logger.info('[DevUtils] Vault cleared successfully');
 }
+
+/**
+ * Drops the entire local SQLite database file containing all application data and migrations.
+ * WARNING: This is a destructive operation primarily meant for development resets or terminal wipes.
+ * The application must be reloaded (Updates.reloadAsync()) after this operation to recreate schemas.
+ *
+ * @param dbName - The name of the database to drop, defaults to 'app.db'
+ */
+export async function dropDatabase(dbName: string = 'app.db') {
+  logger.info(`[DevUtils] Warning: Dropping entire SQLite database (${dbName})...`);
+  try {
+    // Attempt graceful close if the db connection is accessible, otherwise delete directly
+    await SQLite.deleteDatabaseAsync(dbName);
+    logger.info(`[DevUtils] Database ${dbName} successfully dropped. Trigger an app reload to recreate tables.`);
+  } catch (error) {
+    logger.error(`[DevUtils] Failed to drop database ${dbName}`, error);
+    throw error;
+  }
+}
+
