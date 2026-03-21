@@ -6,6 +6,7 @@ import { useColorScheme } from 'nativewind';
 import { toast } from 'sonner-native';
 import { VaultSecretT } from '@src/types/vault';
 import { truncateText } from '@securevault/utils';
+import { Redirect } from 'expo-router';
 
 export const VaultItem = ({
   item,
@@ -18,7 +19,7 @@ export const VaultItem = ({
   const isDarkMode = colorScheme === 'dark';
   const title = (item as any).title || (item as any).serviceName;
 
-  if (!item) return null;
+  if (!item) return <Redirect href={'/(drawer)/(tabs)'} />;
 
   return (
     <TouchableOpacity

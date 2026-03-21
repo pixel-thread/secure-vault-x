@@ -72,7 +72,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
    * 4. Sync Mutation
    * -------------------------------
    */
-  const { mutateAsync: syncMutate, isPending: isSyncing } = useMutation({
+  const { mutate: syncMutate, isPending: isSyncing } = useMutation({
     mutationFn: async () => {
       await waitForReady();
       if (!syncService) return;
@@ -107,15 +107,14 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       return await vaultService.deleteVaultItem(id);
     },
     onSuccess: async () => {
-      toast.success('Deleted successfully');
-
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['vault', user.id] });
       }
 
       // Background sync (safe)
       try {
-        await syncMutate();
+        toast.success('Deleted successfully');
+        syncMutate();
       } catch (e) {
         logger.error('Post-delete sync failed', { error: e });
       }
@@ -138,18 +137,17 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       return await vaultService.saveVaultItem(data);
     },
     onSuccess: async () => {
-      toast.success('Vault updated');
-
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['vault', user.id] });
       }
 
       // Background sync
       try {
-        await syncMutate();
+        syncMutate();
       } catch (e) {
         logger.error('Post-save sync failed', { error: e });
       }
+      toast.success('Vault updated');
     },
     onError: (err: any) => {
       toast.error('Save failed', { description: err.message });
@@ -165,7 +163,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success('Vault updated');
       queryClient.invalidateQueries({ queryKey: ['vault'] });
       // Trigger background sync
-      syncMutate().catch((e) => logger.error('Post-save sync failed', { error: e }));
+      syncMutate();
     },
     onError: (err: any) => {
       toast.error('Save failed', { description: err.message });
@@ -208,7 +206,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const sync = useCallback(async () => {
-    await syncMutate();
+    syncMutate();
   }, [syncMutate]);
 
   /**

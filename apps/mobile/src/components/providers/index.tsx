@@ -10,16 +10,17 @@ import { DBProvider } from './db';
 import { ScreenCaptureProvider } from './capture';
 import { VaultProvider } from './vault';
 import { StatusBar } from 'expo-status-bar';
-import { useThemeStore } from '@src/store/theme';
+import { useColorScheme } from 'nativewind';
 
 type Props = { children: React.ReactNode };
 
 export const Wrapper = ({ children }: Props) => {
-  const { isDarkMode } = useThemeStore();
+  const { colorScheme } = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
 
   return (
     <ErrorBoundary>
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <StatusBar animated translucent style={isDarkMode ? 'dark' : 'light'} />
       <TQueryProvider>
         <AuthProvider>
           <Redirect>

@@ -1,11 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CustomDrawerContent } from '@src/components/common/CustomDrawer';
+import { useVaultContext } from '@src/hooks/vault/useVaultContext';
 import { Drawer } from 'expo-router/drawer';
 import { useColorScheme } from 'nativewind';
 
 const DrawerLayout = () => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  const {
+    isLoading: { isSyncing },
+  } = useVaultContext();
 
   return (
     <Drawer
@@ -22,8 +26,8 @@ const DrawerLayout = () => {
       <Drawer.Screen
         name="(tabs)"
         options={{
+          title: isSyncing ? 'Syncing...' : 'My Stash',
           headerShown: true,
-          headerTitle: 'Secure Vault X',
           drawerLabel: 'My Vault',
           drawerIcon: ({ size, color }) => (
             <Ionicons name="lock-closed-outline" size={size} color={color} />
@@ -33,7 +37,7 @@ const DrawerLayout = () => {
       <Drawer.Screen
         name="settings"
         options={{
-          headerTitle: 'Security Settings',
+          title: isSyncing ? 'Syncing...' : 'Security Settings',
           drawerLabel: 'Settings',
           drawerIcon: ({ size, color }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
@@ -43,7 +47,7 @@ const DrawerLayout = () => {
       <Drawer.Screen
         name="readme"
         options={{
-          headerTitle: 'README',
+          title: isSyncing ? 'Syncing...' : 'README',
           drawerLabel: 'Documentation',
           drawerIcon: ({ size, color }) => (
             <Ionicons name="document-text-outline" size={size} color={color} />
@@ -53,7 +57,7 @@ const DrawerLayout = () => {
       <Drawer.Screen
         name="about"
         options={{
-          headerTitle: 'About',
+          title: isSyncing ? 'Syncing...' : 'About',
           drawerLabel: 'About Us',
           drawerIcon: ({ size, color }) => (
             <Ionicons name="information-circle-outline" size={size} color={color} />

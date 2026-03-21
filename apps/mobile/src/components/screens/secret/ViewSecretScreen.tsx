@@ -50,9 +50,9 @@ export default function ViewSecretScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              router.replace('/(drawer)/(tabs)');
               await deleteVaultItem(selectedSecret.id);
               logger.info('Secret deleted successfully');
-              router.back();
             } catch (error) {
               logger.error('[ViewSecretPage] Delete failed', { error });
             }
@@ -90,9 +90,8 @@ export default function ViewSecretScreen() {
       <StackHeader title={truncateText({ text: title, maxLength: 20 })} />
 
       <Header
-        title={truncateText({ text: title, maxLength: 30 })}
+        title={truncateText({ text: title, maxLength: 28 })}
         subtitle="Safe and sound in your vault"
-        isSyncing={isLoading.isSyncing}
       />
 
       <ScreenContainer>

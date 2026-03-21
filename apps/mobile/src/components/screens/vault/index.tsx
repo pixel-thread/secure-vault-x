@@ -29,8 +29,6 @@ export default function VaultScreen() {
     sync,
   } = useVaultContext();
 
-  const isSyncingOrLoading = contextLoading.isPending;
-
   // --- HANDLERS ---
 
   const onManualSync = useCallback(async () => {
@@ -91,7 +89,6 @@ export default function VaultScreen() {
       <Header
         title="My Stash"
         subtitle="Safe as houses"
-        isSyncing={contextLoading.isSyncing}
         rightElement={
           <View className="flex-row">
             {isDev && (
@@ -119,16 +116,6 @@ export default function VaultScreen() {
                 </TouchableOpacity>
               </>
             )}
-
-            <TouchableOpacity
-              className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/80"
-              onPress={onManualSync}>
-              {isSyncingOrLoading ? (
-                <ActivityIndicator size="small" color="#10b981" />
-              ) : (
-                <Ionicons name="sync" size={24} color="#10b981" />
-              )}
-            </TouchableOpacity>
           </View>
         }
       />
@@ -138,8 +125,8 @@ export default function VaultScreen() {
         ifTrue={
           <FlatList
             data={vaults ?? []}
-            refreshing={isSyncingOrLoading}
-            onRefresh={sync}
+            refreshing={false}
+            onRefresh={onManualSync}
             keyExtractor={(item) => item.id}
             contentContainerClassName="px-6 py-6 pb-32"
             className="flex-1"
