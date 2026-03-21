@@ -3,6 +3,8 @@ import { Image, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { VaultSecretT } from '@src/types/vault';
 import { logger } from '@securevault/utils-native';
+import { SecretType } from '@securevault/types';
+import { getIcon } from '@src/utils/helper/getIcon';
 
 export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   const [imgError, setImgError] = useState(false);
@@ -10,7 +12,7 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   if (!item) return null;
 
   const renderIcon = () => {
-    if (item.type === 'password' && item.website && !imgError) {
+    if (item.type === 'password' && !imgError) {
       let domain = item.website;
       try {
         domain = new URL(item.website).hostname;
@@ -27,13 +29,7 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
         />
       );
     }
-    return (
-      <Ionicons
-        name={item.type === 'password' ? 'key' : 'card-outline'}
-        size={24}
-        color="#10b981"
-      />
-    );
+    return <Ionicons name={getIcon(item?.type as SecretType)} size={24} color="#10b981" />;
   };
 
   return (

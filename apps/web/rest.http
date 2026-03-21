@@ -1,8 +1,8 @@
 ###
-GET {{API_BASE_URL}}/auth/me
+GET {{EXPO_PUBLIC_API_URL}}/api/auth/me
 
 ###
-POST {{API_BASE_URL}}/auth/password/login
+POST {{EXPO_PUBLIC_API_URL}}/api/auth/password/login
 
 {
   "email":"one@gmail.com",
@@ -10,7 +10,7 @@ POST {{API_BASE_URL}}/auth/password/login
 }
 
 ###
-POST {{API_BASE_URL}}/auth/password/register
+POST {{EXPO_PUBLIC_API_URL}}/api/auth/password/register
 
 {
   "email":"one@gmail.com",

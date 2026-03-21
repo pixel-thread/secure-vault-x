@@ -1,13 +1,17 @@
-import { View, Text, TouchableOpacity, Switch } from 'react-native';
-import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from 'nativewind';
-import Header from '@components/common/Header';
+import { Container } from '@securevault/ui-native';
 import { generatePassword } from '@securevault/utils';
 import * as Clipboard from 'expo-clipboard';
+import { useColorScheme } from 'nativewind';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, Switch, ScrollView } from 'react-native';
 import { toast } from 'sonner-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import Header from '@components/common/Header';
+import { ScreenContainer } from '@src/components/common/ScreenContainer';
 
+/**
+ * Renders the password generator screen for creating cryptographically strong secrets.
+ */
 export default function GeneratorScreen() {
   const [password, setPassword] = useState('Tap Generate');
   const [length, setLength] = useState(32);
@@ -31,29 +35,35 @@ export default function GeneratorScreen() {
   const handleCopy = async () => {
     if (password === 'Tap Generate') return;
     await Clipboard.setStringAsync(password);
-    toast.success('Copied!', {
-      description: 'Password copied to clipboard',
+    toast.success('Locked & Loaded!', {
+      description: 'Password is in your clipboard.',
     });
   };
 
   return (
-    <View className="flex-1 bg-white dark:bg-[#09090b]">
-      <Header title="Generator" subtitle="Secure Passwords" />
+    <Container>
+      <Header 
+        title="The Key Smith" 
+        subtitle="Unbreakable Energy" 
+      />
 
-      <View className="flex-1 p-6">
-        <TouchableOpacity
-          onPress={handleCopy}
-          activeOpacity={0.7}
-          className="mb-8 items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-8 shadow-lg shadow-emerald-500/10">
-          <Text className="text-center font-mono text-3xl font-medium tracking-wider text-emerald-600 dark:text-emerald-400">
-            {password}
-          </Text>
-        </TouchableOpacity>
-
+      <ScreenContainer>
         <ScrollView
-          className="gap-y-4"
+          className="flex-1 p-6"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
+          
+          <TouchableOpacity
+            onPress={handleCopy}
+            activeOpacity={0.7}
+            className="mb-8 items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-8 shadow-lg shadow-emerald-500/10">
+            <Text 
+              numberOfLines={2}
+              className="text-center font-mono text-3xl font-medium tracking-wider text-emerald-600 dark:text-emerald-400">
+              {password}
+            </Text>
+          </TouchableOpacity>
+
           <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
             <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
               Length: {length}
@@ -73,9 +83,7 @@ export default function GeneratorScreen() {
           </View>
 
           <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
-              Lowercase (a-z)
-            </Text>
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Lowercase (a-z)</Text>
             <Switch
               value={useLowercase}
               onValueChange={setUseLowercase}
@@ -85,9 +93,7 @@ export default function GeneratorScreen() {
           </View>
 
           <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
-              Uppercase (A-Z)
-            </Text>
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Uppercase (A-Z)</Text>
             <Switch
               value={useUppercase}
               onValueChange={setUseUppercase}
@@ -97,9 +103,7 @@ export default function GeneratorScreen() {
           </View>
 
           <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
-              Numbers (0-9)
-            </Text>
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Numbers (0-9)</Text>
             <Switch
               value={useNumbers}
               onValueChange={setUseNumbers}
@@ -109,9 +113,7 @@ export default function GeneratorScreen() {
           </View>
 
           <View className="mb-4 flex-row items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
-            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
-              Symbols (!@#$)
-            </Text>
+            <Text className="text-lg font-semibold text-zinc-900 dark:text-white">Symbols (!@#$)</Text>
             <Switch
               value={useSymbols}
               onValueChange={setUseSymbols}
@@ -121,13 +123,16 @@ export default function GeneratorScreen() {
           </View>
 
           <TouchableOpacity
-            className="mt-6 flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 transition-transform active:scale-[0.98] active:bg-emerald-600"
+            className="mt-6 flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] active:bg-emerald-600"
             onPress={generate}>
             <Ionicons name="refresh-outline" size={24} color="#022c22" />
-            <Text className="ml-2 text-xl font-bold text-[#022c22]">Generate Password</Text>
+            <Text className="ml-2 text-xl font-bold text-[#022c22]">Forge Identity</Text>
           </TouchableOpacity>
+          
+          <View className="h-20" />
         </ScrollView>
-      </View>
-    </View>
+      </ScreenContainer>
+    </Container>
   );
 }
+

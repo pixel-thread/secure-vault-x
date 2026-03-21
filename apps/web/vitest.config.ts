@@ -9,12 +9,14 @@ export default defineConfig({
   alias: {
    "@": path.resolve(__dirname, "./src"),
    "@libs": path.resolve(__dirname, "./src/libs"),
+   "@securevault/types": path.resolve(__dirname, "../../packages/types/src"),
   },
  },
  resolve: {
   alias: {
    "@": path.resolve(__dirname, "./src"),
    "@libs": path.resolve(__dirname, "./src/libs"),
+   "@securevault/types": path.resolve(__dirname, "../../packages/types/src"),
   },
  },
 });

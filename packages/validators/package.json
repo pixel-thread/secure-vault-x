@@ -18,7 +18,8 @@
   "lint": "eslint ."
  },
  "dependencies": {
-  "zod": "^3.22.4"
+  "zod": "^3.22.4",
+  "@securevault/types": "workspace:*"
  },
  "devDependencies": {
   "@securevault/eslint-config": "workspace:*",

@@ -3,69 +3,74 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { useCallback } from 'react';
 import { toast } from 'sonner-native';
-import { http, logger } from '@securevault/utils-native';
-import { VAULT_ENDPOINT } from '@securevault/constants';
-import * as SecureStore from 'expo-secure-store';
+import { logger } from '@securevault/utils-native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { decryptData } from '@securevault/crypto';
+import { useVaultContext } from '@src/hooks/vault/useVaultContext';
+import { isBiometricAvailable, authenticateWithBiometric } from '@utils/biometricLock';
 
 export default function DataManagementSection() {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  const { vaultItems } = useVaultContext();
 
   const handleExportVault = useCallback(async () => {
     try {
-      const response = await http.get<any[]>(VAULT_ENDPOINT.GET_VAULT);
-      const entries = response?.data ?? [];
+      const isEnabledBiometric = await isBiometricAvailable();
 
-      if (!Array.isArray(entries) || entries.length === 0) {
-        toast.error('Vault is empty — nothing to export');
-        return;
-      }
-
-      const mek = await SecureStore.getItemAsync('SV_MEK');
-      if (!mek) {
-        toast.error('MEK not found — cannot decrypt vault');
-        return;
-      }
-
-      const decrypted: any[] = [];
-      for (const entry of entries) {
-        if (!entry.encryptedData || !entry.iv) continue;
-        try {
-          const payload = await decryptData<any>(entry.encryptedData, entry.iv, mek);
-          decrypted.push(payload);
-        } catch {
-          logger.error('Skipped undecryptable entry during export');
+      if (isEnabledBiometric) {
+        const success = await authenticateWithBiometric();
+        if (!success) {
+          toast.error('Authentication failed — biometric lock remained enabled');
+          return;
         }
       }
 
-      if (decrypted.length === 0) {
-        toast.error('No entries could be decrypted');
+      const header = 'Service Name, Username, Password, Website, Notes\n';
+
+      if (vaultItems.length === 0) {
+        toast.error('Vault is empty');
         return;
       }
 
-      const json = JSON.stringify(decrypted, null, 2);
+      logger.info('Exporting vault', {
+        data: vaultItems.length,
+      });
+
+      const rows = vaultItems
+        .map(
+          (item) =>
+            `${item.serviceName},${item.username},${item.secretInfo}, ${item.website},${item.note}`
+        )
+        .join('\n');
+
+      const csv = `${header}${rows}`;
+
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const exportFile = new File(Paths.document, `securevault-export-${timestamp}.json`);
+      const exportFile = new File(Paths.document, `securevault-export-${timestamp}.csv`);
       exportFile.create();
-      exportFile.write(json);
+      exportFile.write(csv);
 
       const isSharingAvailable = await Sharing.isAvailableAsync();
+
       if (isSharingAvailable) {
         await Sharing.shareAsync(exportFile.uri, {
-          mimeType: 'application/json',
+          mimeType: 'application/csv',
           dialogTitle: 'Export Vault',
         });
       } else {
         toast.success(`Exported to ${exportFile.uri}`);
       }
+
+      logger.info('Vault exported successfully', {
+        timeStamp: Date.now(),
+      });
+      return;
     } catch (err) {
       logger.error('Export vault failed', err);
       toast.error('Failed to export vault');
     }
-  }, []);
+  }, [vaultItems]);
 
   return (
     <>
@@ -85,9 +90,7 @@ export default function DataManagementSection() {
           </View>
           <View className="flex-1">
             <Text className="text-lg font-bold text-zinc-900 dark:text-white">Export Vault</Text>
-            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-              Download decrypted JSON
-            </Text>
+            <Text className="text-sm text-zinc-500 dark:text-zinc-400">Download decrypted CSV</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#71717a" />
         </TouchableOpacity>

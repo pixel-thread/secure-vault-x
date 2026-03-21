@@ -1,9 +1,12 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, useColorScheme, RefreshControl } from 'react-native';
+import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { DrizzleContext } from '@src/libs/context/DBContext';
 import * as schema from '@src/libs/database/schema';
 import { desc } from 'drizzle-orm';
 import { Stack } from 'expo-router';
+import { Container } from '@securevault/ui-native';
+import { ScreenContainer } from '@src/components/common/ScreenContainer';
+import Header from '@src/components/common/Header';
 
 /**
  * DatabaseViewScreen Component
@@ -18,7 +21,6 @@ export function DatabaseViewScreen() {
     if (!db) return;
     try {
       // Query all records from the vault table, ordered by most recently updated
-      // We include deleted items to see the raw state
       const result = await db.select().from(schema.vault).orderBy(desc(schema.vault.updatedAt));
       setData(result);
     } catch (error) {
@@ -42,81 +44,80 @@ export function DatabaseViewScreen() {
 
     return (
       <View
-        className={`mb-4 rounded-3xl border ${isDeleted ? 'border-red-100 bg-red-50/30' : 'border-zinc-200 bg-white'} p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50`}>
-        <View className="mb-3 flex-row items-center justify-between border-b border-zinc-100 pb-2 dark:border-zinc-800">
-          <Text className="font-mono text-[10px] text-zinc-500">{item.id}</Text>
+        className={`mb-4 rounded-3xl border ${
+          isDeleted 
+            ? 'border-rose-200 bg-rose-50/30 dark:border-rose-900/30 dark:bg-rose-950/10' 
+            : 'border-zinc-200 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/40'
+        } p-6 shadow-sm`}>
+        <View className="mb-4 flex-row items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-800">
+          <Text className="font-mono text-[10px] tracking-tight text-zinc-500 uppercase">{item.id.substring(0, 16)}...</Text>
           <View className="flex-row gap-2">
             {isDeleted && (
-              <View className="rounded-full bg-red-500/10 px-2 py-0.5">
-                <Text className="text-[10px] font-bold text-red-500 uppercase">Deleted</Text>
+              <View className="rounded-full bg-rose-500/10 px-2.5 py-1">
+                <Text className="text-[10px] font-bold text-rose-500 uppercase">Trash</Text>
               </View>
             )}
             {isCorrupted && (
-              <View className="rounded-full bg-amber-500/10 px-2 py-0.5">
-                <Text className="text-[10px] font-bold text-amber-500 uppercase">Corrupted</Text>
+              <View className="rounded-full bg-amber-500/10 px-2.5 py-1">
+                <Text className="text-[10px] font-bold text-amber-500 uppercase">Broken</Text>
               </View>
             )}
             {!isDeleted && !isCorrupted && (
-              <View className="rounded-full bg-emerald-500/10 px-2 py-0.5">
-                <Text className="text-[10px] font-bold text-emerald-500 uppercase">Active</Text>
+              <View className="rounded-full bg-emerald-500/10 px-2.5 py-1">
+                <Text className="text-[10px] font-bold text-emerald-500 uppercase">Live</Text>
               </View>
             )}
           </View>
         </View>
 
-        <View className="gap-3">
+        <View className="gap-4">
           <View>
-            <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-              Encrypted Data
+            <Text className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              Encrypted Blob
             </Text>
-            <Text
-              className="font-mono text-[11px] leading-4 text-zinc-700 dark:text-zinc-300"
-              numberOfLines={3}>
-              {item.encryptedData}
-            </Text>
+            <View className="rounded-2xl bg-zinc-50 p-3 dark:bg-zinc-950/50">
+              <Text
+                className="font-mono text-[11px] leading-4 text-zinc-600 dark:text-zinc-400"
+                numberOfLines={3}>
+                {item.encryptedData}
+              </Text>
+            </View>
           </View>
 
-          <View className="flex-row gap-6">
+          <View className="flex-row gap-4">
             <View className="flex-1">
               <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                 IV
               </Text>
               <Text className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300">
-                {item.iv || 'N/A'}
+                {item.iv || 'None'}
               </Text>
             </View>
             <View className="w-16">
               <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                 Ver
               </Text>
-              <Text className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                {item.version}
+              <Text className="text-xs font-bold text-emerald-500">
+                v{item.version}
               </Text>
             </View>
           </View>
 
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center justify-between mt-1">
             <View className="flex-1">
               <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                Timeline
+                Stash Time
               </Text>
-              <View className="flex-row flex-wrap gap-x-3 gap-y-1">
-                <Text className="text-[10px] text-zinc-500">
-                  Upd: <Text className="text-zinc-700 dark:text-zinc-300">{new Date(item.updatedAt).toLocaleTimeString()}</Text>
-                </Text>
-                {isDeleted && (
-                  <Text className="text-[10px] text-red-400">
-                    Del: <Text className="text-red-600">{new Date(item.deletedAt).toLocaleTimeString()}</Text>
-                  </Text>
-                )}
-              </View>
+              <Text className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
+                {new Date(item.updatedAt).toLocaleTimeString()}
+              </Text>
             </View>
             <View>
               <Text className="mb-1 text-right text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                Owner (Partial)
+                Owner
               </Text>
-              <Text className="text-right text-[10px] font-medium text-zinc-500">
-                {item.userId.substring(0, 10)}...
+              <Text className="text-right font-mono text-[10px] text-zinc-500">
+                {item.userId.substring(0, 8)}...
               </Text>
             </View>
           </View>
@@ -125,36 +126,29 @@ export function DatabaseViewScreen() {
     );
   };
 
-  const isDarkMode = useColorScheme() === 'dark';
-
   return (
-    <View className="flex-1 bg-zinc-50 dark:bg-[#000000]">
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTitle: 'Raw DB Inspector',
-          headerStyle: { backgroundColor: isDarkMode ? '#09090b' : '#fff' },
-          headerTintColor: isDarkMode ? '#fff' : '#000',
-          headerTitleStyle: { color: isDarkMode ? '#fff' : '#000' },
-          headerBackTitle: 'Vault',
-        }}
-      />
-
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerClassName="p-6 pb-20"
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
-        }
-        ListEmptyComponent={
-          <View className="flex-1 items-center justify-center pt-24">
-            <Text className="text-zinc-500">No raw records found</Text>
-          </View>
-        }
-      />
-    </View>
+    <Container>
+      <ScreenContainer>
+        <Stack.Screen options={{ headerShown: false }} />
+        <Header title="The Matrix" subtitle="Raw db inspector" />
+        
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerClassName="p-6 pb-24"
+          className="flex-1"
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
+          }
+          ListEmptyComponent={
+            <View className="flex-1 items-center justify-center pt-32">
+              <Text className="text-lg font-bold text-zinc-400">The stash is empty</Text>
+            </View>
+          }
+        />
+      </ScreenContainer>
+    </Container>
   );
 }
+

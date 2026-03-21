@@ -117,7 +117,7 @@ export class VaultService {
           and(
             isNull(schema.vault.deletedAt),
             eq(schema.vault.userId, this.userId), // Security: Enforce user isolation
-            eq(schema.vault.isCorrupted, false) // Only fetch healthy items
+            eq(schema.vault.isCorrupted, false)
           )
         )
         .orderBy(desc(schema.vault.updatedAt));
@@ -130,12 +130,12 @@ export class VaultService {
       }
 
       const mek = await DeviceStoreManager.getMek();
+
       if (!mek) {
         logger.error('Decryption aborted: Master Encryption Key (MEK) missing');
         return [];
       }
 
-      logger.log(`Beginning decryption for ${entries.length} items`);
       const decryptedItems: VaultSecretT[] = [];
 
       for (const entry of entries) {
@@ -192,33 +192,60 @@ export class VaultService {
    * Centralizes mapping logic for easier maintenance.
    */
   private transformToVaultSecret(id: string, payload: any): VaultSecretT {
-    if (!payload) return null as any; // Should be handled by caller
+    if (!payload) return null as any;
 
     try {
-      const isCard = !!payload.cardNumber;
+      // Step 0: Robust payload detection (handle potential double-serialization from user manual stringification)
+      let data = payload;
+      if (typeof payload === 'string') {
+        try {
+          data = JSON.parse(payload);
+        } catch (e) {
+          logger.warn('Failed to parse payload string - using raw string', { id });
+        }
+      }
 
+      // 1. Detect dynamic Secret format (presence of fields array)
+      if (data.fields && Array.isArray(data.fields)) {
+        return {
+          ...data,
+          id, // Ensure database ID matches the object ID
+        } as any;
+      }
+
+      // 2. Handle legacy Card format
+      const isCard = !!data.cardNumber || data.type === 'card';
       if (isCard) {
         return {
           id,
           type: 'card',
-          serviceName: payload.serviceName || 'Unknown Card',
-          cardholderName: payload.cardName || payload.cardholderName || '',
-          cardNumber: payload.cardNumber || '',
-          expirationDate: payload.exp || payload.expirationDate || '',
-          cvv: payload.cvv || '',
-          note: payload.note || '',
-        };
+          serviceName: data.serviceName || 'Unknown Card',
+          cardholderName: data.cardName || data.cardholderName || '',
+          cardNumber: data.cardNumber || '',
+          expirationDate: data.exp || data.expirationDate || '',
+          cvv: data.cvv || '',
+          note: data.note || '',
+          meta: data.meta || {
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        } as any;
       }
 
+      // 3. Fallback to legacy Password format
       return {
         id,
-        type: 'password',
-        serviceName: payload.serviceName || 'Unknown',
-        website: payload.url ?? payload.website ?? '',
-        username: payload.username ?? '',
-        secretInfo: payload.password ?? payload.secretInfo ?? '',
-        note: payload.note || '',
-      };
+        type: 'login',
+        serviceName: data.serviceName || 'Unknown',
+        website: data.url ?? data.website ?? '',
+        username: data.username ?? '',
+        secretInfo: data.password ?? data.secretInfo ?? '',
+        note: data.note || '',
+        meta: data.meta || {
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      } as any;
     } catch (err) {
       logger.error('Transformation failed for vault item', { id, error: err });
       return null as any;

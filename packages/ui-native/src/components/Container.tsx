@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { View } from "react-native";
 
 interface ContainerProps {
   children: React.ReactNode;
@@ -9,5 +9,5 @@ export const Container: React.FC<ContainerProps> = ({ children }) => {
 };
 
 const styles = {
-  container: 'flex flex-1 p-safe bg-white',
+  container: "flex flex-1 p-safe bg-white dark:bg-[#09090b]",
 };

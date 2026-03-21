@@ -1,1 +1,1 @@
-export { default } from '@components/screens/vault/MekSetup';
+export { default } from '@src/components/screens/mek/MekSetup';

@@ -1,11 +1,11 @@
 import { prisma } from "@libs/db/prisma";
-import { BadRequestError, ConflictError } from "@/utils/errors/common";
 
 export class VaultService {
   static async getVault(userId: string) {
     const vaults = await prisma.vault.findMany({
       where: { userId, deletedAt: null },
     });
+
     return vaults.map((vault) => ({
       id: vault.id,
       encryptedData: vault.encryptedData,
