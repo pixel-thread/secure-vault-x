@@ -1,38 +1,53 @@
-# Plan: File Encryption Feature
+# Plan: Monorepo TypeScript Centralization
 **Status:** ACTIVE
-**PRD Reference:** .agents/prd/features/file-encryption-feature-prd.md
+**PRD Reference:** .agents/prd/core_prd.md
 **Model Used:** Gemini 3 Pro
 **Last Updated:** 2026-03-21
 
-## Tasks
-- [x] [PLAN]   Update implementation plan with cleanup and review steps
-- [ ] [SEC]    Identify and model all security-sensitive surfaces (Zero-Knowledge, Memory limits)
-- [ ] [DESIGN] Schema design for File SecretType
-- [ ] [TEST]   Write testing logic for file picker and base64 handling
-- [ ] [IMPL]   Implement file selection and base64 encoding
-- [ ] [IMPL]   Implement client-side encryption of file payloads
-- [ ] [IMPL]   Implement View/Download flow for decrypted files with cleanup
-- [ ] [REVIEW] Run `refactor-cleaner.md` skill on new components
-- [ ] [REVIEW] Run `simplified.md` skill on new components
-- [ ] [REVIEW] Security review gate (`security.md`)
+## Overview
+Centralize the `typescript` dependency across the secure-vault-x monorepo. By removing it from all individual workspace `package.json` files and installing it exclusively at the repository root, we ensure a unified, predictable TypeScript version (e.g., ^5.3.3) is used globally. This plan also accounts for fixing any package import breakages that might surface during the process, and leverages the code-reviewer skill to guarantee stability.
 
-## Security Flags
-> A02 - Cryptographic Failures: Must ensure IV is uniquely mapped to the file payload correctly.
-> A04 - Insecure Design: Need to limit file sizes (e.g., 5MB) to avoid OOM or DoS during Base64 decoding/encryption.
-> Zero-Knowledge & Ephemeral Storage: Base64 decrypted data must be stored in isolated App internal storage and DELETED on unmount.
-> Threat 2: Data Exfiltration via malicious files (Picker shouldn't trigger external network requests).
+## User Review Required
+> [!IMPORTANT]
+> This change impacts the build pipeline for all apps and packages. Please review the steps below. Once approved, I will proceed with the execution.
+
+## Tasks
+- [ ] [SEC] Verify no security risks in changing build dependencies (low risk).
+- [ ] [DESIGN] Hoist typescript dependency to monorepo root.
+- [ ] [IMPL] Remove `typescript` from all sub-packages (`apps/*` and `packages/*`).
+- [ ] [IMPL] Ensure `typescript` is in the root `package.json` `devDependencies`.
+- [ ] [IMPL] Run `pnpm install` in the root.
+- [ ] [TEST] Build all packages by running `pnpm run build` and `pnpm run generate`.
+- [ ] [IMPL] Correct any package import issues that arise during the build/generate phase.
+- [ ] [REVIEW] Run the `code-reviewer.md` skill to scan the codebase and verify nothing is broken.
 
 ## Proposed Changes
+---
+### Root Configuration
+#### [MODIFY] package.json (file:///Users/harrison/Downloads/secure-vault-x/package.json)
+- Ensure `"typescript": "^5.3.3"` is installed under `devDependencies`.
 
-### Types & Validation
-- **[MODIFY] `packages/types/src/secret.ts`**: Add `"file"` to `SecretType`.
-- **[MODIFY] `packages/validators/src/secrets.ts`**: Add `fileSchema` enforcing metadata validation for files.
+---
+### Workspaces (Apps & Packages)
+#### [MODIFY] Multiple package.json files
+Remove the `"typescript"` dependency/devDependency from:
+- `apps/mobile/package.json`
+- `apps/web/package.json`
+- `packages/config/package.json`
+- `packages/constants/package.json`
+- `packages/crypto/package.json`
+- `packages/libs/package.json`
+- `packages/types/package.json`
+- `packages/ui/package.json`
+- `packages/ui-native/package.json`
+- `packages/utils/package.json`
+- `packages/validators/package.json`
 
-### UI & File Selection
-- **[NEW] `apps/mobile/src/components/screens/secret/AddFileForm.tsx`**: Utilizes `expo-document-picker` for selecting a file, encodes as base64, encrypts via `@securevault/crypto`, and pushes to vault.
-- **[NEW] `apps/mobile/src/components/screens/secret/FileDetail.tsx`**: For viewing/decrypting files using `expo-sharing`. Includes `useEffect` cleanup to delete temporary files from `FileSystem.cacheDirectory` when view is closed.
+## Verification Plan
+### Automated Tests
+- Run `pnpm install` to update the lockfile and node_modules.
+- Run `pnpm run generate` to execute code generation steps.
+- Run `pnpm run build` to compile the entire project. We will fix any type errors or import issues that occur.
 
-## Post-Implementation Review
-- **Refactoring:** Apply `refactor-cleaner.md` to remove dead code and `ts-prune`.
-- **Simplification:** Apply `simplified.md` to document cryptography logic clearly and eliminate nested conditions.
-- **Security:** Ensure `security.md` rules are strictly followed around token leaks or text leaks.
+### Security Post-Check
+- We will execute the `code-reviewer.md` skill to analyze the changes before finalizing the task, ensuring alignment with project coding standards and zero-knowledge architecture principles.

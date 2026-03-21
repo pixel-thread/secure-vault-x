@@ -11,7 +11,8 @@
     "eas-build-post-install": "pnpm run build && pnpm run generate"
   },
   "devDependencies": {
-    "turbo": "latest"
+    "turbo": "latest",
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=18"
