@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # PRD: Local-First Sync with Expo SQLite + Prisma (Mobile)
 
 ## Overview
