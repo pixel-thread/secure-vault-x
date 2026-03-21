@@ -8,6 +8,7 @@ export type SecretType =
   | "identity"
   | "secure_note"
   | "license"
+  | "file"
   | "custom";
 
 export type FieldType =
