@@ -12,6 +12,7 @@ import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import { StackHeader } from '@src/components/common/StackHeader';
 import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { FileDetailView } from '@src/components/screens/secret/FileDetailView';
+import { truncateText } from '@securevault/utils';
 
 /**
  * ============================================================================
@@ -86,10 +87,10 @@ export default function ViewSecretScreen() {
 
   return (
     <Container>
-      <StackHeader title={title} />
+      <StackHeader title={truncateText({ text: title, maxLength: 20 })} />
 
       <Header
-        title={title}
+        title={truncateText({ text: title, maxLength: 30 })}
         subtitle="Safe and sound in your vault"
         isSyncing={isLoading.isSyncing}
       />
@@ -115,7 +116,9 @@ export default function ViewSecretScreen() {
 
                   <View className="flex-row gap-2">
                     {(field.copyable || field.masked) && (
-                      <TouchableOpacity onPress={() => copyToClipboard(field.value)} className="p-1">
+                      <TouchableOpacity
+                        onPress={() => copyToClipboard(field.value)}
+                        className="p-1">
                         <Ionicons name="copy-outline" size={20} color="#10b981" />
                       </TouchableOpacity>
                     )}

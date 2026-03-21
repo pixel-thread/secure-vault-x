@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { toast } from 'sonner-native';
 import { VaultSecretT } from '@src/types/vault';
+import { truncateText } from '@securevault/utils';
 
 export const VaultItem = ({
   item,
@@ -15,6 +16,7 @@ export const VaultItem = ({
 }) => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  const title = (item as any).title || (item as any).serviceName;
 
   if (!item) return null;
 
@@ -26,19 +28,23 @@ export const VaultItem = ({
       <VaultItemIcon item={item} />
       <View className="flex-1">
         <Text className="mb-1 text-xl font-bold capitalize text-zinc-900 dark:text-white">
-          {(item as any).title || (item as any).serviceName}
+          {truncateText({ text: title, maxLength: 28 })}
         </Text>
-        
+
         {/* Dynamic Field Preview */}
         {(item as any).fields ? (
           <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
             {(item as any).fields[0]?.masked ? '••••••••' : (item as any).fields[0]?.value}
-            {(item as any).fields[1] ? ` • ${(item as any).fields[1]?.masked ? '••••' : (item as any).fields[1]?.value}` : ''}
+            {(item as any).fields[1]
+              ? ` • ${(item as any).fields[1]?.masked ? '••••' : (item as any).fields[1]?.value}`
+              : ''}
           </Text>
         ) : (
           /* Legacy Fallback */
           <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            {item.type === 'password' ? (item as any).username : `•••• ${(item as any).cardNumber?.slice(-4)}`}
+            {item.type === 'password'
+              ? (item as any).username
+              : `•••• ${(item as any).cardNumber?.slice(-4)}`}
           </Text>
         )}
       </View>
@@ -50,7 +56,8 @@ export const VaultItem = ({
             // Copy the first primary field (usually username, API key, etc.)
             textToCopy = (item as any).fields[0]?.value || '';
           } else {
-            textToCopy = item.type === 'password' ? (item as any).secretInfo : (item as any).cardNumber;
+            textToCopy =
+              item.type === 'password' ? (item as any).secretInfo : (item as any).cardNumber;
           }
           Clipboard.setStringAsync(textToCopy);
           toast.success('Copied to clipboard');

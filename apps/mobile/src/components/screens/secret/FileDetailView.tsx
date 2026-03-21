@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { logger } from '@securevault/utils-native';
-import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { toast } from 'sonner-native';
 import { VaultSecretT } from '@src/types/vault';
 import { useFileEncrypter } from '@hooks/useFileEncrypter';
+import { truncateText } from '@securevault/utils';
 
 interface Props {
   item: VaultSecretT;
@@ -15,7 +14,7 @@ interface Props {
  * FILE DETAIL VIEW COMPONENT
  * ============================================================================
  * Specialized viewer for encrypted files.
- * 
+ *
  * SECURITY ADVISORY:
  * 1. Files are decrypted ONLY when the user taps "View File".
  * 2. Decrypted data is stored in the app-internal cache directory.
@@ -49,8 +48,10 @@ export function FileDetailView({ item }: Props) {
           <Ionicons name="document-text" size={32} color="#10b981" />
         </View>
         <View className="flex-1">
-          <Text className="text-xl font-bold text-zinc-900 dark:text-white" numberOfLines={1}>
-            {fileName}
+          <Text
+            className="text-xl font-bold capitalize text-zinc-900 dark:text-white"
+            numberOfLines={1}>
+            {truncateText({ text: fileName, maxLength: 28 })}
           </Text>
           <Text className="text-sm text-zinc-500 dark:text-zinc-400">
             {contentType} • {(fileSizeInBytes / 1024 / 1024).toFixed(2)} MB
@@ -71,9 +72,10 @@ export function FileDetailView({ item }: Props) {
           {isProcessing ? 'Preparing...' : 'View File'}
         </Text>
       </TouchableOpacity>
-      
+
       <Text className="mt-4 text-center text-xs text-zinc-400 dark:text-zinc-500">
-        This file is decrypted only when viewed and is wiped from storage when you leave this screen.
+        This file is decrypted only when viewed and is wiped from storage when you leave this
+        screen.
       </Text>
     </View>
   );
