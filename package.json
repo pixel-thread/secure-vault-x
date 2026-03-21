@@ -11,7 +11,8 @@
     "eas-build-post-install": "pnpm run build && pnpm run generate"
   },
   "devDependencies": {
-    "turbo": "latest"
+    "turbo": "latest",
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=18"
@@ -30,11 +31,7 @@
       "expo-asset": "~12.0.12",
       "expo-file-system": "~19.0.21",
       "expo-keep-awake": "~15.0.8",
-      "expo-modules-core": "~3.0.29",
-      "@securevault/types": "link:../types"
+      "expo-modules-core": "~3.0.29"
     }
-  },
-  "dependencies": {
-    "@securevault/types": "link:../types"
   }
 }
