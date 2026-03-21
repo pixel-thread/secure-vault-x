@@ -11,10 +11,15 @@ import Header from '@src/components/common/Header';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import { StackHeader } from '@src/components/common/StackHeader';
 import { useVaultContext } from '@hooks/vault/useVaultContext';
+import { FileDetailView } from '@src/components/screens/secret/FileDetailView';
 
 /**
- * Screen for viewing secret details.
- * Layout uses common project components for a minimal, modern experience.
+ * ============================================================================
+ * VIEW SECRET SCREEN
+ * ============================================================================
+ * Primary viewer for all vault items.
+ * Uses a dynamic layout to render fields based on the secret type.
+ * For file types, it delegates to the specialized FileDetailView.
  */
 export default function ViewSecretScreen() {
   const router = useRouter();
@@ -92,34 +97,38 @@ export default function ViewSecretScreen() {
       <ScreenContainer>
         <ScrollView contentContainerClassName="px-6 py-8" showsVerticalScrollIndicator={false}>
           {/* Render Dynamic Fields */}
-          {(selectedSecret as any).fields?.map((field: any) => (
-            <View key={field.id} className="mb-6">
-              <Text className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                {field.label}
-              </Text>
-
-              <View className="flex-row items-center rounded-2xl border border-zinc-200 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-                <Text
-                  className="flex-1 text-base text-zinc-900 dark:text-white"
-                  numberOfLines={field.type === 'multiline' ? undefined : 1}>
-                  {field.masked ? '••••••••••••' : field.value}
+          {selectedSecret.type === 'file' ? (
+            <FileDetailView item={selectedSecret as any} />
+          ) : (
+            (selectedSecret as any).fields?.map((field: any) => (
+              <View key={field.id} className="mb-6">
+                <Text className="mb-2 ml-1 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {field.label}
                 </Text>
 
-                <View className="flex-row gap-2">
-                  {(field.copyable || field.masked) && (
-                    <TouchableOpacity onPress={() => copyToClipboard(field.value)} className="p-1">
-                      <Ionicons name="copy-outline" size={20} color="#10b981" />
-                    </TouchableOpacity>
-                  )}
-                  {field.type === 'url' && (
-                    <TouchableOpacity onPress={() => openUrl(field.value)} className="p-1">
-                      <Ionicons name="open-outline" size={20} color="#10b981" />
-                    </TouchableOpacity>
-                  )}
+                <View className="flex-row items-center rounded-2xl border border-zinc-200 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  <Text
+                    className="flex-1 text-base text-zinc-900 dark:text-white"
+                    numberOfLines={field.type === 'multiline' ? undefined : 1}>
+                    {field.masked ? '••••••••••••' : field.value}
+                  </Text>
+
+                  <View className="flex-row gap-2">
+                    {(field.copyable || field.masked) && (
+                      <TouchableOpacity onPress={() => copyToClipboard(field.value)} className="p-1">
+                        <Ionicons name="copy-outline" size={20} color="#10b981" />
+                      </TouchableOpacity>
+                    )}
+                    {field.type === 'url' && (
+                      <TouchableOpacity onPress={() => openUrl(field.value)} className="p-1">
+                        <Ionicons name="open-outline" size={20} color="#10b981" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            ))
+          )}
 
           {/* Optional Note Section */}
           {selectedSecret.note && (
