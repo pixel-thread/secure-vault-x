@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import { Wrapper } from '@components/providers';
 import React, { useEffect } from 'react';
 import { useSyncTrigger } from '@hooks/useSyncTrigger';
+import { Platform } from 'react-native';
 
 const AppSyncManager = ({ children }: { children: React.ReactNode }) => {
   useSyncTrigger();
@@ -45,29 +46,11 @@ export default function RootLayout() {
           <AppSyncManager>
             <Stack
               screenOptions={{
+                animation: 'slide_from_right',
                 headerShown: false,
-                contentStyle: { backgroundColor: 'transparent' },
-              }}>
-              <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-              <Stack.Screen name="auth/index" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="auth/mfa"
-                options={{
-                  presentation: 'modal',
-                  title: 'Two-Factor Authentication',
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen
-                name="auth/signup/index"
-                options={{
-                  presentation: 'modal',
-                  title: 'Sign Up',
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen name="+not-found" />
-            </Stack>
+                presentation: Platform.OS === 'ios' ? 'modal' : 'card',
+              }}
+            />
           </AppSyncManager>
         </Wrapper>
       </SafeAreaProvider>

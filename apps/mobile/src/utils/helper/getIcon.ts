@@ -1,7 +1,6 @@
 import { SecretType } from '@securevault/types';
 
 export function getIcon(type: SecretType) {
-  console.log('Type', type);
   switch (type) {
     case 'login':
       return 'person';
