@@ -7,6 +7,7 @@ import { Wrapper } from '@components/providers';
 import React, { useEffect } from 'react';
 import { useSyncTrigger } from '@hooks/useSyncTrigger';
 import { Platform } from 'react-native';
+import { LoadingScreen } from '@src/components/common/LoadingScreen';
 
 const AppSyncManager = ({ children }: { children: React.ReactNode }) => {
   useSyncTrigger();
@@ -36,7 +37,7 @@ export default function RootLayout() {
   }, [isMounted]);
 
   if (!isMounted) {
-    return null;
+    return <LoadingScreen />;
   }
 
   return (
@@ -46,11 +47,32 @@ export default function RootLayout() {
           <AppSyncManager>
             <Stack
               screenOptions={{
-                animation: 'slide_from_right',
                 headerShown: false,
-                presentation: Platform.OS === 'ios' ? 'modal' : 'card',
-              }}
-            />
+                animation: 'slide_from_right', // 👈 consistent animation
+                animationTypeForReplace: 'push', // 👈 fixes Android replace behavior
+                presentation: 'card', // 👈 REQUIRED for Android animations
+                gestureEnabled: true,
+                fullScreenGestureEnabled: true,
+                contentStyle: { backgroundColor: '#fff' }, // 👈 avoid transparent bugs
+              }}>
+              <Stack.Screen name="(drawer)" />
+              <Stack.Screen name="auth/index" />
+              <Stack.Screen
+                name="auth/mfa"
+                options={{
+                  presentation: 'modal',
+                  animation: 'slide_from_bottom', // 👈 better UX for modals
+                }}
+              />
+              <Stack.Screen
+                name="auth/signup/index"
+                options={{
+                  presentation: 'modal',
+                  animation: 'slide_from_bottom',
+                }}
+              />
+              <Stack.Screen name="+not-found" />
+            </Stack>
           </AppSyncManager>
         </Wrapper>
       </SafeAreaProvider>
