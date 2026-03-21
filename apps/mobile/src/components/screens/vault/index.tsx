@@ -57,6 +57,7 @@ export default function VaultScreen() {
 
   const onClearDevItems = useCallback(async () => {
     if (vaults.length === 0) return;
+
     Alert.alert('Clear everything?', `Delete all ${vaults.length} items? This is a total reset.`, [
       { text: 'Never mind', style: 'cancel' },
       {
@@ -65,8 +66,7 @@ export default function VaultScreen() {
         onPress: async () => {
           setIsSeeding(true);
           try {
-            await clearVaultItems(vaults, deleteVaultItem);
-            await sync();
+            await clearVaultItems(vaults, deleteVaultItem).finally(() => sync());
           } finally {
             setIsSeeding(false);
           }
