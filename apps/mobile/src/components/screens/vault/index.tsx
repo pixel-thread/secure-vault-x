@@ -106,6 +106,16 @@ export default function VaultScreen() {
 
                 <TouchableOpacity
                   className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/80"
+                  onPress={() => router.push('/dev/database')}
+                  disabled={isSeeding}>
+                  {isSeeding ? (
+                    <ActivityIndicator size="small" color="#ef4444" />
+                  ) : (
+                    <Ionicons name="server-outline" size={24} color="#ef4444" />
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/80"
                   onPress={onClearDevItems}
                   disabled={isSeeding}>
                   {isSeeding ? (
