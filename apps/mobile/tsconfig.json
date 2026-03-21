@@ -30,7 +30,15 @@
       ],
       "@services/*": [
         "src/services/*"
-      ]
+      ],
+      "@securevault/constants": ["../../packages/constants/src"],
+      "@securevault/crypto": ["../../packages/crypto/src"],
+      "@securevault/libs": ["../../packages/libs/src"],
+      "@securevault/types": ["../../packages/types/src"],
+      "@securevault/ui-native": ["../../packages/ui-native/src"],
+      "@securevault/utils": ["../../packages/utils/src"],
+      "@securevault/utils-native": ["../../packages/utils-native/src"],
+      "@securevault/validators": ["../../packages/validators/src"]
     }
   },
   "include": [

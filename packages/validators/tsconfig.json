@@ -1,17 +1,14 @@
 {
- "extends": "@securevault/typescript-config/base.json",
- "compilerOptions": {
-  "outDir": "dist",
-  "baseUrl": ".",
-  "paths": {
-   "@securevault/types": ["../types/src/index.ts"]
-  }
- },
- "include": [
-  "src"
- ],
- "exclude": [
-  "node_modules",
-  "dist"
- ]
+  "extends": "@securevault/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": "."
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
