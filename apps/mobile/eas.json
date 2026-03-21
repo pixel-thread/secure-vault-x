@@ -4,23 +4,16 @@
   },
   "build": {
     "development": {
-      "android": {
-        "buildType": "apk"
-      },
-      "distribution": "internal",
+      "android": { "buildType": "apk" },
       "channel": "development",
+      "distribution": "internal",
+      "developmentClient": true,
       "env": {
         "APP_VARIANT": "development"
-      },
-      "cache": {
-        "key": "android-cache-v2",
-        "paths": ["android/.gradle"]
       }
     },
     "preview": {
-      "android": {
-        "buildType": "apk"
-      },
+      "android": { "buildType": "apk" },
       "distribution": "internal",
       "channel": "preview",
       "env": {
@@ -32,13 +25,9 @@
       }
     },
     "production": {
-      "android": {
-        "buildType": "apk"
-      },
+      "android": { "buildType": "apk" },
       "channel": "production",
-      "env": {
-        "APP_VARIANT": "production"
-      },
+      "env": { "APP_VARIANT": "production" },
       "cache": {
         "key": "android-cache-v2",
         "paths": ["android/.gradle"]
