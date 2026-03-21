@@ -17,6 +17,8 @@ export function getIcon(type: SecretType) {
       return 'person';
     case 'secure_note':
       return 'document-text';
+    case 'file':
+      return 'document';
     default:
       return 'document-text';
   }

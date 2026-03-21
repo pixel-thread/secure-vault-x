@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Feature PRD: Account Password Management
 
 ## Overview

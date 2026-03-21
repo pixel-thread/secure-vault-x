@@ -65,4 +65,13 @@ export const SECRET_TEMPLATES: SecretTemplate[] = [
       { label: 'Content', type: 'multiline', masked: true },
     ],
   },
+  {
+    type: 'file',
+    label: 'File',
+    fields: [
+      { label: 'Title', type: 'text' },
+    ],
+  },
 ];
+export const MAX_FILE_SIZE_MB = 5;
+export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;

@@ -60,6 +60,14 @@ export const secureNoteSchema = z.object({
   Content: z.string().min(1, "Content is required"),
 });
 
+export const fileSchema = z.object({
+  ...baseSecretSchema,
+  fileName: z.string().min(1, "File name is required"),
+  fileSize: z.number().max(5 * 1024 * 1024, "File size must be less than 5MB"),
+  contentType: z.string().min(1, "Content type is required"),
+  base64Data: z.string().min(1, "File data is missing"),
+});
+
 /**
  * Returns the appropriate Zod schema for a given secret type.
  * Used by the frontend forms to enforce type-specific validation.
@@ -80,6 +88,8 @@ export function getSecretSchema(type: SecretType) {
       return identitySchema;
     case "secure_note":
       return secureNoteSchema;
+    case "file":
+      return fileSchema;
     default:
       // Fallback for custom or unmapped types
       return z.object({

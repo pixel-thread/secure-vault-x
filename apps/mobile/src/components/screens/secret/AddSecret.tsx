@@ -9,6 +9,7 @@ import Header from '@src/components/common/Header';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import { StackHeader } from '@src/components/common/StackHeader';
 import { AddSecretForm } from '@src/components/screens/secret/AddSecretForm';
+import { AddFileForm } from '@src/components/screens/secret/AddFileForm';
 import { getIcon } from '@src/utils/helper/getIcon';
 import { useThemeStore } from '@src/store/theme';
 
@@ -67,11 +68,19 @@ export default function AddSecret() {
           </View>
 
           {/* Dynamic Secret Type Form */}
-          <AddSecretForm
-            template={selectedTemplate}
-            onSuccess={onHandleSuccess}
-            onCancel={() => router.back()}
-          />
+          {selectedTemplate.type === 'file' ? (
+            <AddFileForm
+              template={selectedTemplate}
+              onSuccess={onHandleSuccess}
+              onCancel={() => router.back()}
+            />
+          ) : (
+            <AddSecretForm
+              template={selectedTemplate}
+              onSuccess={onHandleSuccess}
+              onCancel={() => router.back()}
+            />
+          )}
         </View>
       </ScreenContainer>
     </Container>

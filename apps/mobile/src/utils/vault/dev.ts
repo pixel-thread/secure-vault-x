@@ -66,7 +66,7 @@ export async function seedVaultItems(
     const id = Crypto.randomUUID();
 
     // Map template fields to mock data
-    const fields = template.fields.map((f) => ({
+    const fields = template.fields.map((f: any) => ({
       id: Crypto.randomUUID(),
       label: f.label,
       value: generateMockValue(f.label, f.type, i),
