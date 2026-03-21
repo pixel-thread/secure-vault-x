@@ -104,10 +104,10 @@ export class VaultService {
   }
 
   /**
-   * Get all non-deleted vault items for the current user and decrypt them.
+   * Get paginated non-deleted vault items for the current user and decrypt them.
    */
-  async getVaultItems(): Promise<VaultSecretT[]> {
-    logger.log('Fetching local vault items');
+  async getVaultItems({ limit = 20, offset = 0 }: { limit?: number; offset?: number } = {}): Promise<VaultSecretT[]> {
+    logger.log('Fetching local vault items', { limit, offset });
 
     try {
       const entries = await this.db
@@ -120,7 +120,9 @@ export class VaultService {
             eq(schema.vault.isCorrupted, false)
           )
         )
-        .orderBy(desc(schema.vault.updatedAt));
+        .orderBy(desc(schema.vault.updatedAt))
+        .limit(limit)
+        .offset(offset);
 
       if (entries.length === 0) {
         logger.info('No vault items found for user', {

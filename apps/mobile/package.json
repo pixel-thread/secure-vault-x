@@ -31,6 +31,7 @@
     "@securevault/utils": "workspace:^",
     "@securevault/utils-native": "workspace:^",
     "@securevault/validators": "workspace:^",
+    "@shopify/flash-list": "^2.3.0",
     "@tanstack/react-query": "^5.90.21",
     "axios": "^1.13.6",
     "drizzle-orm": "^0.45.1",

@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Image, View } from 'react-native';
+import { Image, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { VaultSecretT } from '@src/types/vault';
-import { logger } from '@securevault/utils-native';
 import { SecretType } from '@securevault/types';
 import { getIcon } from '@src/utils/helper/getIcon';
 
@@ -12,14 +11,22 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   if (!item) return null;
 
   const renderIcon = () => {
-    if (item.type === 'password' && !imgError) {
-      let domain = item.website;
+    // 1. Try to find a website URL from the fields or a direct property
+    const itemAny = item as any;
+    const websiteUrl =
+      itemAny.website ||
+      itemAny.fields?.find(
+        (f: any) =>
+          f.label.toLowerCase().includes('url') || f.label.toLowerCase().includes('website')
+      )?.value;
+
+    if (websiteUrl && !imgError) {
+      let domain = websiteUrl;
       try {
-        domain = new URL(item.website).hostname;
+        const urlStr = domain.startsWith('http') ? domain : `https://${domain}`;
+        domain = new URL(urlStr).hostname;
       } catch (e) {
-        logger.error('Failed to parse URL', e);
-        domain = item.website;
-        // Fallback if not a strict URL format
+        domain = websiteUrl; // Fallback if not a strict URL format
       }
       return (
         <Image
@@ -29,6 +36,19 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
         />
       );
     }
+
+    // 2. Fallback to the first letter of the service (item.title)
+    const title = itemAny.title || '';
+    const firstChar = title.trim().charAt(0);
+    if (firstChar && /[a-zA-Z]/.test(firstChar)) {
+      return (
+        <Text className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+          {firstChar.toUpperCase()}
+        </Text>
+      );
+    }
+
+    // 3. Ultimate fallback: default icon based on type
     return <Ionicons name={getIcon(item?.type as SecretType)} size={24} color="#10b981" />;
   };
 

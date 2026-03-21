@@ -3,7 +3,8 @@ import { Container } from '@securevault/ui-native';
 import { logger } from '@securevault/utils-native';
 import { useRouter } from 'expo-router';
 import { useState, useCallback } from 'react';
-import { View, Alert, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { toast } from 'sonner-native';
 import Header from '@components/common/Header';
 import { Ternary } from '@src/components/common/Ternary';
@@ -27,6 +28,7 @@ export default function VaultScreen() {
     addVaultItem,
     deleteVaultItem,
     sync,
+    fetchNextPage,
   } = useVaultContext();
 
   // --- HANDLERS ---
@@ -133,10 +135,13 @@ export default function VaultScreen() {
       <Ternary
         condition={vaults.length > 0}
         ifTrue={
-          <FlatList
+          <FlashList
             data={vaults ?? []}
             refreshing={false}
             onRefresh={onManualSync}
+            onEndReached={fetchNextPage}
+            onEndReachedThreshold={0.5}
+            estimatedItemSize={80}
             keyExtractor={(item) => item.id}
             contentContainerClassName="px-6 py-6 pb-32"
             className="flex-1"

@@ -19,7 +19,7 @@ interface BaseSecret {
 }
 
 export interface PasswordSecret extends BaseSecret {
-  type: 'password';
+  type: 'login';
   website: string;
   username: string;
   secretInfo: string;
@@ -47,8 +47,11 @@ export type VaultContextT = {
   addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>;
   updateVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>;
   deleteVaultItem: (id: string) => Promise<void>;
-  getVaultItems: () => Promise<VaultSecretT[]>;
+  getVaultItems: (params?: { limit?: number; offset?: number }) => Promise<VaultSecretT[]>;
   getVaultItem: (id: string) => Promise<VaultSecretT | null>;
   vaultItems: VaultSecretT[]; // Expose the reactive items list
   isVaultReady: boolean;
+  fetchNextPage: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
 };

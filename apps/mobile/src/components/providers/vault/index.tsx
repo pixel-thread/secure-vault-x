@@ -3,8 +3,8 @@ import { logger } from '@securevault/utils-native';
 import { VaultContext } from '@src/libs/context/VaultContext';
 import { VaultService } from '@src/services/VaultService';
 import { SyncService } from '@src/services/SyncService';
-import { VaultContextT } from '@src/types/vault';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { VaultContextT, VaultSecretT } from '@src/types/vault';
+import { useMutation, useInfiniteQuery, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 import { useDB } from '@hooks/useDB';
 import { useAuthStore } from '@src/store/auth';
@@ -58,14 +58,27 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
    * 3. Fetch Vault Items
    * -------------------------------
    */
-  const { data: vaultItems = [], isLoading: isFetching } = useQuery({
-    queryKey: ['vault', user?.id],
-    queryFn: async () => {
+  const {
+    data,
+    isLoading: isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['vault', user?.id || 'guest'] as const,
+    queryFn: async ({ pageParam = 0 }: { pageParam: unknown }) => {
       if (!vaultService) return [];
-      return await vaultService.getVaultItems();
+      return await vaultService.getVaultItems({ limit: 20, offset: pageParam as number });
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: VaultSecretT[], allPages: VaultSecretT[][]) => {
+      if (lastPage.length < 20) return undefined;
+      return allPages.length * 20;
     },
     enabled: isReady,
   });
+
+  const vaultItems = useMemo(() => data?.pages.flat() ?? [], [data]);
 
   /**
    * -------------------------------
@@ -175,7 +188,13 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
    * 7. Context Methods
    * -------------------------------
    */
-  const getVaultItems = useCallback(async () => vaultItems, [vaultItems]);
+  const getVaultItems = useCallback(
+    async (params?: { limit?: number; offset?: number }) => {
+      if (!vaultService) return [];
+      return vaultService.getVaultItems(params);
+    },
+    [vaultService]
+  );
 
   const removeVaultItem = useCallback(
     async (id: string) => {
@@ -200,7 +219,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
 
   const getVaultItem = useCallback(
     async (id: string) => {
-      return vaultItems.find((i) => i.id === id) || null;
+      return vaultItems.find((i: VaultSecretT) => i.id === id) || null;
     },
     [vaultItems]
   );
@@ -224,6 +243,9 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       sync,
       vaultItems,
       isVaultReady: isReady,
+      fetchNextPage,
+      hasNextPage,
+      isFetchingNextPage,
       isLoading: {
         isFetching,
         isSaving,
@@ -241,6 +263,9 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       sync,
       vaultItems,
       isReady,
+      fetchNextPage,
+      hasNextPage,
+      isFetchingNextPage,
       isFetching,
       isSaving,
       isDeleting,
