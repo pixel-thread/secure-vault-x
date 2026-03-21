@@ -36,7 +36,7 @@ export default function LoginScreen() {
   const { setIsAuthenticated } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
-  
+
   const {
     control,
     handleSubmit,
@@ -147,7 +147,9 @@ export default function LoginScreen() {
                   />
                 )}
               />
-              {errors.email && <Text className="ml-1 mt-1 text-sm text-red-500">{errors.email.message}</Text>}
+              {errors.email && (
+                <Text className="ml-1 mt-1 text-sm text-red-500">{errors.email.message}</Text>
+              )}
             </View>
 
             <View>
@@ -158,9 +160,10 @@ export default function LoginScreen() {
                 control={control}
                 name="password"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
-                    errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}>
+                  <View
+                    className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                      errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                    }`}>
                     <TextInput
                       className="flex-1 px-5 py-4 text-lg text-zinc-900 dark:text-white"
                       placeholder="The secret word..."
@@ -170,13 +173,22 @@ export default function LoginScreen() {
                       onBlur={onBlur}
                       secureTextEntry={!showPassword}
                     />
-                    <TouchableOpacity onPressIn={() => setShowPassword(true)} onPressOut={() => setShowPassword(false)} className="p-3">
-                      <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={22} color={showPassword ? '#10b981' : '#71717a'} />
+                    <TouchableOpacity
+                      onPressIn={() => setShowPassword(true)}
+                      onPressOut={() => setShowPassword(false)}
+                      className="p-3">
+                      <Ionicons
+                        name={showPassword ? 'eye' : 'eye-off'}
+                        size={22}
+                        color={showPassword ? '#10b981' : '#71717a'}
+                      />
                     </TouchableOpacity>
                   </View>
                 )}
               />
-              {errors.password && <Text className="ml-1 mt-1 text-sm text-red-500">{errors.password.message}</Text>}
+              {errors.password && (
+                <Text className="ml-1 mt-1 text-sm text-red-500">{errors.password.message}</Text>
+              )}
             </View>
 
             <TouchableOpacity
@@ -193,7 +205,9 @@ export default function LoginScreen() {
               <Text className="text-zinc-500 dark:text-zinc-400">No account yet? </Text>
               <Link href="/auth/signup" asChild>
                 <TouchableOpacity>
-                  <Text className="font-bold text-emerald-600 dark:text-emerald-500">Join the Crew</Text>
+                  <Text className="font-bold text-emerald-600 dark:text-emerald-500">
+                    Join the Crew
+                  </Text>
                 </TouchableOpacity>
               </Link>
             </View>
@@ -203,4 +217,3 @@ export default function LoginScreen() {
     </Container>
   );
 }
-
