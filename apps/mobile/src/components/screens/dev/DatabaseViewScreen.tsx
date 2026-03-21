@@ -3,10 +3,9 @@ import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { DrizzleContext } from '@src/libs/context/DBContext';
 import * as schema from '@src/libs/database/schema';
 import { desc } from 'drizzle-orm';
-import { Stack } from 'expo-router';
 import { Container } from '@securevault/ui-native';
-import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import Header from '@src/components/common/Header';
+import { StackHeader } from '@src/components/common/StackHeader';
 
 /**
  * DatabaseViewScreen Component
@@ -45,26 +44,28 @@ export function DatabaseViewScreen() {
     return (
       <View
         className={`mb-4 rounded-3xl border ${
-          isDeleted 
-            ? 'border-rose-200 bg-rose-50/30 dark:border-rose-900/30 dark:bg-rose-950/10' 
+          isDeleted
+            ? 'border-rose-200 bg-rose-50/30 dark:border-rose-900/30 dark:bg-rose-950/10'
             : 'border-zinc-200 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/40'
         } p-6 shadow-sm`}>
         <View className="mb-4 flex-row items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-800">
-          <Text className="font-mono text-[10px] tracking-tight text-zinc-500 uppercase">{item.id.substring(0, 16)}...</Text>
+          <Text className="font-mono text-[10px] uppercase tracking-tight text-zinc-500">
+            {item.id.substring(0, 16)}...
+          </Text>
           <View className="flex-row gap-2">
             {isDeleted && (
               <View className="rounded-full bg-rose-500/10 px-2.5 py-1">
-                <Text className="text-[10px] font-bold text-rose-500 uppercase">Trash</Text>
+                <Text className="text-[10px] font-bold uppercase text-rose-500">Trash</Text>
               </View>
             )}
             {isCorrupted && (
               <View className="rounded-full bg-amber-500/10 px-2.5 py-1">
-                <Text className="text-[10px] font-bold text-amber-500 uppercase">Broken</Text>
+                <Text className="text-[10px] font-bold uppercase text-amber-500">Broken</Text>
               </View>
             )}
             {!isDeleted && !isCorrupted && (
               <View className="rounded-full bg-emerald-500/10 px-2.5 py-1">
-                <Text className="text-[10px] font-bold text-emerald-500 uppercase">Live</Text>
+                <Text className="text-[10px] font-bold uppercase text-emerald-500">Live</Text>
               </View>
             )}
           </View>
@@ -97,13 +98,11 @@ export function DatabaseViewScreen() {
               <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                 Ver
               </Text>
-              <Text className="text-xs font-bold text-emerald-500">
-                v{item.version}
-              </Text>
+              <Text className="text-xs font-bold text-emerald-500">v{item.version}</Text>
             </View>
           </View>
 
-          <View className="flex-row items-center justify-between mt-1">
+          <View className="mt-1 flex-row items-center justify-between">
             <View className="flex-1">
               <Text className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                 Stash Time
@@ -128,27 +127,24 @@ export function DatabaseViewScreen() {
 
   return (
     <Container>
-      <ScreenContainer>
-        <Stack.Screen options={{ headerShown: false }} />
-        <Header title="The Matrix" subtitle="Raw db inspector" />
-        
-        <FlatList
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerClassName="p-6 pb-24"
-          className="flex-1"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
-          }
-          ListEmptyComponent={
-            <View className="flex-1 items-center justify-center pt-32">
-              <Text className="text-lg font-bold text-zinc-400">The stash is empty</Text>
-            </View>
-          }
-        />
-      </ScreenContainer>
+      <Header title="The Matrix" subtitle="Raw db inspector" />
+      <StackHeader title="The Matrix" subtitle="Raw db inspector" />
+
+      <FlatList
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerClassName="p-6 pb-24"
+        className="flex-1"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
+        }
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center pt-32">
+            <Text className="text-lg font-bold text-zinc-400">The stash is empty</Text>
+          </View>
+        }
+      />
     </Container>
   );
 }
-
