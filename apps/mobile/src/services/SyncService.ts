@@ -4,6 +4,8 @@ import * as schema from '@libs/database/schema';
 import { eq, gt, and } from 'drizzle-orm';
 import { http, logger } from '@securevault/utils-native';
 import { SyncStoreManager } from '@store/sync';
+import { syncItemSchema } from '@securevault/validators';
+import { z } from 'zod';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -114,6 +116,7 @@ export class SyncService {
       logger.error('[Sync] Failed to push changes (exception)', {
         error: error instanceof Error ? error.message : String(error),
       });
+      throw error; // OWASP: Propagate error to avoid silent failures
     }
   }
 
@@ -127,16 +130,7 @@ export class SyncService {
 
     logger.info(`[Sync] Requesting pull from: ${url}`);
 
-    interface PullItem {
-      id: string;
-      encryptedData: string;
-      iv: string;
-      version: number;
-      updatedAt: number | string | Date;
-      deletedAt: number | string | Date | null;
-    }
-
-    const response = await http.get<{ items: PullItem[]; serverTime: number }>(url);
+    const response = await http.get<{ items: unknown[]; serverTime: number }>(url);
 
     if (!response.success || !response.data) {
       logger.error('[Sync] Pull request failed', {
@@ -147,12 +141,29 @@ export class SyncService {
       return;
     }
 
-    const { items, serverTime } = response.data;
-    logger.log(`[Sync] Received ${items.length} items from server`);
+    const { items: rawItems, serverTime } = response.data;
+    logger.log(`[Sync] Received ${rawItems.length} items from server`);
+
+    // OWASP A04: Validation of server-supplied data before insertion
+    const validationResult = z.array(syncItemSchema).safeParse(rawItems);
+    
+    if (!validationResult.success) {
+      logger.error('[Sync] Pull validation failed', { 
+        errors: validationResult.error.flatten().fieldErrors 
+      });
+      return;
+    }
+
+    const items = validationResult.data;
 
     if (items.length > 0) {
       await this.db.transaction(async (tx) => {
         for (const item of items) {
+          if (!item.id) {
+            logger.warn('[Sync] Skipping item with missing ID');
+            continue;
+          }
+
           const existing = await tx.query.vault.findFirst({
             where: and(eq(schema.vault.id, item.id), eq(schema.vault.userId, this.userId)),
           });
@@ -172,7 +183,7 @@ export class SyncService {
                 id: item.id,
                 userId: this.userId,
                 encryptedData: item.encryptedData,
-                iv: item.iv,
+                iv: item.iv ?? null,
                 version: item.version,
                 updatedAt: new Date(item.updatedAt),
                 deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
@@ -181,7 +192,7 @@ export class SyncService {
                 target: schema.vault.id,
                 set: {
                   encryptedData: item.encryptedData,
-                  iv: item.iv,
+                  iv: item.iv ?? null,
                   version: item.version,
                   updatedAt: new Date(item.updatedAt),
                   deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
