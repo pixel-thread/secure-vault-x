@@ -73,7 +73,6 @@ export function withValidation<
 
       /* ---------------- body ---------------- */
       let validatedBody: InferOrUndefined<B>;
-
       if (schemas.body) {
         const rawBody = await safeJson(req);
         validatedBody = schemas.body.parse(rawBody) as InferOrUndefined<B>;
