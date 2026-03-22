@@ -39,7 +39,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         logger.info('[NotificationProvider] Deep linking to secret', { item_id, item_type });
         // @ts-ignore - Dynamic path is safe here
         router.push({
-          pathname: `/secret/${item_id}`,
+          pathname: `/secret/${item_id}` as any,
           params: { id: String(item_id), type: String(item_type) },
         });
       }

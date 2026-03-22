@@ -39,15 +39,14 @@ export class SyncService {
     }
 
     this.updateSyncStatus(true);
-    logger.info('Sync started', { userId: !!this.userId });
+    logger.info('Sync service started');
 
     try {
       await this.push();
       await this.pull();
       logger.info('Sync finished successfully');
     } catch (error) {
-      logger.error('Sync failed', {
-        userId: !!this.userId,
+      logger.error('Sync process failed', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -148,7 +147,7 @@ export class SyncService {
     const validationResult = z.array(syncItemSchema).safeParse(rawItems);
     
     if (!validationResult.success) {
-      logger.error('[Sync] Pull validation failed', { 
+      logger.error('[Sync] Pull data validation failed', { 
         errors: validationResult.error.flatten().fieldErrors 
       });
       return;

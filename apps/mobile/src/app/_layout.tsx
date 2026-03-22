@@ -8,6 +8,7 @@ import React, { useEffect } from 'react';
 import { useSyncTrigger } from '@hooks/useSyncTrigger';
 import { Platform } from 'react-native';
 import { LoadingScreen } from '@src/components/common/LoadingScreen';
+import { GlobalErrorBoundary } from '@components/common/GlobalErrorBoundary';
 
 const AppSyncManager = ({ children }: { children: React.ReactNode }) => {
   useSyncTrigger();
@@ -42,8 +43,9 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <Wrapper>
+      <GlobalErrorBoundary>
+        <SafeAreaProvider>
+          <Wrapper>
           <AppSyncManager>
             <Stack
               screenOptions={{
@@ -75,6 +77,7 @@ export default function RootLayout() {
           </AppSyncManager>
         </Wrapper>
       </SafeAreaProvider>
-    </GestureHandlerRootView>
-  );
+    </GlobalErrorBoundary>
+  </GestureHandlerRootView>
+);
 }

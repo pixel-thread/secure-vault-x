@@ -28,7 +28,7 @@ export class VaultService {
    * Ensures data integrity via Zod and enforces user isolation.
    */
   async saveVaultItem(input: unknown) {
-    logger.info('Attempting to save vault item', { userId: !!this.userId });
+    logger.info('Attempting to save vault item');
 
     try {
       // Validate input schema
@@ -110,7 +110,7 @@ export class VaultService {
     limit = 20,
     offset = 0,
   }: { limit?: number; offset?: number } = {}): Promise<VaultSecretT[]> {
-    logger.log('Fetching local vault items', { limit, offset });
+    logger.log('Fetching local vault items');
 
     try {
       const entries = await this.db
@@ -128,9 +128,7 @@ export class VaultService {
         .offset(offset);
 
       if (entries.length === 0) {
-        logger.info('No vault items found for user', {
-          vaults: entries,
-        });
+        logger.info('No vault items found for user');
         return [];
       }
 
@@ -296,7 +294,7 @@ export class VaultService {
    * userId is intentionally excluded from .set() to prevent IDOR.
    */
   async updateVaultItem(input: unknown) {
-    logger.info('Attempting to update vault item', { userId: !!this.userId });
+    logger.info('Attempting to update vault item');
 
     try {
       const data = VaultItemSchema.parse(input);

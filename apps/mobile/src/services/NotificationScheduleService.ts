@@ -69,9 +69,9 @@ export class NotificationScheduleService {
         });
       }
 
-      logger.info(`[NotificationScheduleService] Scheduled ${schedules.length} notifications for ${item.id}`);
+      logger.info(`[NotificationScheduleService] Scheduled ${schedules.length} notifications`);
     } catch (error) {
-      logger.error('[NotificationScheduleService] Internal scheduling error', { error });
+      logger.error('[NotificationScheduleService] Internal scheduling error');
     }
   }
 
@@ -104,10 +104,10 @@ export class NotificationScheduleService {
 
       });
 
-      logger.info(`[NotificationScheduleService] Test notification scheduled in ${delayMs}ms`, { id });
+      logger.info(`[NotificationScheduleService] Test notification scheduled in ${delayMs}ms`);
       return id;
     } catch (error) {
-      logger.error('[NotificationScheduleService] Test schedule failed', { error });
+      logger.error('[NotificationScheduleService] Test schedule failed');
       return null;
     }
   }

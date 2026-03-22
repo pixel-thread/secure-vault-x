@@ -48,7 +48,7 @@ export const CronProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logger.info('Local DB Cleanup complete');
         setLastCleanupRanAt(now);
       } catch (error) {
-        logger.error('Failed to run local DB cleanup:', error);
+        logger.error('Failed to run local DB cleanup');
       }
     };
 
