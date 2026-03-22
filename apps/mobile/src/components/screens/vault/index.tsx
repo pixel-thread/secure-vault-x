@@ -141,6 +141,7 @@ export default function VaultScreen() {
             onRefresh={onManualSync}
             onEndReached={fetchNextPage}
             onEndReachedThreshold={0.5}
+            // @ts-ignore - estimatedItemSize type check fails in this React Native version
             estimatedItemSize={80}
             keyExtractor={(item) => item.id}
             contentContainerClassName="px-6 py-6 pb-32"

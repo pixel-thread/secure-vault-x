@@ -87,13 +87,12 @@ export default function ViewSecretScreen() {
     );
   }
 
-  const title =
-    (selectedSecret as any).title || (selectedSecret as any).serviceName || 'Secret Details';
+  const title = selectedSecret.title || 'Secret Details';
 
   // Extract primary detail (like username or email) for the subtitle
   const primaryDetail =
-    (selectedSecret as any).fields?.find(
-      (f: any) => f.label.toLowerCase().includes('user') || f.label.toLowerCase().includes('email')
+    selectedSecret.fields?.find(
+      (f) => f.label.toLowerCase().includes('user') || f.label.toLowerCase().includes('email')
     )?.value || selectedSecret.type;
 
   return (
@@ -106,7 +105,7 @@ export default function ViewSecretScreen() {
           {/* 1. HERO SECTION */}
           <View className="mb-8 items-center justify-center pt-6">
             <View className="mb-6 flex-1 scale-150 flex-row items-center justify-center">
-              <VaultItemIcon item={selectedSecret as any} />
+              <VaultItemIcon item={selectedSecret} />
             </View>
             <View className="flex-col items-center gap-2">
               <Text className="text-3xl font-extrabold capitalize text-zinc-900 dark:text-white">
@@ -172,7 +171,7 @@ export default function ViewSecretScreen() {
                       version: Date.now(),
                     });
 
-                    await scheduleForItem(updatedSecret as any);
+                    await scheduleForItem(updatedSecret);
                     toast.success('Rotation clock reset!');
                   }}
                   className="rounded-full bg-emerald-500/20 px-3 py-1">
@@ -200,11 +199,11 @@ export default function ViewSecretScreen() {
 
           {/* 3. STRUCTURAL CARDS FOR FIELDS */}
           {selectedSecret.type === 'file' ? (
-            <FileDetailView item={selectedSecret as any} />
+            <FileDetailView item={selectedSecret} />
           ) : (
             <View className="mb-6 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/40">
-              {(selectedSecret as any).fields?.map((field: any, index: number) => {
-                const isLast = index === ((selectedSecret as any).fields?.length || 0) - 1;
+              {selectedSecret.fields?.map((field, index) => {
+                const isLast = index === (selectedSecret.fields?.length || 0) - 1;
                 return (
                   <View
                     key={field.id}

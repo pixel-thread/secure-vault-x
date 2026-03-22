@@ -132,9 +132,9 @@ export function useFileEncrypter() {
       }
 
       return { id: secretPayload.id, encryptedData, iv };
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Security: Obscure the error message to ensure no part of the Base64 payload is logged
-      logger.error('[useFileEncrypter] Encryption failed', { message: err?.message || 'Unknown error' });
+      logger.error('[useFileEncrypter] Encryption failed', { message: err instanceof Error ? err.message : String(err) });
       toast.error('Failed to secure file');
       return null;
     } finally {
@@ -167,9 +167,9 @@ export function useFileEncrypter() {
       } else {
         toast.error("Viewer unavailable", { description: "Format not supported by installed apps." });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Security: Obscure the error message to ensure no part of the payload is logged
-      logger.error('[useFileEncrypter] Decryption/Sharing failed', { message: err?.message || 'Unknown error' });
+      logger.error('[useFileEncrypter] Decryption/Sharing failed', { message: err instanceof Error ? err.message : String(err) });
       toast.error('Failed to open file');
     } finally {
       setIsProcessing(false);

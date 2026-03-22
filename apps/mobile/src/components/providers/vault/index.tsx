@@ -102,7 +102,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
         timeStamp: Date.now(),
       });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error('Sync failed', { description: err.message });
     },
   });
@@ -132,7 +132,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
         logger.error('Post-delete sync failed', { error: e });
       }
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error('Delete failed', { description: err.message });
     },
   });
@@ -143,7 +143,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
    * -------------------------------
    */
   const { mutateAsync: saveItem, isPending: isSaving } = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: unknown) => {
       await waitForReady();
       if (!vaultService) throw new Error('Service not ready');
 
@@ -162,13 +162,13 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       }
       toast.success('Vault updated');
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error('Save failed', { description: err.message });
     },
   });
 
   const { mutateAsync: updateItem, isPending: isUpdating } = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: unknown) => {
       if (!vaultService) throw new Error('Service not ready');
       return await vaultService.updateVaultItem(data);
     },
@@ -178,7 +178,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       // Trigger background sync
       syncMutate();
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error('Save failed', { description: err.message });
     },
   });
@@ -204,14 +204,14 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const addVaultItem = useCallback(
-    async (input: any) => {
+    async (input: unknown) => {
       await saveItem(input);
     },
     [saveItem]
   );
 
   const updateVaultItem = useCallback(
-    async (input: any) => {
+    async (input: unknown) => {
       await updateItem(input);
     },
     [updateItem]

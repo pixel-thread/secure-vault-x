@@ -50,7 +50,7 @@ function generateMockValue(label: string, type: string, index: number): string {
  * @param count - Number of items to generate (default 100)
  */
 export async function seedVaultItems(
-  addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>,
+  addVaultItem: (item: { id: string; encryptedData: string; iv: string; version: number }) => Promise<void>,
   count: number = 10
 ) {
   const mek = await DeviceStoreManager.getMek();
@@ -68,7 +68,7 @@ export async function seedVaultItems(
     const id = Crypto.randomUUID();
 
     // Map template fields to mock data
-    const fields = template.fields.map((f: any) => ({
+    const fields = template.fields.map((f) => ({
       id: Crypto.randomUUID(),
       label: f.label,
       value: generateMockValue(f.label, f.type, i),
@@ -96,6 +96,7 @@ export async function seedVaultItems(
       id,
       encryptedData,
       iv,
+      version: Date.now(),
     });
   });
 

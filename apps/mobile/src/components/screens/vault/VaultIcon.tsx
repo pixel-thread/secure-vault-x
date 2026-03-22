@@ -12,11 +12,9 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
 
   const renderIcon = () => {
     // 1. Try to find a website URL from the fields or a direct property
-    const itemAny = item as any;
     const websiteUrl =
-      itemAny.website ||
-      itemAny.fields?.find(
-        (f: any) =>
+      item.fields?.find(
+        (f) =>
           f.label.toLowerCase().includes('url') || f.label.toLowerCase().includes('website')
       )?.value;
 
@@ -37,8 +35,7 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
       );
     }
 
-    // 2. Fallback to the first letter of the service (item.title)
-    const title = itemAny.title || '';
+    const title = item.title || '';
     const firstChar = title.trim().charAt(0);
     if (firstChar && /[a-zA-Z]/.test(firstChar)) {
       return (

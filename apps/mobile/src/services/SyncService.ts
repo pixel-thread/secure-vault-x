@@ -127,7 +127,16 @@ export class SyncService {
 
     logger.info(`[Sync] Requesting pull from: ${url}`);
 
-    const response = await http.get<{ items: any[]; serverTime: number }>(url);
+    interface PullItem {
+      id: string;
+      encryptedData: string;
+      iv: string;
+      version: number;
+      updatedAt: number | string | Date;
+      deletedAt: number | string | Date | null;
+    }
+
+    const response = await http.get<{ items: PullItem[]; serverTime: number }>(url);
 
     if (!response.success || !response.data) {
       logger.error('[Sync] Pull request failed', {

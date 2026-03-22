@@ -40,8 +40,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         // @ts-ignore - Dynamic path is safe here
         router.push({
           pathname: `/secret/${item_id}`,
-          params: { id: item_id, type: item_type },
-        } as any);
+          params: { id: String(item_id), type: String(item_type) },
+        });
       }
     });
 

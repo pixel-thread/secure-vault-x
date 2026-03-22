@@ -50,6 +50,7 @@ export const UrgencyBadge = ({ expiresAt, nextRotationAt }: UrgencyBadgeProps) =
     if (diffDays <= 7) return 'soon';
     return 'normal';
   }, [diffDays]);
+
   const config = useMemo(() => getBadgeConfig(urgency, diffDays), [urgency, diffDays]);
 
   return (

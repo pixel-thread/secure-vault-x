@@ -176,24 +176,17 @@ export class NotificationScheduleService {
     title: string;
     body: string;
   }> {
-    const schedules: any[] = [];
+    const schedules: Array<{ type: string; scheduledFor: number; title: string; body: string }> = [];
     const now = Date.now();
 
     // Mapping logic to handle different secret structures
-    // VaultSecretT can be PasswordSecret | CardSecret | Secret
     const type = item.type;
-    const meta = item.meta as any;
-    const title = (item as any).title || (item as any).serviceName || 'Secret';
+    const meta = item.meta;
+    const title = item.title || 'Secret';
 
     if (['login', 'api_key', 'database'].includes(type)) {
-      if (meta?.next_rotation_at || meta?.autoRotateDays) {
-        // If next_rotation_at is missing, calculate it based on autoRotateDays if available
-        let nextRotation = meta?.next_rotation_at;
-        if (!nextRotation && meta?.autoRotateDays && meta?.updatedAt) {
-          const updatedAt =
-            meta.updatedAt instanceof Date ? meta.updatedAt.getTime() : meta.updatedAt;
-          nextRotation = updatedAt + meta.autoRotateDays * 86400000;
-        }
+      if (meta?.autoRotateDays && meta?.updatedAt) {
+        const nextRotation = meta.updatedAt + meta.autoRotateDays * 86400000;
 
         if (nextRotation) {
           // 7 days before
@@ -228,20 +221,25 @@ export class NotificationScheduleService {
     }
 
     // Add card/identity expiry logic here...
-    if (item.type === 'card' && (item as any).expiry_date) {
-      // Parsing MM/YY to first day of month
-      const [mm, yy] = (item as any).expiry_date.split('/');
-      const expiryDate = new Date(parseInt(`20${yy}`), parseInt(mm) - 1, 1).getTime();
-      const notifyDaysBefore = (item as any).notify_days_before || 30;
-      const last4 = (item as any).cardNumber?.slice(-4) || '';
+    if (item.type === 'card') {
+      const expField = item.fields?.find((f) => f.label.toLowerCase().includes('exp'))?.value;
+      if (expField && expField.includes('/')) {
+        // Parsing MM/YY to first day of month
+        const [mm, yy] = expField.split('/');
+        const expiryDate = new Date(parseInt(`20${yy}`), parseInt(mm) - 1, 1).getTime();
+        const notifyDaysBefore = 30;
+        
+        const cardNumField = item.fields?.find((f) => f.label.toLowerCase().includes('card number'))?.value || '';
+        const last4 = cardNumField.slice(-4);
 
-      if (expiryDate - notifyDaysBefore * 86400000 > now) {
-        schedules.push({
-          type: 'expiry',
-          scheduledFor: expiryDate - notifyDaysBefore * 86400000,
-          title: '💳 Card Expiring Soon',
-          body: `Your card ending ${last4} expires soon.`,
-        });
+        if (expiryDate - notifyDaysBefore * 86400000 > now) {
+          schedules.push({
+            type: 'expiry',
+            scheduledFor: expiryDate - notifyDaysBefore * 86400000,
+            title: '💳 Card Expiring Soon',
+            body: `Your card ending ${last4} expires soon.`,
+          });
+        }
       }
     }
 

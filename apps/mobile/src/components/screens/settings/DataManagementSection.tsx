@@ -41,10 +41,12 @@ export default function DataManagementSection() {
       });
 
       const rows = vaultItems
-        .map(
-          (item: any) =>
-            `${item.serviceName || item.title || ''},${item.username || ''},${item.secretInfo || item.cardNumber || ''}, ${item.website || ''},${item.note || ''}`
-        )
+        .map((item) => {
+          const u = item.fields?.find((f) => f.label.toLowerCase().includes('user'))?.value || '';
+          const p = item.fields?.find((f) => f.label.toLowerCase().includes('password') || f.label.toLowerCase().includes('card') || f.label.toLowerCase().includes('cvv'))?.value || '';
+          const w = item.fields?.find((f) => f.label.toLowerCase().includes('url') || f.label.toLowerCase().includes('website'))?.value || '';
+          return `${item.title || ''},${u},${p}, ${w},${item.note || ''}`;
+        })
         .join('\n');
 
       const csv = `${header}${rows}`;

@@ -8,7 +8,7 @@ interface LogPayload {
 }
 
 let logQueue: LogPayload[] = [];
-let flushTimeout: NodeJS.Timeout | null = null;
+let flushTimeout: ReturnType<typeof setTimeout> | null = null;
 const MAX_BATCH_SIZE = 20;
 const BATCH_INTERVAL = 5000; // 5 seconds
 

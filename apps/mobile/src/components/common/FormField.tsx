@@ -1,19 +1,19 @@
 import { View, Text, TextInput, TextInputProps } from 'react-native';
-import { Controller, Control, FieldErrors } from 'react-hook-form';
+import { Controller, Control, FieldErrors, FieldValues, Path } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 
 // --- Reusable Form Field Component ---
-interface FormFieldProps extends TextInputProps {
+interface FormFieldProps<T extends FieldValues> extends TextInputProps {
   label: string;
-  name: string;
-  control: Control<any>;
-  errors: FieldErrors<any>;
+  name: Path<T>;
+  control: Control<T>;
+  errors: FieldErrors<T>;
   isDarkMode: boolean;
   extraElement?: React.ReactNode;
   leftIconName?: keyof typeof Ionicons.glyphMap;
 }
 
-export const FormField = ({
+export const FormField = <T extends FieldValues>({
   label,
   name,
   control,
@@ -22,7 +22,7 @@ export const FormField = ({
   extraElement,
   leftIconName,
   ...props
-}: FormFieldProps) => (
+}: FormFieldProps<T>) => (
   <View className="mb-5">
     <Text className="mb-2 ml-1 text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
       {label}
@@ -60,8 +60,8 @@ export const FormField = ({
             )}
           </View>
           {errors[name] && (
-            <Text className="ml-2 mt-1 text-xs font-medium text-red-500">
-              {errors[name]?.message as string}
+            <Text className="ml-2 mt-1 text-xs font-medium text-rose-500">
+              {String(errors[name]?.message || '')}
             </Text>
           )}
         </>
