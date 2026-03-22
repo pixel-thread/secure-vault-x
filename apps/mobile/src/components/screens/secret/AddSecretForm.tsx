@@ -122,8 +122,8 @@ export function AddSecretForm({
       );
     } catch (err) {
       logger.error('[AddSecretForm] Submission failed', { error: err });
-      toast.error("Darn, couldn't save that.", { 
-        description: 'Could not secure your data.' 
+      toast.error("Major L", { 
+        description: "Couldn't secure your stash." 
       });
     }
   };

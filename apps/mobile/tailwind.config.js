@@ -41,6 +41,13 @@ module.exports = {
         input: 'var(--input)',
         ring: 'var(--ring)',
       },
+      fontFamily: {
+        sans: ['JetBrainsMono_400Regular'],
+        mono: ['JetBrainsMono_400Regular'],
+        'jetbrains-medium': ['JetBrainsMono_500Medium'],
+        'jetbrains-bold': ['JetBrainsMono_700Bold'],
+        'jetbrains-extrabold': ['JetBrainsMono_800ExtraBold'],
+      },
     },
   },
   plugins: [],

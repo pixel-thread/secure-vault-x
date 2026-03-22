@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: configVars.name,
   slug: 'secure-vault-x',
-  version: '0.0.9',
+  version: '0.1.2',
   scheme: ['securevaultx'],
   platforms: ['ios', 'android'],
   newArchEnabled: true,

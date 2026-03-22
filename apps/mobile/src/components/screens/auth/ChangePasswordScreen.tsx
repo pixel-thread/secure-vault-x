@@ -79,11 +79,11 @@ const ChangePasswordScreen = () => {
     mutationFn: () => http.post<{ success: boolean; message?: string }>(AUTH_ENDPOINT.POST_PASSWORD_RESET_REQUEST, {}),
     onSuccess: (res: { success: boolean; message?: string }) => {
       if (res.success) {
-        toast.success('Code dropped in your inbox!');
+        toast.success('Code dropped');
         setIsOtpSent(true);
         return;
       } else {
-        toast.error(res.message || 'Failed to request OTP');
+        toast.error('Major L', { description: res.message || 'Failed to request code.' });
         return;
       }
     },
@@ -99,7 +99,7 @@ const ChangePasswordScreen = () => {
       http.post<{ success: boolean; message?: string }>(AUTH_ENDPOINT.POST_PASSWORD_CHANGE, data),
     onSuccess: (res: { success: boolean; message?: string }) => {
       if (res.success) {
-        toast.success('Password updated! Clean vibes.');
+        toast.success('Glow up complete');
         router.back();
       } else {
         toast.error(res?.message || 'Failed to update password');

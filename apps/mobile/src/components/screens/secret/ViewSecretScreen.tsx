@@ -5,7 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { toast } from 'sonner-native';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import { StackHeader } from '@src/components/common/StackHeader';
@@ -29,7 +29,7 @@ import { DeviceStoreManager } from '@store/device';
 export default function ViewSecretScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { vaultItems, deleteVaultItem, updateVaultItem, isLoading } = useVaultContext();
+  const { vaultItems, deleteVaultItem, updateVaultItem, isLoading, sync } = useVaultContext();
   const { scheduleForItem } = useNotification();
 
   // --- CORE LOGIC ---
@@ -76,11 +76,11 @@ export default function ViewSecretScreen() {
 
   const copyToClipboard = (value: string) => {
     Clipboard.setStringAsync(value);
-    toast.success('Copied it!');
+    toast.success('Say Less');
   };
 
   const openUrl = (url: string) => {
-    toast.success('Opening...');
+    toast.success('Vibe check... opening URL');
     Linking.openURL(url);
   };
 
@@ -108,7 +108,15 @@ export default function ViewSecretScreen() {
       <ScreenContainer>
         <ScrollView
           contentContainerClassName="px-6 py-4 pb-12"
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading.isSyncing}
+              onRefresh={sync}
+              tintColor="#10b981"
+              colors={['#10b981']}
+            />
+          }>
           {/* 1. HERO SECTION */}
           <View className="mb-8 items-center justify-center pt-6">
             <View className="mb-6 flex-1 scale-150 flex-row items-center justify-center">
@@ -166,7 +174,7 @@ export default function ViewSecretScreen() {
 
                     const mek = await DeviceStoreManager.getMek();
                     if (!mek) {
-                      toast.error('Encryption key missing');
+                      toast.error('Major L. Key missing.');
                       return;
                     }
 
@@ -179,7 +187,7 @@ export default function ViewSecretScreen() {
                     });
 
                     await scheduleForItem(updatedSecret);
-                    toast.success('Rotation clock reset!');
+                    toast.success('Manifested! Rotation reset.');
                   }}
                   className="rounded-full bg-emerald-500/20 px-3 py-1">
                   <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500">

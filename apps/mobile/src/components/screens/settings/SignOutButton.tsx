@@ -23,7 +23,7 @@ export default function SignOutButton() {
         await tokenManager.removeAllTokens();
         purgeLocalEnclave();
         DeviceStoreManager.clearAll();
-        toast.success('Signed out successfully');
+        toast.success('Later, bestie');
         logout();
         setIsLoading(false);
         router.push('/auth');

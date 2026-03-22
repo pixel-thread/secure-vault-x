@@ -103,7 +103,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       });
     },
     onError: (err: Error) => {
-      toast.error('Sync failed', { description: err.message });
+      toast.error('Major L', { description: 'Sync acting up.' });
     },
   });
 
@@ -126,14 +126,14 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Background sync (safe)
       try {
-        toast.success('Deleted successfully');
+        toast.success('Ghosted');
         syncMutate();
       } catch (e) {
         logger.error('Post-delete sync failed', { error: e });
       }
     },
     onError: (err: Error) => {
-      toast.error('Delete failed', { description: err.message });
+      toast.error('Major L', { description: 'Could not delete.' });
     },
   });
 
@@ -160,10 +160,10 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (e) {
         logger.error('Post-save sync failed', { error: e });
       }
-      toast.success('Vault updated');
+      toast.success('Manifested');
     },
     onError: (err: Error) => {
-      toast.error('Save failed', { description: err.message });
+      toast.error('Major L', { description: 'Could not update.' });
     },
   });
 
@@ -173,13 +173,13 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       return await vaultService.updateVaultItem(data);
     },
     onSuccess: () => {
-      toast.success('Vault updated');
+      toast.success('Manifested');
       queryClient.invalidateQueries({ queryKey: ['vault'] });
       // Trigger background sync
       syncMutate();
     },
     onError: (err: Error) => {
-      toast.error('Save failed', { description: err.message });
+      toast.error('Major L', { description: 'Update failed.' });
     },
   });
 

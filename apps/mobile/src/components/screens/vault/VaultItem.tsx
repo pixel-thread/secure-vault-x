@@ -90,7 +90,9 @@ export const VaultItem = ({
             textToCopy = item.fields[0]?.value || '';
           }
           Clipboard.setStringAsync(textToCopy);
-          toast.success('Copied to clipboard');
+          toast.success('Say Less', {
+            description: 'Copied to clipboard... vibes.',
+          });
         }}>
         <Ionicons name="copy-outline" size={20} color={isDarkMode ? '#a1a1aa' : '#71717a'} />
       </TouchableOpacity>

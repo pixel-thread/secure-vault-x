@@ -35,7 +35,7 @@ export function FileDetailView({ item }: Props) {
 
   const handleDecryptAndOpenFile = () => {
     if (!encryptedBase64Payload) {
-      toast.error('File data corrupted');
+      toast.error('File data is acting up.');
       return;
     }
     decryptAndOpen(fileName, contentType, encryptedBase64Payload);

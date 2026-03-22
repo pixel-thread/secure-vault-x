@@ -77,20 +77,20 @@ export default function MfaScreen() {
           }
 
           setIsAuthenticated(true);
-          toast.success('Access Granted!', {
+          toast.success('you r in', {
             description: 'The stash is open.',
           });
           router.replace('/(drawer)/(tabs)');
         }
       } else {
-        toast.error('Code failed', {
+        toast.error('Major L', {
           description: data.message || 'Invalid code, try again.',
         });
       }
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : 'The vibes are off.';
-      toast.error('Verification error', {
+      toast.error('Major L', {
         description: message,
       });
     },

@@ -169,9 +169,9 @@ export class VaultService {
             // Mark as corrupted to avoid trying again
             await this.db
               .update(schema.vault)
-              .set({ 
+              .set({
                 isCorrupted: true,
-                corruptedAt: new Date()
+                corruptedAt: new Date(),
               })
               .where(eq(schema.vault.id, entry.id))
               .execute();
@@ -197,7 +197,11 @@ export class VaultService {
    * Transforms raw decrypted payload into a structured VaultSecretT
    * Centralizes mapping logic for easier maintenance.
    */
-  private transformToVaultSecret(id: string, payload: unknown, version: number): VaultSecretT | null {
+  private transformToVaultSecret(
+    id: string,
+    payload: unknown,
+    version: number
+  ): VaultSecretT | null {
     if (!payload) return null;
 
     try {

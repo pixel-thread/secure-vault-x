@@ -24,7 +24,7 @@ export default function DataManagementSection() {
       if (isEnabledBiometric) {
         const success = await authenticateWithBiometric();
         if (!success) {
-          toast.error('Authentication failed — biometric lock remained enabled');
+          toast.error('Vibe check failed', { description: 'Biometrics required.' });
           return;
         }
       }
@@ -32,7 +32,7 @@ export default function DataManagementSection() {
       const header = 'Service Name, Username, Password, Website, Notes\n';
 
       if (vaultItems.length === 0) {
-        toast.error('Vault is empty');
+        toast.error('Vault is empty... lonely vibes.');
         return;
       }
 
@@ -111,7 +111,7 @@ export default function DataManagementSection() {
               className="flex-row items-center p-5 active:bg-zinc-200 dark:active:bg-zinc-800/60"
               onPress={async () => {
                 await scheduleTestNotifications(vaultItems, scheduleTest);
-                toast.success('Test notifications staggered by 1 min');
+                toast.success('Alerts queued... testing the vibe.');
               }}>
               <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
                 <Ionicons

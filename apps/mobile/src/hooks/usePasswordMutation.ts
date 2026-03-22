@@ -36,7 +36,7 @@ export function usePasswordMutation(mode: MutationMode, onSuccess?: () => void) 
       }
 
       const message =
-        mode === 'edit' ? 'Password updated successfully' : 'Password added successfully';
+        mode === 'edit' ? 'Glow up complete' : 'Manifested';
       logger.info(`[usePasswordMutation] ${message}`);
       // toast is already handled in VaultProvider, but we can add another one or rely on that
 

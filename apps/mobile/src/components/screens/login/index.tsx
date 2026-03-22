@@ -89,13 +89,13 @@ export default function LoginScreen() {
           }
 
           setIsAuthenticated(true);
-          toast.success('Welcome back!', {
+          toast.success('you r in', {
             description: 'The vibe is immaculate.',
           });
           router.replace('/(drawer)/(tabs)');
         }
       } else {
-        toast.error('Oof, Login failed', {
+        toast.error('Major L', {
           description: data.message || 'Check your handle or the key.',
         });
       }

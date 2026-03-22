@@ -49,7 +49,7 @@ export default function SecurityControlsSection() {
 
       await DeviceStoreManager.setBiometricEnabled(value);
       setBiometricEnabled(value);
-      toast.success(value ? 'Biometric lock enabled' : 'Biometric lock disabled');
+      toast.success(value ? 'Secure AF' : 'Security lowered');
     },
     [biometricAvailable]
   );
@@ -63,8 +63,8 @@ export default function SecurityControlsSection() {
         setMfaEnabled(data.data.mfaEnabled);
         toast.success(
           data.data.mfaEnabled
-            ? 'Two-factor authentication enabled'
-            : 'Two-factor authentication disabled'
+            ? '2FA is on!'
+            : '2FA is off'
         );
       } else {
         // Toggle failed but returned 200 OK (e.g. wrapper error)

@@ -46,12 +46,13 @@ export default function VaultScreen() {
     if (isSeeding) return;
     setIsSeeding(true);
     try {
+      // @ts-ignore
       await seedVaultItems(addVaultItem);
-      toast.success('Seeded 100 items... manifesting success!');
+      toast.success('Manifested 100 items... manifesting success!');
       await sync();
     } catch (error: any) {
       logger.error('[VaultScreen] Seed failed', { error });
-      toast.error('Seed failed, major L.');
+      toast.error('Major L. Seed failed.');
     } finally {
       setIsSeeding(false);
     }
@@ -132,25 +133,23 @@ export default function VaultScreen() {
         }
       />
 
-      <Ternary
-        condition={vaults.length > 0}
-        ifTrue={
-          <FlashList
-            data={vaults ?? []}
-            refreshing={false}
-            onRefresh={onManualSync}
-            onEndReached={fetchNextPage}
-            onEndReachedThreshold={0.5}
-            // @ts-ignore - estimatedItemSize type check fails in this React Native version
-            estimatedItemSize={80}
-            keyExtractor={(item) => item.id}
-            contentContainerClassName="px-6 py-6 pb-32"
-            className="flex-1"
-            ListEmptyComponent={<VaultEmpty />}
-            renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
-          />
+      <FlashList
+        data={vaults ?? []}
+        onRefresh={onManualSync}
+        refreshing={contextLoading.isSyncing}
+        onEndReached={fetchNextPage}
+        onEndReachedThreshold={0.5}
+        // @ts-ignore - estimatedItemSize type check fails in this React Native version
+        estimatedItemSize={80}
+        keyExtractor={(item) => item.id}
+        contentContainerClassName="px-6 py-6 pb-32"
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        className="flex-1"
+        ListEmptyComponent={
+          <VaultEmpty onRefresh={onManualSync} isRefreshing={contextLoading.isSyncing} />
         }
-        ifFalse={<VaultEmpty />}
+        renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
       />
 
       <TouchableOpacity

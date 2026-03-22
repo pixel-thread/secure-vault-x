@@ -55,7 +55,7 @@ export function AddFileForm({ onSuccess, onCancel }: Props) {
 
   const onSubmitForm = async (values: { title: string }) => {
     if (!fileInfo) {
-      toast.error('No file selected');
+      toast.error('No file selected... awkward.');
       return;
     }
 

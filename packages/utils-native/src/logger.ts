@@ -115,7 +115,10 @@ const sendLog = (payload: Omit<LogPayload, "timestamp">) => {
 const logLocally = (message: string, content?: any) => {
   if (process.env.NODE_ENV === "development") {
     if (content) {
-      console.log(`[${new Date().toISOString()}] ${message}`, content);
+      console.log(
+        `[${new Date().toISOString()}] ${message}`,
+        JSON.stringify(content, null, 2),
+      );
     } else {
       console.log(`[${new Date().toISOString()}] ${message}`);
     }

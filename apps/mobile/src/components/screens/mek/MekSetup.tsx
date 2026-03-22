@@ -79,20 +79,20 @@ export default function MekSetup() {
               },
               onError: (error) => {
                 logger.error('Failed to save salt to backend', error);
-                toast.error('Setup Failed', { description: 'Could not save encryption settings.' });
+                toast.error('Major L', { description: 'Could not save encryption settings.' });
               },
             });
           }
         } catch (error) {
           logger.error('MEK Generation Error', error instanceof Error ? error.message : error);
-          toast.error('Setup Failed', {
+          toast.error('Major L', {
             description: 'An error occurred during encryption setup.',
           });
         }
       },
       onError: (error) => {
         logger.error('Failed to get salt', error);
-        toast.error('Setup Failed', { description: 'Could not retrieve encryption settings.' });
+        toast.error('Major L', { description: 'Could not retrieve encryption settings.' });
       },
     });
   };
@@ -101,10 +101,10 @@ export default function MekSetup() {
     try {
       await SecureStore.setItemAsync('SV_MEK', mek);
       setHasMek(true);
-      toast.success('Key Forged!', { description: 'Your Vault is now officially unbreakable.' });
+      toast.success('Key forged... vibes.', { description: 'Your Vault is now officially unbreakable.' });
     } catch (error) {
       logger.error('Failed to save MEK locally', error);
-      toast.error('Setup Failed', { description: 'Could not store encryption key securely.' });
+      toast.error('Major L', { description: 'Could not store encryption key securely.' });
     }
   };
 
