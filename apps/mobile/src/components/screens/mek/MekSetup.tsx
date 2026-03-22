@@ -109,7 +109,7 @@ export default function MekSetup() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-[#09090b]">
+    <SafeAreaView className="flex-1 bg-background">
       <ScreenContainer>
         <Header title="The Forge" subtitle="Let's lock it down" />
         <View className="flex-1 px-6 pt-12">

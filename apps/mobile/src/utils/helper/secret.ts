@@ -32,9 +32,13 @@ export function getSecretDefaults(
   // Default values for new secret
   const defaults: Record<string, string> = { title: '' };
   template.fields.forEach((f) => {
-    defaults[f.label] = '';
-    if (f.label.toLowerCase().includes('password')) {
+    const label = f.label.toLowerCase();
+    if (label.includes('password')) {
       defaults[f.label] = generatePassword(32);
+    } else if (label.includes('url') || label.includes('website')) {
+      defaults[f.label] = 'https://';
+    } else {
+      defaults[f.label] = '';
     }
   });
   defaults['note'] = '';

@@ -14,7 +14,13 @@ export const loginSchema = z.object({
   ...baseSecretSchema,
   Username: z.string().min(1, "Username is required"),
   Password: z.string().min(1, "Password is required"),
-  "Website URL": z.string().url("Invalid URL").optional().or(z.literal("")),
+  "Website URL": z.preprocess((val) => {
+    if (typeof val !== "string" || val === "") return val;
+    if (!val.startsWith("http://") && !val.startsWith("https://")) {
+      return `https://${val}`;
+    }
+    return val;
+  }, z.string().url("Invalid URL").optional().or(z.literal(""))),
 });
 
 export const cardSchema = z.object({

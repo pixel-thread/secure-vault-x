@@ -29,7 +29,7 @@ export default function UpdateSecretPage() {
 
   if (!selectedSecret) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-[#09090b]">
+      <View className="flex-1 items-center justify-center bg-background">
         <Stack.Screen options={{ title: 'Update Secret' }} />
         <ActivityIndicator size="large" color="#10b981" />
       </View>

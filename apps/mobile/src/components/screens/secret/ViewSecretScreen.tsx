@@ -4,7 +4,7 @@ import { logger } from '@securevault/utils-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { toast } from 'sonner-native';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
@@ -35,6 +35,7 @@ export default function ViewSecretScreen() {
   // --- CORE LOGIC ---
 
   const selectedSecret = useMemo(() => vaultItems.find((item) => item.id === id), [vaultItems, id]);
+  const [visibleFieldIds, setVisibleFieldIds] = useState<string[]>([]);
 
   const isDeleting = isLoading.isDeleting;
 
@@ -67,6 +68,12 @@ export default function ViewSecretScreen() {
     );
   };
 
+  const toggleVisibility = (fieldId: string) => {
+    setVisibleFieldIds((prev) =>
+      prev.includes(fieldId) ? prev.filter((id) => id !== fieldId) : [...prev, fieldId]
+    );
+  };
+
   const copyToClipboard = (value: string) => {
     Clipboard.setStringAsync(value);
     toast.success('Copied it!');
@@ -81,7 +88,7 @@ export default function ViewSecretScreen() {
 
   if (!selectedSecret) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-[#09090b]">
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color="#10b981" />
       </View>
     );
@@ -216,10 +223,23 @@ export default function ViewSecretScreen() {
                       <Text
                         className="flex-1 text-lg font-medium text-zinc-900 dark:text-white"
                         numberOfLines={field.type === 'multiline' ? undefined : 1}>
-                        {field.masked ? '••••••••••••••••' : field.value}
+                        {field.masked && !visibleFieldIds.includes(field.id)
+                          ? '••••••••••••••••'
+                          : field.value}
                       </Text>
 
                       <View className="ml-4 flex-row gap-3">
+                        {field.masked && (
+                          <TouchableOpacity
+                            onPress={() => toggleVisibility(field.id)}
+                            className="rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700">
+                            <Ionicons
+                              name={visibleFieldIds.includes(field.id) ? 'eye-off-outline' : 'eye-outline'}
+                              size={22}
+                              color="#10b981"
+                            />
+                          </TouchableOpacity>
+                        )}
                         {(field.copyable || field.masked) && (
                           <TouchableOpacity
                             onPress={() => copyToClipboard(field.value)}

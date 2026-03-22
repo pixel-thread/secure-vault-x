@@ -171,7 +171,10 @@ export class VaultService {
             // Mark as corrupted to avoid trying again
             await this.db
               .update(schema.vault)
-              .set({ isCorrupted: true })
+              .set({ 
+                isCorrupted: true,
+                corruptedAt: new Date()
+              })
               .where(eq(schema.vault.id, entry.id))
               .execute();
           } catch (error) {

@@ -42,18 +42,17 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider className="bg-white dark:bg-[#09090b]">
+      <SafeAreaProvider>
         <Wrapper>
           <AppSyncManager>
             <Stack
               screenOptions={{
                 headerShown: false,
-                animation: 'slide_from_right', // 👈 consistent animation
-                animationTypeForReplace: 'push', // 👈 fixes Android replace behavior
-                presentation: 'card', // 👈 REQUIRED for Android animations
+                animation: 'slide_from_right',
+                animationTypeForReplace: 'push',
+                presentation: 'card',
                 gestureEnabled: true,
                 fullScreenGestureEnabled: true,
-                contentStyle: { backgroundColor: '#fff' }, // 👈 avoid transparent bugs
               }}>
               <Stack.Screen name="(drawer)" />
               <Stack.Screen name="auth/index" />
@@ -61,7 +60,7 @@ export default function RootLayout() {
                 name="auth/mfa"
                 options={{
                   presentation: 'modal',
-                  animation: 'slide_from_bottom', // 👈 better UX for modals
+                  animation: 'slide_from_bottom',
                 }}
               />
               <Stack.Screen

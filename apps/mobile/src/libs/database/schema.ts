@@ -14,6 +14,7 @@ export const vault = sqliteTable('vault', {
     .$defaultFn(() => new Date()),
   deletedAt: integer('deleted_at', { mode: 'timestamp' }),
   isCorrupted: integer('is_corrupted', { mode: 'boolean' }).default(false).notNull(),
+  corruptedAt: integer('corrupted_at', { mode: 'timestamp' }),
 });
 
 export const notificationSchedule = sqliteTable('notification_schedule', {
