@@ -38,7 +38,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: 'static',
     favicon: './assets/favicon.png',
   },
-  plugins: ['expo-router', 'expo-secure-store'],
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    [
+      'expo-notifications',
+      {
+        icon: './assets/icon.png',
+        color: '#ffffff',
+        defaultChannel: 'default',
+        enableBackgroundRemoteNotifications: true,
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
     tsconfigPaths: true,

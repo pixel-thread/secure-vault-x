@@ -46,8 +46,18 @@ export type VaultContextT = {
     isSyncing: boolean;
   };
   sync: () => Promise<void>;
-  addVaultItem: (item: { id: string; encryptedData: string; iv: string; version: number }) => Promise<void>;
-  updateVaultItem: (item: { id: string; encryptedData: string; iv: string; version: number }) => Promise<void>;
+  addVaultItem: (item: {
+    id: string;
+    encryptedData: string;
+    iv: string;
+    version: number;
+  }) => Promise<void>;
+  updateVaultItem: (item: {
+    id: string;
+    encryptedData: string;
+    iv: string;
+    version: number;
+  }) => Promise<void>;
   deleteVaultItem: (id: string) => Promise<void>;
   getVaultItems: (params?: { limit?: number; offset?: number }) => Promise<VaultSecretT[]>;
   getVaultItem: (id: string) => Promise<VaultSecretT | null>;

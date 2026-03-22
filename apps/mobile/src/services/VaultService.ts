@@ -106,7 +106,10 @@ export class VaultService {
   /**
    * Get paginated non-deleted vault items for the current user and decrypt them.
    */
-  async getVaultItems({ limit = 20, offset = 0 }: { limit?: number; offset?: number } = {}): Promise<VaultSecretT[]> {
+  async getVaultItems({
+    limit = 20,
+    offset = 0,
+  }: { limit?: number; offset?: number } = {}): Promise<VaultSecretT[]> {
     logger.log('Fetching local vault items', { limit, offset });
 
     try {
@@ -147,7 +150,7 @@ export class VaultService {
         }
 
         try {
-          const payload = await decryptData<any>(entry.encryptedData, entry.iv, mek);
+          const payload = await decryptData<VaultSecretT>(entry.encryptedData, entry.iv, mek);
 
           if (!payload) {
             logger.warn('Decryption returned null payload', { vaultId: entry.id });
@@ -213,7 +216,7 @@ export class VaultService {
           ...data,
           id, // Ensure database ID matches the object ID
           version,
-        } as any;
+        } as VaultSecretT;
       }
 
       // 2. Handle legacy Card format
@@ -233,7 +236,7 @@ export class VaultService {
             updatedAt: Date.now(),
           },
           version,
-        } as any;
+        } as VaultSecretT;
       }
 
       // 3. Fallback to legacy Password format
@@ -250,7 +253,7 @@ export class VaultService {
           updatedAt: Date.now(),
         },
         version,
-      } as any;
+      } as VaultSecretT;
     } catch (err) {
       logger.error('Transformation failed for vault item', { id, error: err });
       return null as any;

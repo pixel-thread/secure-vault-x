@@ -9,6 +9,7 @@ import { Toaster } from 'sonner-native';
 import { DBProvider } from './db';
 import { ScreenCaptureProvider } from './capture';
 import { VaultProvider } from './vault';
+import { NotificationProvider } from './notification';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 
@@ -28,9 +29,11 @@ export const Wrapper = ({ children }: Props) => {
               <CryptoProvider>
                 <DBProvider>
                   <VaultProvider>
-                    <Suspense>
-                      <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
-                    </Suspense>
+                    <NotificationProvider>
+                      <Suspense>
+                        <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
+                      </Suspense>
+                    </NotificationProvider>
                   </VaultProvider>
                 </DBProvider>
               </CryptoProvider>

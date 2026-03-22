@@ -13,6 +13,7 @@ import { useColorScheme } from 'nativewind';
 import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useNotification } from '@hooks/useNotification';
 import { toast } from 'sonner-native';
 
 interface Props {
@@ -40,6 +41,7 @@ export function AddSecretForm({
   // --- STATE ---
   const [showMasked, setShowMasked] = useState<Record<string, boolean>>({});
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { scheduleForItem } = useNotification();
 
   // --- FORM SETUP ---
   
@@ -111,6 +113,11 @@ export function AddSecretForm({
 
       const { encryptedData, iv } = await encryptData(secretPayload, mek);
       mutate({ id: secretPayload.id, encryptedData, iv, version });
+      
+      // Reschedule notifications (background)
+      scheduleForItem(secretPayload as any).catch(e => 
+        logger.error('[AddSecretForm] Auto-reschedule failed', { error: e })
+      );
     } catch (err) {
       logger.error('[AddSecretForm] Submission failed', { error: err });
       toast.error("Darn, couldn't save that.", { 

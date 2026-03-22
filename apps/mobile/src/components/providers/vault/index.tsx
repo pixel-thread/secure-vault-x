@@ -65,7 +65,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['vault', user?.id || 'guest'] as const,
+    queryKey: ['vault', user?.id],
     queryFn: async ({ pageParam = 0 }: { pageParam: unknown }) => {
       if (!vaultService) return [];
       return await vaultService.getVaultItems({ limit: 20, offset: pageParam as number });

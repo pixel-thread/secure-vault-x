@@ -13,6 +13,10 @@ import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { FileDetailView } from '@src/components/screens/secret/FileDetailView';
 import { truncateText } from '@securevault/utils';
 import { VaultItemIcon } from '../vault/VaultIcon';
+import { UrgencyBadge } from './UrgencyBadge';
+import { useNotification } from '@hooks/useNotification';
+import { encryptData } from '@securevault/crypto';
+import { DeviceStoreManager } from '@store/device';
 
 /**
  * ============================================================================
@@ -25,7 +29,8 @@ import { VaultItemIcon } from '../vault/VaultIcon';
 export default function ViewSecretScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { vaultItems, deleteVaultItem, isLoading } = useVaultContext();
+  const { vaultItems, deleteVaultItem, updateVaultItem, isLoading } = useVaultContext();
+  const { scheduleForItem } = useNotification();
 
   // --- CORE LOGIC ---
 
@@ -107,6 +112,15 @@ export default function ViewSecretScreen() {
               <Text className="text-3xl font-extrabold capitalize text-zinc-900 dark:text-white">
                 {truncateText({ text: title, maxLength: 28 })}
               </Text>
+              <UrgencyBadge
+                expiresAt={selectedSecret.meta?.expiresAt}
+                nextRotationAt={
+                  selectedSecret.meta?.autoRotateDays && selectedSecret.meta?.updatedAt
+                    ? Number(selectedSecret.meta.updatedAt) +
+                      selectedSecret.meta.autoRotateDays * 86400000
+                    : undefined
+                }
+              />
               <View className="flex-row items-center gap-1.5">
                 {selectedSecret.meta?.environment && (
                   <View className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5">
@@ -133,27 +147,52 @@ export default function ViewSecretScreen() {
                 <View className="flex-row items-center">
                   <Ionicons name="shield-checkmark" size={20} color="#10b981" />
                   <Text className="ml-2 font-bold text-emerald-700 dark:text-emerald-400">
-                    Security Status
+                    Security Rotation
                   </Text>
                 </View>
-                <Text className="text-xs font-bold text-emerald-600 dark:text-emerald-500">
-                  STRONG
-                </Text>
+                <TouchableOpacity
+                  onPress={async () => {
+                    const now = Date.now();
+                    const updatedSecret = {
+                      ...selectedSecret,
+                      meta: { ...selectedSecret.meta, updatedAt: now },
+                    };
+
+                    const mek = await DeviceStoreManager.getMek();
+                    if (!mek) {
+                      toast.error('Encryption key missing');
+                      return;
+                    }
+
+                    const { encryptedData, iv } = await encryptData(updatedSecret, mek);
+                    await updateVaultItem({
+                      id: updatedSecret.id,
+                      encryptedData,
+                      iv,
+                      version: Date.now(),
+                    });
+
+                    await scheduleForItem(updatedSecret as any);
+                    toast.success('Rotation clock reset!');
+                  }}
+                  className="rounded-full bg-emerald-500/20 px-3 py-1">
+                  <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500">
+                    ROTATE NOW
+                  </Text>
+                </TouchableOpacity>
               </View>
-              {/* Fake Password Strength Meter */}
-              <View className="mb-4 flex-row gap-1">
-                <View className="h-1.5 flex-1 rounded-full bg-emerald-500" />
-                <View className="h-1.5 flex-1 rounded-full bg-emerald-500" />
-                <View className="h-1.5 flex-1 rounded-full bg-emerald-500" />
-                <View className="h-1.5 flex-1 rounded-full bg-emerald-500/30" />
-              </View>
-              {/* Fake Rotate Reminder */}
+
               <View className="flex-row items-center justify-between border-t border-emerald-500/10 pt-3">
                 <Text className="text-sm font-medium text-emerald-700 dark:text-emerald-400/80">
-                  Auto-Rotate Reminder
+                  Next Scheduled
                 </Text>
                 <Text className="text-sm font-semibold text-emerald-600 dark:text-emerald-500">
-                  In {selectedSecret.meta?.autoRotateDays || 90} days
+                  {selectedSecret.meta?.autoRotateDays
+                    ? new Date(
+                        Number(selectedSecret.meta.updatedAt) +
+                          selectedSecret.meta.autoRotateDays * 86400000
+                      ).toLocaleDateString()
+                    : 'Not set'}
                 </Text>
               </View>
             </View>
