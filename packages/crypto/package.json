@@ -26,7 +26,7 @@
     "hash-wasm": "^4.12.0"
   },
   "devDependencies": {
-    "@securevault/eslint-config": "workspace:*",
+    "@securevault/config-eslint": "workspace:*",
     "@securevault/typescript-config": "workspace:*",
     "@types/node": "^25.3.2"
   }

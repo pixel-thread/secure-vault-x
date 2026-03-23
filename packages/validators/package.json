@@ -23,8 +23,7 @@
   "dependencies": {
     "zod": "^3.22.4",
     "@securevault/types": "workspace:*",
-    "@securevault/eslint-config": "workspace:*",
+    "@securevault/config-eslint": "workspace:*",
     "@securevault/typescript-config": "workspace:*"
   }
 }
-

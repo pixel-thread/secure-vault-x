@@ -9,8 +9,8 @@
     "start": "expo start",
     "dev": "APP_VARIANT=development expo start -c",
     "prebuild": "expo prebuild",
-    "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
-    "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "db:generate": "drizzle-kit generate",
     "android": "expo run:android",
     "ios": "expo run:ios"
@@ -85,14 +85,11 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@securevault/config-eslint": "workspace:*",
+    "@securevault/config-prettier": "workspace:*",
     "@types/react": "~19.1.10",
     "babel-plugin-inline-import": "^3.0.0",
     "drizzle-kit": "^0.31.9",
-    "eslint": "^9.25.1",
-    "eslint-config-expo": "~10.0.0",
-    "eslint-config-prettier": "^10.1.2",
-    "prettier": "^3.2.5",
-    "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.0"
   },
   "private": true

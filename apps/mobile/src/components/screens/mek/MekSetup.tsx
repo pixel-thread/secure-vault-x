@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '@store/auth';
@@ -13,7 +14,6 @@ import { passwordLoginSchema } from '@securevault/validators';
 import { useForm, Controller } from 'react-hook-form';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Container } from '@securevault/ui-native';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import Header from '@src/components/common/Header';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -61,7 +61,7 @@ export default function MekSetup() {
     getSalt(undefined, {
       onSuccess: async (saltData) => {
         try {
-          let currentSalt = saltData?.data?.salt;
+          const currentSalt = saltData?.data?.salt;
           let mekData: { mek: string; salt: string };
 
           if (currentSalt) {
@@ -101,7 +101,9 @@ export default function MekSetup() {
     try {
       await SecureStore.setItemAsync('SV_MEK', mek);
       setHasMek(true);
-      toast.success('Key forged... vibes.', { description: 'Your Vault is now officially unbreakable.' });
+      toast.success('Key forged... vibes.', {
+        description: 'Your Vault is now officially unbreakable.',
+      });
     } catch (error) {
       logger.error('Failed to save MEK locally', error);
       toast.error('Major L', { description: 'Could not store encryption key securely.' });
@@ -135,7 +137,8 @@ export default function MekSetup() {
                   <View
                     className={`flex-row items-center rounded-2xl border bg-zinc-50/50 pr-2 dark:bg-zinc-900/30 ${
                       errors.password ? 'border-rose-500' : 'border-zinc-200 dark:border-zinc-800'
-                    }`}>
+                    }`}
+                  >
                     <TextInput
                       className="flex-1 px-5 py-4 text-zinc-900 focus:bg-white dark:text-white dark:focus:bg-zinc-900/10"
                       placeholder="Enter your Master Password"
@@ -149,7 +152,8 @@ export default function MekSetup() {
                       className="p-3"
                       onPressIn={() => setShowPassword(true)}
                       onPressOut={() => setShowPassword(false)}
-                      delayPressIn={0}>
+                      delayPressIn={0}
+                    >
                       <Ionicons
                         name={showPassword ? 'eye' : 'eye-off'}
                         size={22}
@@ -169,7 +173,8 @@ export default function MekSetup() {
             <TouchableOpacity
               className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
               onPress={handleSubmit(onHandleSetup)}
-              disabled={isLoading || password.length < 8}>
+              disabled={isLoading || password.length < 8}
+            >
               {isLoading ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (

@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { eq, and, isNull, lt } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { logger } from '@securevault/utils-native';
 import { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import * as schema from '@libs/database/schema';
@@ -52,7 +52,6 @@ export class NotificationScheduleService {
               seconds: Math.floor((sched.scheduledFor - Date.now()) / 1000),
               repeats: false,
             },
-
           });
         }
 
@@ -71,7 +70,7 @@ export class NotificationScheduleService {
 
       logger.info(`[NotificationScheduleService] Scheduled ${schedules.length} notifications`);
     } catch (error) {
-      logger.error('[NotificationScheduleService] Internal scheduling error');
+      logger.error('[NotificationScheduleService] Internal scheduling error', error);
     }
   }
 
@@ -101,13 +100,12 @@ export class NotificationScheduleService {
           seconds: Math.floor(delayMs / 1000),
           repeats: false,
         },
-
       });
 
       logger.info(`[NotificationScheduleService] Test notification scheduled in ${delayMs}ms`);
       return id;
     } catch (error) {
-      logger.error('[NotificationScheduleService] Test schedule failed');
+      logger.error('[NotificationScheduleService] Test schedule failed', error);
       return null;
     }
   }
@@ -122,8 +120,8 @@ export class NotificationScheduleService {
       .where(
         and(
           eq(schema.notificationSchedule.itemId, itemId),
-          eq(schema.notificationSchedule.status, 'pending')
-        )
+          eq(schema.notificationSchedule.status, 'pending'),
+        ),
       );
 
     for (const row of pending) {
@@ -138,8 +136,8 @@ export class NotificationScheduleService {
       .where(
         and(
           eq(schema.notificationSchedule.itemId, itemId),
-          eq(schema.notificationSchedule.status, 'pending')
-        )
+          eq(schema.notificationSchedule.status, 'pending'),
+        ),
       );
   }
 
@@ -169,14 +167,14 @@ export class NotificationScheduleService {
     }
   }
 
-
   private calculateSchedules(item: VaultSecretT): Array<{
     type: string;
     scheduledFor: number;
     title: string;
     body: string;
   }> {
-    const schedules: Array<{ type: string; scheduledFor: number; title: string; body: string }> = [];
+    const schedules: Array<{ type: string; scheduledFor: number; title: string; body: string }> =
+      [];
     const now = Date.now();
 
     // Mapping logic to handle different secret structures
@@ -228,8 +226,9 @@ export class NotificationScheduleService {
         const [mm, yy] = expField.split('/');
         const expiryDate = new Date(parseInt(`20${yy}`), parseInt(mm) - 1, 1).getTime();
         const notifyDaysBefore = 30;
-        
-        const cardNumField = item.fields?.find((f) => f.label.toLowerCase().includes('card number'))?.value || '';
+
+        const cardNumField =
+          item.fields?.find((f) => f.label.toLowerCase().includes('card number'))?.value || '';
         const last4 = cardNumField.slice(-4);
 
         if (expiryDate - notifyDaysBefore * 86400000 > now) {

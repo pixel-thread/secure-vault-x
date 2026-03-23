@@ -30,7 +30,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@securevault/eslint-config": "workspace:*",
+    "@securevault/config-eslint": "workspace:*",
     "@securevault/typescript-config": "workspace:*",
     "@types/react": "~19.1.10",
     "@types/react-native": "^0.73.0",

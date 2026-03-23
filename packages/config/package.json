@@ -1,24 +1,24 @@
 {
- "name": "@securevault/config",
- "version": "1.0.0",
- "private": true,
- "main": "./dist/index.js",
- "react-native": "./src/index.ts",
- "source": "./src/index.ts",
- "types": "./dist/index.d.ts",
- "exports": {
-  ".": {
-   "types": "./dist/index.d.ts",
-   "default": "./dist/index.js"
+  "name": "@securevault/config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "react-native": "./src/index.ts",
+  "source": "./src/index.ts",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "tsc",
+    "build": "tsc",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@securevault/config-eslint": "workspace:*",
+    "@securevault/typescript-config": "workspace:*"
   }
- },
- "scripts": {
-  "generate": "tsc",
-  "build": "tsc",
-  "lint": "eslint ."
- },
- "devDependencies": {
-  "@securevault/eslint-config": "workspace:*",
-  "@securevault/typescript-config": "workspace:*"
- }
 }

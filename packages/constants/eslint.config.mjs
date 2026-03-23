@@ -1,4 +1,4 @@
-import { config } from "@securevault/eslint-config/react-internal";
+import { config } from "@securevault/config-eslint/node";
 
 /** @type {import("eslint").Linter.Config[]} */
 export default config;

@@ -24,7 +24,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@securevault/eslint-config": "workspace:*",
+    "@securevault/config-eslint": "workspace:*",
     "@securevault/typescript-config": "workspace:*",
     "expo-secure-store": "~15.0.8"
   }
