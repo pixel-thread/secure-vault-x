@@ -18,8 +18,11 @@
     "@prisma/adapter-pg": "7.0.0",
     "@prisma/client": "7.0.0",
     "@securevault/constants": "workspace:*",
-    "@securevault/crypto": "workspace:^",
-    "@securevault/validators": "workspace:^",
+    "@securevault/crypto": "workspace:*",
+    "@securevault/validators": "workspace:*",
+    "@securevault/eslint-config": "workspace:*",
+    "@securevault/types": "workspace:*",
+    "@securevault/typescript-config": "workspace:*",
     "@simplewebauthn/server": "^13.2.3",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.4",
@@ -36,9 +39,6 @@
     "zustand": "^4.5.1"
   },
   "devDependencies": {
-    "@securevault/eslint-config": "workspace:*",
-    "@securevault/types": "workspace:*",
-    "@securevault/typescript-config": "workspace:*",
     "@types/bcryptjs": "^3.0.0",
     "@types/jest": "^30.0.0",
     "@types/pg": "^8.0.0",
@@ -51,4 +51,3 @@
     "vitest": "^4.1.0"
   }
 }
-

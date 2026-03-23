@@ -10,8 +10,8 @@ export const ScreenCaptureProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     // 2. Screenshot Detection & Toast
     const subscription = ScreenCapture.addScreenshotListener(() => {
-      toast.error('Screen capture is disabled for security', {
-        description: 'Sharing sensitive data is prohibited.',
+      toast.error('No peeking', {
+        description: 'Screen capture is blocked for your protection.',
       });
     });
 

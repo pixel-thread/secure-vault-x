@@ -1,8 +1,9 @@
 import { Container } from '@securevault/ui-native';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, RefreshControl } from 'react-native';
 import Header from '@components/common/Header';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
+import { useVaultContext } from '@hooks/vault/useVaultContext';
 import AppAppearanceSection from './AppAppearanceSection';
 import SecurityControlsSection from './SecurityControlsSection';
 import PendingOtpsSection from './PendingOtpsSection';
@@ -16,6 +17,7 @@ import SignOutButton from './SignOutButton';
  */
 export default function SettingsScreen() {
   const [isCurrentDeviceTrusted, setIsCurrentDeviceTrusted] = useState(false);
+  const { sync, isLoading } = useVaultContext();
 
   return (
     <Container>
@@ -25,7 +27,15 @@ export default function SettingsScreen() {
         <ScrollView
           className="flex-1 p-6"
           contentContainerStyle={{ paddingBottom: 80 }}
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading.isSyncing}
+              onRefresh={sync}
+              tintColor="#10b981"
+              colors={['#10b981']}
+            />
+          }>
           <AppAppearanceSection />
           <SecurityControlsSection />
           <PendingOtpsSection isCurrentDeviceTrusted={isCurrentDeviceTrusted} />

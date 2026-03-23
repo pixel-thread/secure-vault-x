@@ -3,8 +3,8 @@ import { logger } from '@securevault/utils-native';
 import { VaultContext } from '@src/libs/context/VaultContext';
 import { VaultService } from '@src/services/VaultService';
 import { SyncService } from '@src/services/SyncService';
-import { VaultContextT } from '@src/types/vault';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { VaultContextT, VaultSecretT } from '@src/types/vault';
+import { useMutation, useInfiniteQuery, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 import { useDB } from '@hooks/useDB';
 import { useAuthStore } from '@src/store/auth';
@@ -58,21 +58,34 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
    * 3. Fetch Vault Items
    * -------------------------------
    */
-  const { data: vaultItems = [], isLoading: isFetching } = useQuery({
+  const {
+    data,
+    isLoading: isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['vault', user?.id],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }: { pageParam: unknown }) => {
       if (!vaultService) return [];
-      return await vaultService.getVaultItems();
+      return await vaultService.getVaultItems({ limit: 20, offset: pageParam as number });
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: VaultSecretT[], allPages: VaultSecretT[][]) => {
+      if (lastPage.length < 20) return undefined;
+      return allPages.length * 20;
     },
     enabled: isReady,
   });
+
+  const vaultItems = useMemo(() => data?.pages.flat() ?? [], [data]);
 
   /**
    * -------------------------------
    * 4. Sync Mutation
    * -------------------------------
    */
-  const { mutateAsync: syncMutate, isPending: isSyncing } = useMutation({
+  const { mutate: syncMutate, isPending: isSyncing } = useMutation({
     mutationFn: async () => {
       await waitForReady();
       if (!syncService) return;
@@ -85,12 +98,12 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       queryClient.invalidateQueries({ queryKey: ['vault', user.id] });
 
       logger.info('Sync successful', {
-        userId: user.id,
+        userId: !!user.id,
         timeStamp: Date.now(),
       });
     },
-    onError: (err: any) => {
-      toast.error('Sync failed', { description: err.message });
+    onError: (err: Error) => {
+      toast.error('Major L', { description: 'Sync acting up.' });
     },
   });
 
@@ -107,21 +120,20 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       return await vaultService.deleteVaultItem(id);
     },
     onSuccess: async () => {
-      toast.success('Deleted successfully');
-
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['vault', user.id] });
       }
 
       // Background sync (safe)
       try {
-        await syncMutate();
+        toast.success('Ghosted');
+        syncMutate();
       } catch (e) {
         logger.error('Post-delete sync failed', { error: e });
       }
     },
-    onError: (err: any) => {
-      toast.error('Delete failed', { description: err.message });
+    onError: (err: Error) => {
+      toast.error('Major L', { description: 'Could not delete.' });
     },
   });
 
@@ -131,44 +143,43 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
    * -------------------------------
    */
   const { mutateAsync: saveItem, isPending: isSaving } = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: unknown) => {
       await waitForReady();
       if (!vaultService) throw new Error('Service not ready');
 
       return await vaultService.saveVaultItem(data);
     },
     onSuccess: async () => {
-      toast.success('Vault updated');
-
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['vault', user.id] });
       }
 
       // Background sync
       try {
-        await syncMutate();
+        syncMutate();
       } catch (e) {
         logger.error('Post-save sync failed', { error: e });
       }
+      toast.success('Manifested');
     },
-    onError: (err: any) => {
-      toast.error('Save failed', { description: err.message });
+    onError: (err: Error) => {
+      toast.error('Major L', { description: 'Could not update.' });
     },
   });
 
   const { mutateAsync: updateItem, isPending: isUpdating } = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: unknown) => {
       if (!vaultService) throw new Error('Service not ready');
       return await vaultService.updateVaultItem(data);
     },
     onSuccess: () => {
-      toast.success('Vault updated');
+      toast.success('Manifested');
       queryClient.invalidateQueries({ queryKey: ['vault'] });
       // Trigger background sync
-      syncMutate().catch((e) => logger.error('Post-save sync failed', { error: e }));
+      syncMutate();
     },
-    onError: (err: any) => {
-      toast.error('Save failed', { description: err.message });
+    onError: (err: Error) => {
+      toast.error('Major L', { description: 'Update failed.' });
     },
   });
 
@@ -177,7 +188,13 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
    * 7. Context Methods
    * -------------------------------
    */
-  const getVaultItems = useCallback(async () => vaultItems, [vaultItems]);
+  const getVaultItems = useCallback(
+    async (params?: { limit?: number; offset?: number }) => {
+      if (!vaultService) return [];
+      return vaultService.getVaultItems(params);
+    },
+    [vaultService]
+  );
 
   const removeVaultItem = useCallback(
     async (id: string) => {
@@ -187,14 +204,14 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const addVaultItem = useCallback(
-    async (input: any) => {
+    async (input: unknown) => {
       await saveItem(input);
     },
     [saveItem]
   );
 
   const updateVaultItem = useCallback(
-    async (input: any) => {
+    async (input: unknown) => {
       await updateItem(input);
     },
     [updateItem]
@@ -202,13 +219,13 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
 
   const getVaultItem = useCallback(
     async (id: string) => {
-      return vaultItems.find((i) => i.id === id) || null;
+      return vaultItems.find((i: VaultSecretT) => i.id === id) || null;
     },
     [vaultItems]
   );
 
   const sync = useCallback(async () => {
-    await syncMutate();
+    syncMutate();
   }, [syncMutate]);
 
   /**
@@ -226,6 +243,9 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       sync,
       vaultItems,
       isVaultReady: isReady,
+      fetchNextPage,
+      hasNextPage,
+      isFetchingNextPage,
       isLoading: {
         isFetching,
         isSaving,
@@ -243,6 +263,9 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       sync,
       vaultItems,
       isReady,
+      fetchNextPage,
+      hasNextPage,
+      isFetchingNextPage,
       isFetching,
       isSaving,
       isDeleting,

@@ -16,6 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Container } from '@securevault/ui-native';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import Header from '@src/components/common/Header';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const schema = passwordLoginSchema.pick({ password: true });
 
@@ -78,20 +79,20 @@ export default function MekSetup() {
               },
               onError: (error) => {
                 logger.error('Failed to save salt to backend', error);
-                toast.error('Setup Failed', { description: 'Could not save encryption settings.' });
+                toast.error('Major L', { description: 'Could not save encryption settings.' });
               },
             });
           }
         } catch (error) {
           logger.error('MEK Generation Error', error instanceof Error ? error.message : error);
-          toast.error('Setup Failed', {
+          toast.error('Major L', {
             description: 'An error occurred during encryption setup.',
           });
         }
       },
       onError: (error) => {
         logger.error('Failed to get salt', error);
-        toast.error('Setup Failed', { description: 'Could not retrieve encryption settings.' });
+        toast.error('Major L', { description: 'Could not retrieve encryption settings.' });
       },
     });
   };
@@ -100,24 +101,25 @@ export default function MekSetup() {
     try {
       await SecureStore.setItemAsync('SV_MEK', mek);
       setHasMek(true);
-      toast.success('Key Forged!', { description: 'Your Vault is now officially unbreakable.' });
+      toast.success('Key forged... vibes.', { description: 'Your Vault is now officially unbreakable.' });
     } catch (error) {
       logger.error('Failed to save MEK locally', error);
-      toast.error('Setup Failed', { description: 'Could not store encryption key securely.' });
+      toast.error('Major L', { description: 'Could not store encryption key securely.' });
     }
   };
 
   return (
-    <Container>
+    <SafeAreaView className="flex-1 bg-background">
       <ScreenContainer>
-        <Header title="The Forge" subtitle="Let's lock it down" isSyncing={isLoading} />
+        <Header title="The Forge" subtitle="Let's lock it down" />
         <View className="flex-1 px-6 pt-12">
-          <View className="items-center mb-10">
+          <View className="mb-10 items-center">
             <View className="mb-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-6 shadow-lg shadow-emerald-500/10">
               <Ionicons name="shield-checkmark-outline" size={56} color="#10b981" />
             </View>
-            <Text className="text-center text-base font-medium leading-6 text-zinc-500 dark:text-zinc-400 px-4">
-              Your vault is protected by a Master Encryption Key (MEK) forged from your Master Password. We never store this key — only you have the access.
+            <Text className="px-4 text-center text-base font-medium leading-6 text-zinc-500 dark:text-zinc-400">
+              Your vault is protected by a Master Encryption Key (MEK) forged from your Master
+              Password. We never store this key — only you have the access.
             </Text>
           </View>
 
@@ -158,7 +160,9 @@ export default function MekSetup() {
                 )}
               />
               {errors.password && (
-                <Text className="ml-1 text-sm font-medium text-rose-500">{errors.password.message}</Text>
+                <Text className="ml-1 text-sm font-medium text-rose-500">
+                  {errors.password.message}
+                </Text>
               )}
             </View>
 
@@ -178,13 +182,14 @@ export default function MekSetup() {
 
             <View className="mt-4 rounded-2xl border border-zinc-100 bg-zinc-50/30 p-5 dark:border-zinc-800 dark:bg-zinc-900/20">
               <Text className="text-center text-xs font-medium italic leading-5 text-zinc-500 dark:text-zinc-400">
-                <Text className="font-bold text-zinc-900 dark:text-white">Heads up:</Text> We never store or see your password. It's used to forge your unique MEK. If you lose this password, your vault is gone forever. Keep it on lock.
+                <Text className="font-bold text-zinc-900 dark:text-white">Heads up:</Text> We never
+                store or see your password. It's used to forge your unique MEK. If you lose this
+                password, your vault is gone forever. Keep it on lock.
               </Text>
             </View>
           </View>
         </View>
       </ScreenContainer>
-    </Container>
+    </SafeAreaView>
   );
 }
-

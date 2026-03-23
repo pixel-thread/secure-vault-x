@@ -3,7 +3,8 @@ import { Container } from '@securevault/ui-native';
 import { logger } from '@securevault/utils-native';
 import { useRouter } from 'expo-router';
 import { useState, useCallback } from 'react';
-import { View, Alert, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { toast } from 'sonner-native';
 import Header from '@components/common/Header';
 import { Ternary } from '@src/components/common/Ternary';
@@ -19,7 +20,7 @@ import { VaultItem } from './VaultItem';
 export default function VaultScreen() {
   const router = useRouter();
   const [isSeeding, setIsSeeding] = useState(false);
-  const isDev = process.env.APP_VARIANT !== 'production' || process.env.NODE_ENV === 'development';
+  const isDev = process.env.NODE_ENV === 'development';
 
   const {
     vaultItems: vaults,
@@ -27,9 +28,8 @@ export default function VaultScreen() {
     addVaultItem,
     deleteVaultItem,
     sync,
+    fetchNextPage,
   } = useVaultContext();
-
-  const isSyncingOrLoading = contextLoading.isPending;
 
   // --- HANDLERS ---
 
@@ -46,12 +46,13 @@ export default function VaultScreen() {
     if (isSeeding) return;
     setIsSeeding(true);
     try {
+      // @ts-ignore
       await seedVaultItems(addVaultItem);
-      toast.success('Seeded 100 items... manifesting success!');
+      toast.success('Manifested 100 items... manifesting success!');
       await sync();
     } catch (error: any) {
       logger.error('[VaultScreen] Seed failed', { error });
-      toast.error('Seed failed, major L.');
+      toast.error('Major L. Seed failed.');
     } finally {
       setIsSeeding(false);
     }
@@ -59,6 +60,7 @@ export default function VaultScreen() {
 
   const onClearDevItems = useCallback(async () => {
     if (vaults.length === 0) return;
+
     Alert.alert('Clear everything?', `Delete all ${vaults.length} items? This is a total reset.`, [
       { text: 'Never mind', style: 'cancel' },
       {
@@ -67,8 +69,7 @@ export default function VaultScreen() {
         onPress: async () => {
           setIsSeeding(true);
           try {
-            await clearVaultItems(vaults, deleteVaultItem);
-            await sync();
+            await clearVaultItems(vaults, deleteVaultItem).finally(() => sync());
           } finally {
             setIsSeeding(false);
           }
@@ -91,7 +92,6 @@ export default function VaultScreen() {
       <Header
         title="My Stash"
         subtitle="Safe as houses"
-        isSyncing={contextLoading.isSyncing}
         rightElement={
           <View className="flex-row">
             {isDev && (
@@ -109,6 +109,16 @@ export default function VaultScreen() {
 
                 <TouchableOpacity
                   className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/80"
+                  onPress={() => router.push('/dev/database')}
+                  disabled={isSeeding}>
+                  {isSeeding ? (
+                    <ActivityIndicator size="small" color="#ef4444" />
+                  ) : (
+                    <Ionicons name="server-outline" size={24} color="#ef4444" />
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/80"
                   onPress={onClearDevItems}
                   disabled={isSeeding}>
                   {isSeeding ? (
@@ -119,35 +129,27 @@ export default function VaultScreen() {
                 </TouchableOpacity>
               </>
             )}
-
-            <TouchableOpacity
-              className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/80"
-              onPress={onManualSync}>
-              {isSyncingOrLoading ? (
-                <ActivityIndicator size="small" color="#10b981" />
-              ) : (
-                <Ionicons name="sync" size={24} color="#10b981" />
-              )}
-            </TouchableOpacity>
           </View>
         }
       />
 
-      <Ternary
-        condition={vaults.length > 0}
-        ifTrue={
-          <FlatList
-            data={vaults ?? []}
-            refreshing={isSyncingOrLoading}
-            onRefresh={sync}
-            keyExtractor={(item) => item.id}
-            contentContainerClassName="px-6 py-6 pb-32"
-            className="flex-1"
-            ListEmptyComponent={<VaultEmpty />}
-            renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
-          />
+      <FlashList
+        data={vaults ?? []}
+        onRefresh={onManualSync}
+        refreshing={contextLoading.isSyncing}
+        onEndReached={fetchNextPage}
+        onEndReachedThreshold={0.5}
+        // @ts-ignore - estimatedItemSize type check fails in this React Native version
+        estimatedItemSize={80}
+        keyExtractor={(item) => item.id}
+        contentContainerClassName="px-6 py-6 pb-32"
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        className="flex-1"
+        ListEmptyComponent={
+          <VaultEmpty onRefresh={onManualSync} isRefreshing={contextLoading.isSyncing} />
         }
-        ifFalse={<VaultEmpty />}
+        renderItem={({ item }) => <VaultItem item={item} onSelectItem={onSelectItem} />}
       />
 
       <TouchableOpacity

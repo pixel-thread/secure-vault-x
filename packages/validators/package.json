@@ -1,28 +1,30 @@
 {
- "name": "@securevault/validators",
- "version": "1.0.0",
- "private": true,
- "main": "./dist/index.js",
- "react-native": "./src/index.ts",
- "source": "./src/index.ts",
- "types": "./dist/index.d.ts",
- "exports": {
-  ".": {
-   "types": "./dist/index.d.ts",
-   "default": "./dist/index.js"
+  "name": "@securevault/validators",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "react-native": "./src/index.ts",
+  "source": "./src/index.ts",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-native": "./src/index.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "tsc",
+    "build": "tsc",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "zod": "^3.22.4",
+    "@securevault/types": "workspace:*",
+    "@securevault/eslint-config": "workspace:*",
+    "@securevault/typescript-config": "workspace:*"
   }
- },
- "scripts": {
-  "generate": "tsc",
-  "build": "tsc",
-  "lint": "eslint ."
- },
- "dependencies": {
-  "zod": "^3.22.4",
-  "@securevault/types": "workspace:*"
- },
- "devDependencies": {
-  "@securevault/eslint-config": "workspace:*",
-  "@securevault/typescript-config": "workspace:*"
- }
 }
+

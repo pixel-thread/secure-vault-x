@@ -14,14 +14,24 @@ export const loginSchema = z.object({
   ...baseSecretSchema,
   Username: z.string().min(1, "Username is required"),
   Password: z.string().min(1, "Password is required"),
-  "Website URL": z.string().url("Invalid URL").optional().or(z.literal("")),
+  "Website URL": z.preprocess((val) => {
+    if (typeof val !== "string" || val === "") return val;
+    if (!val.startsWith("http://") && !val.startsWith("https://")) {
+      return `https://${val}`;
+    }
+    return val;
+  }, z.string().url("Invalid URL").optional().or(z.literal(""))),
 });
 
 export const cardSchema = z.object({
   ...baseSecretSchema,
   "Cardholder Name": z.string().min(1, "Name on card is required"),
-  "Card Number": z.string().regex(/^\d{13,19}$/, "Card number must be 13-19 digits"),
-  "Expiry Date": z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Use MM/YY format"),
+  "Card Number": z
+    .string()
+    .regex(/^\d{13,19}$/, "Card number must be 13-19 digits"),
+  "Expiry Date": z
+    .string()
+    .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Use MM/YY format"),
   CVV: z.string().regex(/^\d{3,4}$/, "CVV must be 3 or 4 digits"),
 });
 
@@ -92,8 +102,10 @@ export function getSecretSchema(type: SecretType) {
       return fileSchema;
     default:
       // Fallback for custom or unmapped types
-      return z.object({
-        ...baseSecretSchema,
-      }).passthrough();
+      return z
+        .object({
+          ...baseSecretSchema,
+        })
+        .passthrough();
   }
 }

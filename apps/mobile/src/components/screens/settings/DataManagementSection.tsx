@@ -8,11 +8,14 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useVaultContext } from '@src/hooks/vault/useVaultContext';
 import { isBiometricAvailable, authenticateWithBiometric } from '@utils/biometricLock';
+import { useNotification } from '@hooks/useNotification';
+import { scheduleTestNotifications } from '@src/utils/vault/dev';
 
 export default function DataManagementSection() {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const { vaultItems } = useVaultContext();
+  const { scheduleTest } = useNotification();
 
   const handleExportVault = useCallback(async () => {
     try {
@@ -21,7 +24,7 @@ export default function DataManagementSection() {
       if (isEnabledBiometric) {
         const success = await authenticateWithBiometric();
         if (!success) {
-          toast.error('Authentication failed — biometric lock remained enabled');
+          toast.error('Vibe check failed', { description: 'Biometrics required.' });
           return;
         }
       }
@@ -29,7 +32,7 @@ export default function DataManagementSection() {
       const header = 'Service Name, Username, Password, Website, Notes\n';
 
       if (vaultItems.length === 0) {
-        toast.error('Vault is empty');
+        toast.error('Vault is empty... lonely vibes.');
         return;
       }
 
@@ -38,10 +41,12 @@ export default function DataManagementSection() {
       });
 
       const rows = vaultItems
-        .map(
-          (item) =>
-            `${item.serviceName},${item.username},${item.secretInfo}, ${item.website},${item.note}`
-        )
+        .map((item) => {
+          const u = item.fields?.find((f) => f.label.toLowerCase().includes('user'))?.value || '';
+          const p = item.fields?.find((f) => f.label.toLowerCase().includes('password') || f.label.toLowerCase().includes('card') || f.label.toLowerCase().includes('cvv'))?.value || '';
+          const w = item.fields?.find((f) => f.label.toLowerCase().includes('url') || f.label.toLowerCase().includes('website'))?.value || '';
+          return `${item.title || ''},${u},${p}, ${w},${item.note || ''}`;
+        })
         .join('\n');
 
       const csv = `${header}${rows}`;
@@ -95,6 +100,35 @@ export default function DataManagementSection() {
           <Ionicons name="chevron-forward" size={20} color="#71717a" />
         </TouchableOpacity>
       </View>
+
+      {__DEV__ && (
+        <>
+          <Text className="mb-3 ml-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+            Developer Tools
+          </Text>
+          <View className="mb-8 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
+            <TouchableOpacity
+              className="flex-row items-center p-5 active:bg-zinc-200 dark:active:bg-zinc-800/60"
+              onPress={async () => {
+                await scheduleTestNotifications(vaultItems, scheduleTest);
+                toast.success('Alerts queued... testing the vibe.');
+              }}>
+              <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
+                <Ionicons
+                  name="flask-outline"
+                  size={22}
+                  color="#d97706"
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-lg font-bold text-zinc-900 dark:text-white">Schedule Test Alerts</Text>
+                <Text className="text-sm text-zinc-500 dark:text-zinc-400">Fire alerts for all types (+1m each)</Text>
+              </View>
+              <Ionicons name="notifications-outline" size={20} color="#71717a" />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </>
   );
 }

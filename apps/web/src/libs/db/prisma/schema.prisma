@@ -65,7 +65,7 @@ model Vault {
   userId        String
   encryptedData String
   iv            String?
-  version       Int       @default(1)
+  version       BigInt    @default(1)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
@@ -169,15 +169,15 @@ enum EASWebhookType {
 }
 
 model EASWebhook {
-  id                  String             @id @default(uuid()) @db.Uuid
-  easId               String             @unique // EAS build/update/submit id
-  type                EASWebhookType
-  accountName         String
-  projectName         String
-  appId               String?
-  platform            AppVersionPlatform?
-  status              EASBuildStatus
-  detailsPageUrl      String?
+  id             String              @id @default(uuid()) @db.Uuid
+  easId          String              @unique // EAS build/update/submit id
+  type           EASWebhookType
+  accountName    String
+  projectName    String
+  appId          String?
+  platform       AppVersionPlatform?
+  status         EASBuildStatus
+  detailsPageUrl String?
 
   // Artifacts (Build specific)
   buildUrl        String?
@@ -194,8 +194,8 @@ model EASWebhook {
   gitCommitMessage String?
 
   // Update specific
-  updateMessage   String?
-  branch          String?
+  updateMessage String?
+  branch        String?
 
   // Timestamps
   createdAt   DateTime

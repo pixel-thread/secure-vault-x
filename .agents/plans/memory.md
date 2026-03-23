@@ -23,3 +23,24 @@
 - Actions taken: Executed 16 individual, prefix-free git commits for each changed file in the feature set to ensure granular history and easy review. (1/file strategy)
 - Artifacts published: git-commit-artifact.md
 - Outcome: COMPLETE
+
+2026-03-21 21:55 - [EXEC/IMPL] Paginate Vault Data
+- Mode used: EXECUTION
+- Actions taken: Installed `@shopify/flash-list`. Updated `VaultService` to paginate. Replaced `VaultProvider` `useQuery` with `useInfiniteQuery`. Switched `VaultScreen` `FlatList` to `FlashList` for native performance.
+- Artifacts published: plans/active_feature_plan.md (implementation)
+- Security findings summary: none (User isolated querying retained, pagination prevents memory/decryption bottlenecks)
+- Outcome: COMPLETE
+- 2026-03-21 16:55
+- [DESIGN] Modernize Vault Screens
+- mode: EXECUTION -> VERIFICATION
+- Updated `ViewSecretScreen`, `AddSecret`, `UpdateSecretScreen`, `AddSecretForm`, `FormField`, `FileDetailView` to implement a structural card design, hero sections, and collapsible meta sections.
+- Artifacts: walkthrough.md updated
+- Security findings: none
+- COMPLETE
+
+2026-03-22 11:35 - [PLAN] Local DB Cleanup Cron Job
+- Mode used: PLAN
+- Actions taken: Created PRD, Implementation Plan, and task checklist for the background auto-cleanup service.
+- Artifacts published: implementation_plan.md (.agents/plans/active_feature_plan.md)
+- Security findings summary: none (planning complete)
+- Outcome: COMPLETE

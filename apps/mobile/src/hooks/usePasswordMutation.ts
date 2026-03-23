@@ -6,6 +6,7 @@ type SaveDTO = {
   id: string;
   encryptedData: string;
   iv: string;
+  version: number;
 };
 
 export type MutationMode = 'create' | 'edit';
@@ -35,17 +36,17 @@ export function usePasswordMutation(mode: MutationMode, onSuccess?: () => void) 
       }
 
       const message =
-        mode === 'edit' ? 'Password updated successfully' : 'Password added successfully';
+        mode === 'edit' ? 'Glow up complete' : 'Manifested';
       logger.info(`[usePasswordMutation] ${message}`);
       // toast is already handled in VaultProvider, but we can add another one or rely on that
-      onSuccess?.();
 
       logger.log('[usePasswordMutation] Triggering background sync');
       sync().catch((err) =>
         logger.error('[usePasswordMutation] Background sync failed', { error: err })
       );
-    } catch (error: any) {
-      logger.error('[usePasswordMutation] Failed to save secret', { error: error.message });
+      onSuccess?.();
+    } catch (error: unknown) {
+      logger.error('[usePasswordMutation] Failed to save secret', { error: error instanceof Error ? error.message : String(error) });
       // Error toast is also handled in VaultProvider
     } finally {
       setIsPending(false);

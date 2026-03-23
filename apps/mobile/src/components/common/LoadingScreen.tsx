@@ -32,7 +32,7 @@ export const LoadingScreen = ({ message = 'Securing your vault...' }: Props) => 
   return (
     <View
       style={StyleSheet.absoluteFill}
-      className="items-center justify-center bg-white dark:bg-[#09090b]">
+      className="items-center justify-center bg-background">
       <View className="items-center justify-center">
         {/* Icon Container - Matching LoginScreen Style */}
         <Animated.View

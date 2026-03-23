@@ -10,11 +10,13 @@ import { useAuthStore } from '@store/auth';
 import { useMutation } from '@tanstack/react-query';
 import { http } from '@securevault/utils-native';
 import { AUTH_ENDPOINT } from '@securevault/constants';
+import { useNotification } from '@hooks/useNotification';
 
 export default function SecurityControlsSection() {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const { user } = useAuthStore();
+  const { isNotificationsEnabled, toggleNotifications } = useNotification();
 
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
@@ -47,7 +49,7 @@ export default function SecurityControlsSection() {
 
       await DeviceStoreManager.setBiometricEnabled(value);
       setBiometricEnabled(value);
-      toast.success(value ? 'Biometric lock enabled' : 'Biometric lock disabled');
+      toast.success(value ? 'Secure AF' : 'Security lowered');
     },
     [biometricAvailable]
   );
@@ -61,8 +63,8 @@ export default function SecurityControlsSection() {
         setMfaEnabled(data.data.mfaEnabled);
         toast.success(
           data.data.mfaEnabled
-            ? 'Two-factor authentication enabled'
-            : 'Two-factor authentication disabled'
+            ? '2FA is on!'
+            : '2FA is off'
         );
       } else {
         // Toggle failed but returned 200 OK (e.g. wrapper error)
@@ -147,6 +149,28 @@ export default function SecurityControlsSection() {
             value={mfaEnabled}
             onValueChange={handleMfaToggle}
             disabled={mfaPending}
+            trackColor={{ false: '#3f3f46', true: '#059669' }}
+            thumbColor="#fff"
+          />
+        </View>
+
+        <View className="flex-row items-center border-t border-zinc-100 p-5 dark:border-zinc-800/50">
+          <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
+            <Ionicons
+              name="notifications-outline"
+              size={22}
+              color={isDarkMode ? '#10b981' : '#059669'}
+            />
+          </View>
+          <View className="flex-1">
+            <Text className="text-lg font-bold text-zinc-900 dark:text-white">Rotation Alerts</Text>
+            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+              Notify before secrets expire
+            </Text>
+          </View>
+          <Switch
+            value={isNotificationsEnabled}
+            onValueChange={toggleNotifications}
             trackColor={{ false: '#3f3f46', true: '#059669' }}
             thumbColor="#fff"
           />

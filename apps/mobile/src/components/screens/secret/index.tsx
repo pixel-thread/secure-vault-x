@@ -13,7 +13,7 @@ export default function Secrets() {
 
   return (
     <Container>
-      <StackHeader title="Secure Vault" />
+      <StackHeader title="Secure Vault X" />
       <ScrollView contentContainerClassName="px-6 py-8">
         <View>
           <Text className="mb-6 text-xl font-bold text-zinc-900 dark:text-white">

@@ -50,7 +50,7 @@ export default function MfaScreen() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_MFA_VERIFY, data),
-    onSuccess: async (data: any) => {
+    onSuccess: async (data: { success: boolean; data?: ApiRes; message?: string }) => {
       if (data.success) {
         const loginData = data?.data;
         if (loginData?.refreshToken && loginData?.accessToken) {
@@ -62,7 +62,7 @@ export default function MfaScreen() {
 
             const dName = Device.deviceName || `${Device.modelName || 'SecureVault Mobile'}`;
             const devId = await getDeviceIdentifier();
-            const res = await http.post<any>(DEVICE_ENDPOINT.POST_REGISTER_DEVICE, {
+            const res = await http.post<{ id: string }>(DEVICE_ENDPOINT.POST_REGISTER_DEVICE, {
               deviceName: dName,
               deviceIdentifier: devId,
               publicKey: keyPair.publicKey,
@@ -77,20 +77,21 @@ export default function MfaScreen() {
           }
 
           setIsAuthenticated(true);
-          toast.success('Access Granted!', {
+          toast.success('you r in', {
             description: 'The stash is open.',
           });
           router.replace('/(drawer)/(tabs)');
         }
       } else {
-        toast.error('Code failed', {
-          description: (data as any).message || 'Invalid code, try again.',
+        toast.error('Major L', {
+          description: data.message || 'Invalid code, try again.',
         });
       }
     },
-    onError: (err: any) => {
-      toast.error('Verification error', {
-        description: err?.response?.data?.message || 'The vibes are off.',
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : 'The vibes are off.';
+      toast.error('Major L', {
+        description: message,
       });
     },
   });

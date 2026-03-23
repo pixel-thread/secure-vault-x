@@ -13,6 +13,7 @@ export default function SecretLayout() {
         headerTintColor: isDarkMode ? '#fff' : '#000',
         headerTitleStyle: { color: isDarkMode ? '#fff' : '#000' },
         contentStyle: { backgroundColor: isDarkMode ? '#09090b' : '#fff' },
+        animation: 'slide_from_right',
       }}
     />
   );

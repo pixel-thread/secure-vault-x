@@ -3,17 +3,23 @@ import { MiddlewareFactory } from "./stackMiddleware";
 import { handleApiErrors } from "../errors/handleApiErrors";
 import { UnauthorizedError } from "../errors/unAuthError";
 import { JWTService } from "@/services/jwt.services";
+import {
+  APP_VERSION_ENDPOINT,
+  LOG_ENDPOINT,
+  AUTH_ENDPOINT,
+} from "@securevault/constants";
 
 const PUBLIC_API_ROUTES = new Set([
-  "/api/auth/register/generate-options",
-  "/api/auth/register/verify",
-  "/api/auth/login/generate-options",
-  "/api/auth/login/verify",
-  "/api/auth/password/register",
-  "/api/auth/password/login",
-  "/api/auth/mfa/verify",
-  "/api/auth/refresh",
-  "/api/logs",
+  AUTH_ENDPOINT.POST_REGISTER_GENERATE_OPTIONS,
+  AUTH_ENDPOINT.POST_LOGIN_GENERATE_OPTIONS,
+  AUTH_ENDPOINT.POST_REGISTER_VERIFY,
+  AUTH_ENDPOINT.POST_LOGIN_VERIFY,
+  AUTH_ENDPOINT.POST_REFRESH,
+  AUTH_ENDPOINT.POST_PASSWORD_LOGIN,
+  AUTH_ENDPOINT.POST_PASSWORD_REGISTER,
+  AUTH_ENDPOINT.POST_MFA_VERIFY,
+  APP_VERSION_ENDPOINT.GET_LATEST,
+  LOG_ENDPOINT.POST_LOGS,
 ]);
 
 export const withAuth: MiddlewareFactory = (next) => {

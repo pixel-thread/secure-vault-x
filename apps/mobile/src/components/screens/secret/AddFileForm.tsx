@@ -21,7 +21,6 @@ interface Props {
   onCancel?: () => void;
 }
 
-
 /**
  * ============================================================================
  * ADD FILE FORM COMPONENT
@@ -33,35 +32,36 @@ interface Props {
  * 4. Zero-Knowledge AES-256-GCM encryption
  * 5. Syncing to the secure vault
  */
-export function AddFileForm({ template, onSuccess, onCancel }: Props) {
+export function AddFileForm({ onSuccess, onCancel }: Props) {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  
-  const { 
-    fileInfo, 
-    isProcessing, 
-    pickFile, 
-    prepareEncryptionPayload 
-  } = useFileEncrypter();
 
-  const { control, handleSubmit, formState: { errors }, setValue } = useForm<any>({
+  const { fileInfo, isProcessing, pickFile, prepareEncryptionPayload } = useFileEncrypter();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm<{ title: string }>({
     defaultValues: { title: '' },
     // We don't use the full fileSchema here for the form because base64 is handled internally
-    resolver: zodResolver(fileSchema.omit({ fileName: true, fileSize: true, contentType: true, base64Data: true })),
+    resolver: zodResolver(
+      fileSchema.omit({ fileName: true, fileSize: true, contentType: true, base64Data: true })
+    ),
   });
 
   const { mutate, isPending } = usePasswordMutation('create', onSuccess);
 
-
-  const onSubmitForm = async (values: any) => {
+  const onSubmitForm = async (values: { title: string }) => {
     if (!fileInfo) {
-      toast.error('No file selected');
+      toast.error('No file selected... awkward.');
       return;
     }
 
     const payload = await prepareEncryptionPayload(values.title, fileInfo);
     if (payload) {
-      mutate(payload);
+      mutate({ ...payload, version: Date.now() });
     }
   };
 
@@ -87,7 +87,11 @@ export function AddFileForm({ template, onSuccess, onCancel }: Props) {
           }}
           className="flex-row items-center rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900/50">
           <View className="mr-4 h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
-            <Ionicons name={fileInfo ? 'document' : 'cloud-upload-outline'} size={24} color="#10b981" />
+            <Ionicons
+              name={fileInfo ? 'document' : 'cloud-upload-outline'}
+              size={24}
+              color="#10b981"
+            />
           </View>
           <View className="flex-1">
             <Text className="text-lg font-semibold text-zinc-900 dark:text-white">
@@ -117,8 +121,8 @@ export function AddFileForm({ template, onSuccess, onCancel }: Props) {
         </TouchableOpacity>
 
         {onCancel && (
-          <TouchableOpacity 
-            onPress={onCancel} 
+          <TouchableOpacity
+            onPress={onCancel}
             className="w-full flex-row items-center justify-center rounded-2xl border border-zinc-200 bg-white py-4 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-900/50">
             <Text className="text-lg font-bold text-zinc-900 dark:text-white">Cancel</Text>
           </TouchableOpacity>

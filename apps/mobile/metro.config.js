@@ -15,6 +15,7 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ];
+config.resolver.disableHierarchicalLookup = true; // Often helpful for pnpm monorepos
 
 // Existing SQL and Crypto logic
 config.resolver.sourceExts.push('sql');

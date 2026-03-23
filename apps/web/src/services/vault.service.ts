@@ -24,4 +24,16 @@ export class VaultService {
       data: { encryptedData, userId, iv, version: 1 },
     });
   }
+
+  static async updateSecret(
+    userId: string,
+    id: string,
+    data: { encryptedData: string; iv: string; version: number },
+  ) {
+    const { encryptedData, iv, version } = data;
+    return await prisma.vault.update({
+      where: { id, userId },
+      data: { encryptedData, iv, version },
+    });
+  }
 }
