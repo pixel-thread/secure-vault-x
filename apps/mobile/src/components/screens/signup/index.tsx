@@ -52,7 +52,9 @@ export default function SignupScreen() {
         toast.success('LFG!', { description: 'Account created. Time to log in.' });
         router.replace('/auth');
       } else {
-        toast.error('Registration failed', { description: data.message || 'The vibes are off, try again.' });
+        toast.error('Registration failed', {
+          description: data.message || 'The vibes are off, try again.',
+        });
       }
     },
   });
@@ -102,7 +104,9 @@ export default function SignupScreen() {
                   />
                 )}
               />
-              {errors.email && <Text className="ml-1 mt-1 text-sm text-red-500">{errors.email.message}</Text>}
+              {errors.email && (
+                <Text className="ml-1 mt-1 text-sm text-red-500">{errors.email.message}</Text>
+              )}
             </View>
 
             <View>
@@ -113,9 +117,11 @@ export default function SignupScreen() {
                 control={control}
                 name="password"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
-                    errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}>
+                  <View
+                    className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                      errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
+                    }`}
+                  >
                     <TextInput
                       className="flex-1 px-5 py-4 text-lg text-zinc-900 dark:text-white"
                       placeholder="The secret word..."
@@ -125,13 +131,23 @@ export default function SignupScreen() {
                       onBlur={onBlur}
                       secureTextEntry={!showPassword}
                     />
-                    <TouchableOpacity onPressIn={() => setShowPassword(true)} onPressOut={() => setShowPassword(false)} className="p-3">
-                      <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={22} color={showPassword ? '#10b981' : '#71717a'} />
+                    <TouchableOpacity
+                      onPressIn={() => setShowPassword(true)}
+                      onPressOut={() => setShowPassword(false)}
+                      className="p-3"
+                    >
+                      <Ionicons
+                        name={showPassword ? 'eye' : 'eye-off'}
+                        size={22}
+                        color={showPassword ? '#10b981' : '#71717a'}
+                      />
                     </TouchableOpacity>
                   </View>
                 )}
               />
-              {errors.password && <Text className="ml-1 mt-1 text-sm text-red-500">{errors.password.message}</Text>}
+              {errors.password && (
+                <Text className="ml-1 mt-1 text-sm text-red-500">{errors.password.message}</Text>
+              )}
             </View>
 
             <View>
@@ -142,9 +158,13 @@ export default function SignupScreen() {
                 control={control}
                 name="confirmPassword"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                  }`}>
+                  <View
+                    className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
+                      errors.confirmPassword
+                        ? 'border-red-500'
+                        : 'border-zinc-200 dark:border-zinc-800'
+                    }`}
+                  >
                     <TextInput
                       className="flex-1 px-5 py-4 text-lg text-zinc-900 dark:text-white"
                       placeholder="Once more..."
@@ -154,19 +174,32 @@ export default function SignupScreen() {
                       onBlur={onBlur}
                       secureTextEntry={!showPassword}
                     />
-                    <TouchableOpacity onPressIn={() => setShowPassword(true)} onPressOut={() => setShowPassword(false)} className="p-3">
-                      <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={22} color={showPassword ? '#10b981' : '#71717a'} />
+                    <TouchableOpacity
+                      onPressIn={() => setShowPassword(true)}
+                      onPressOut={() => setShowPassword(false)}
+                      className="p-3"
+                    >
+                      <Ionicons
+                        name={showPassword ? 'eye' : 'eye-off'}
+                        size={22}
+                        color={showPassword ? '#10b981' : '#71717a'}
+                      />
                     </TouchableOpacity>
                   </View>
                 )}
               />
-              {errors.confirmPassword && <Text className="ml-1 mt-1 text-sm text-red-500">{errors.confirmPassword.message}</Text>}
+              {errors.confirmPassword && (
+                <Text className="ml-1 mt-1 text-sm text-red-500">
+                  {errors.confirmPassword.message}
+                </Text>
+              )}
             </View>
 
             <TouchableOpacity
               className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
               disabled={isPending}
-              onPress={handleSubmit(onSubmit)}>
+              onPress={handleSubmit(onSubmit)}
+            >
               <Ionicons name="person-add-outline" size={24} color="#064e3b" />
               <Text className="ml-2 text-xl font-bold text-[#022c22]">
                 {isPending ? 'Joining...' : "I'm In"}
@@ -187,4 +220,3 @@ export default function SignupScreen() {
     </Container>
   );
 }
-

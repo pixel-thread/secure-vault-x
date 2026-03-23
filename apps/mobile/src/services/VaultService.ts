@@ -20,7 +20,7 @@ export class VaultService {
    */
   constructor(
     private readonly db: DrizzleDB,
-    private readonly userId: string
+    private readonly userId: string,
   ) {}
 
   /**
@@ -88,8 +88,8 @@ export class VaultService {
         .where(
           and(
             eq(schema.vault.id, id),
-            eq(schema.vault.userId, this.userId) // Security: Prevent cross-user deletion
-          )
+            eq(schema.vault.userId, this.userId), // Security: Prevent cross-user deletion
+          ),
         );
 
       logger.info('Vault item soft-deleted successfully', { vaultId: id });
@@ -120,8 +120,8 @@ export class VaultService {
           and(
             isNull(schema.vault.deletedAt),
             eq(schema.vault.userId, this.userId), // Security: Enforce user isolation
-            eq(schema.vault.isCorrupted, false)
-          )
+            eq(schema.vault.isCorrupted, false),
+          ),
         )
         .orderBy(desc(schema.vault.updatedAt))
         .limit(limit)
@@ -200,7 +200,7 @@ export class VaultService {
   private transformToVaultSecret(
     id: string,
     payload: unknown,
-    version: number
+    version: number,
   ): VaultSecretT | null {
     if (!payload) return null;
 
@@ -316,8 +316,8 @@ export class VaultService {
         .where(
           and(
             eq(schema.vault.id, data.id),
-            eq(schema.vault.userId, this.userId) // user may only update their own records
-          )
+            eq(schema.vault.userId, this.userId), // user may only update their own records
+          ),
         );
 
       logger.info('Vault item updated successfully', { id: data.id });

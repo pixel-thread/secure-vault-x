@@ -35,18 +35,19 @@ export function usePasswordMutation(mode: MutationMode, onSuccess?: () => void) 
         await addVaultItem(data);
       }
 
-      const message =
-        mode === 'edit' ? 'Glow up complete' : 'Manifested';
+      const message = mode === 'edit' ? 'Glow up complete' : 'Manifested';
       logger.info(`[usePasswordMutation] ${message}`);
       // toast is already handled in VaultProvider, but we can add another one or rely on that
 
       logger.log('[usePasswordMutation] Triggering background sync');
       sync().catch((err) =>
-        logger.error('[usePasswordMutation] Background sync failed', { error: err })
+        logger.error('[usePasswordMutation] Background sync failed', { error: err }),
       );
       onSuccess?.();
     } catch (error: unknown) {
-      logger.error('[usePasswordMutation] Failed to save secret', { error: error instanceof Error ? error.message : String(error) });
+      logger.error('[usePasswordMutation] Failed to save secret', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       // Error toast is also handled in VaultProvider
     } finally {
       setIsPending(false);

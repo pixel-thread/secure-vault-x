@@ -22,7 +22,8 @@ const DrawerLayout = () => {
         drawerInactiveTintColor: isDarkMode ? '#a1a1aa' : '#71717a',
         headerTitleStyle: { color: isDarkMode ? '#fff' : '#000' },
       }}
-      drawerContent={(props) => <CustomDrawerContent {...props} />}>
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    >
       <Drawer.Screen
         name="(tabs)"
         options={{

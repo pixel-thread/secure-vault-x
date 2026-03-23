@@ -20,9 +20,9 @@ export type FileMetadata = {
  * ============================================================================
  * USE FILE ENCRYPTER HOOK
  * ============================================================================
- * Centralized hook for processing, encrypting, and decrypting files in a 
+ * Centralized hook for processing, encrypting, and decrypting files in a
  * zero-knowledge environment.
- * 
+ *
  * Features:
  * 1. Sandboxed picking via DocumentPicker
  * 2. Secure Base64 reading and AES-256-GCM preparation
@@ -68,7 +68,7 @@ export function useFileEncrypter() {
       if (result.canceled) return null;
 
       const file = result.assets[0];
-      
+
       // Enforce zero-knowledge friendly size limits
       if (file.size && file.size > MAX_FILE_SIZE_BYTES) {
         toast.error('File too chunky', { description: `Keep it under 5MB.` });
@@ -81,7 +81,7 @@ export function useFileEncrypter() {
         size: file.size || 0,
         mimeType: file.mimeType || 'application/octet-stream',
       };
-      
+
       setFileInfo(info);
       return info;
     } catch (err) {
@@ -113,9 +113,20 @@ export function useFileEncrypter() {
         type: 'file',
         fields: [
           { id: Crypto.randomUUID(), label: 'fileName', value: metadata.name, type: 'text' },
-          { id: Crypto.randomUUID(), label: 'fileSize', value: String(metadata.size), type: 'number' },
+          {
+            id: Crypto.randomUUID(),
+            label: 'fileSize',
+            value: String(metadata.size),
+            type: 'number',
+          },
           { id: Crypto.randomUUID(), label: 'contentType', value: metadata.mimeType, type: 'text' },
-          { id: Crypto.randomUUID(), label: 'base64Data', value: base64Data, type: 'text', masked: true },
+          {
+            id: Crypto.randomUUID(),
+            label: 'base64Data',
+            value: base64Data,
+            type: 'text',
+            masked: true,
+          },
         ],
         meta: {
           createdAt: Date.now(),
@@ -125,7 +136,7 @@ export function useFileEncrypter() {
 
       // AES-256-GCM encryption with master key
       const { encryptedData, iv } = await encryptData(secretPayload, mek);
-      
+
       // Instant cleanup of the unencrypted picker cache
       if (pickedFile.exists) {
         pickedFile.delete();
@@ -134,7 +145,9 @@ export function useFileEncrypter() {
       return { id: secretPayload.id, encryptedData, iv };
     } catch (err: unknown) {
       // Security: Obscure the error message to ensure no part of the Base64 payload is logged
-      logger.error('[useFileEncrypter] Encryption failed', { message: err instanceof Error ? err.message : String(err) });
+      logger.error('[useFileEncrypter] Encryption failed', {
+        message: err instanceof Error ? err.message : String(err),
+      });
       toast.error('Major L. File failed.');
       return null;
     } finally {
@@ -143,38 +156,45 @@ export function useFileEncrypter() {
   }, []);
 
   /**
-   * Writes encrypted Base64 data back to a temporary file in the cache directory 
+   * Writes encrypted Base64 data back to a temporary file in the cache directory
    * and opens the native sharing sheet.
    */
-  const decryptAndOpen = useCallback(async (fileName: string, contentType: string, encryptedBase64Payload: string) => {
-    setIsProcessing(true);
-    try {
-      // Create a temporary file in the isolated app cache
-      const tempFile = new File(Paths.cache, fileName);
-      tempFile.create({ overwrite: true });
-      tempFile.write(encryptedBase64Payload, { encoding: 'base64' });
+  const decryptAndOpen = useCallback(
+    async (fileName: string, contentType: string, encryptedBase64Payload: string) => {
+      setIsProcessing(true);
+      try {
+        // Create a temporary file in the isolated app cache
+        const tempFile = new File(Paths.cache, fileName);
+        tempFile.create({ overwrite: true });
+        tempFile.write(encryptedBase64Payload, { encoding: 'base64' });
 
-      setTempUri(tempFile.uri);
+        setTempUri(tempFile.uri);
 
-      // Trigger native document viewer/sharer
-      const sharingAvailable = await Sharing.isAvailableAsync();
-      if (sharingAvailable) {
-        await Sharing.shareAsync(tempFile.uri, {
-          mimeType: contentType,
-          dialogTitle: `Viewing ${fileName}`,
-          UTI: contentType,
+        // Trigger native document viewer/sharer
+        const sharingAvailable = await Sharing.isAvailableAsync();
+        if (sharingAvailable) {
+          await Sharing.shareAsync(tempFile.uri, {
+            mimeType: contentType,
+            dialogTitle: `Viewing ${fileName}`,
+            UTI: contentType,
+          });
+        } else {
+          toast.error('Viewer unavailable', {
+            description: 'Format not supported by installed apps.',
+          });
+        }
+      } catch (err: unknown) {
+        // Security: Obscure the error message to ensure no part of the payload is logged
+        logger.error('[useFileEncrypter] Decryption/Sharing failed', {
+          message: err instanceof Error ? err.message : String(err),
         });
-      } else {
-        toast.error("Viewer unavailable", { description: "Format not supported by installed apps." });
+        toast.error('Failed to open file');
+      } finally {
+        setIsProcessing(false);
       }
-    } catch (err: unknown) {
-      // Security: Obscure the error message to ensure no part of the payload is logged
-      logger.error('[useFileEncrypter] Decryption/Sharing failed', { message: err instanceof Error ? err.message : String(err) });
-      toast.error('Failed to open file');
-    } finally {
-      setIsProcessing(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   return {
     fileInfo,

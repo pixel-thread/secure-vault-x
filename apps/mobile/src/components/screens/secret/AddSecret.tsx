@@ -24,7 +24,7 @@ export default function AddSecret() {
   // Select the template based on route param, fallback to first available
   const selectedTemplate = useMemo(
     () => SECRET_TEMPLATES.find((t) => t.type === type) || SECRET_TEMPLATES[0],
-    [type]
+    [type],
   );
 
   // --- CALLBACKS ---
@@ -41,7 +41,8 @@ export default function AddSecret() {
       <ScreenContainer>
         <ScrollView
           contentContainerClassName="px-6 py-4 pb-12"
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+        >
           {/* Robust Hero Section */}
           <View className="mb-8 items-center justify-center pt-6">
             <View className="mb-5 h-24 w-24 items-center justify-center rounded-[32px] border border-emerald-500/20 bg-emerald-500/10 shadow-lg shadow-emerald-500/10">

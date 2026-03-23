@@ -5,7 +5,15 @@ import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { toast } from 'sonner-native';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import { StackHeader } from '@src/components/common/StackHeader';
@@ -64,13 +72,13 @@ export default function ViewSecretScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
   const toggleVisibility = (fieldId: string) => {
     setVisibleFieldIds((prev) =>
-      prev.includes(fieldId) ? prev.filter((id) => id !== fieldId) : [...prev, fieldId]
+      prev.includes(fieldId) ? prev.filter((id) => id !== fieldId) : [...prev, fieldId],
     );
   };
 
@@ -99,7 +107,7 @@ export default function ViewSecretScreen() {
   // Extract primary detail (like username or email) for the subtitle
   const primaryDetail =
     selectedSecret.fields?.find(
-      (f) => f.label.toLowerCase().includes('user') || f.label.toLowerCase().includes('email')
+      (f) => f.label.toLowerCase().includes('user') || f.label.toLowerCase().includes('email'),
     )?.value || selectedSecret.type;
 
   return (
@@ -116,7 +124,8 @@ export default function ViewSecretScreen() {
               tintColor="#10b981"
               colors={['#10b981']}
             />
-          }>
+          }
+        >
           {/* 1. HERO SECTION */}
           <View className="mb-8 items-center justify-center pt-6">
             <View className="mb-6 flex-1 scale-150 flex-row items-center justify-center">
@@ -189,7 +198,8 @@ export default function ViewSecretScreen() {
                     await scheduleForItem(updatedSecret);
                     toast.success('Manifested! Rotation reset.');
                   }}
-                  className="rounded-full bg-emerald-500/20 px-3 py-1">
+                  className="rounded-full bg-emerald-500/20 px-3 py-1"
+                >
                   <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500">
                     ROTATE NOW
                   </Text>
@@ -204,7 +214,7 @@ export default function ViewSecretScreen() {
                   {selectedSecret.meta?.autoRotateDays
                     ? new Date(
                         Number(selectedSecret.meta.updatedAt) +
-                          selectedSecret.meta.autoRotateDays * 86400000
+                          selectedSecret.meta.autoRotateDays * 86400000,
                       ).toLocaleDateString()
                     : 'Not set'}
                 </Text>
@@ -222,7 +232,8 @@ export default function ViewSecretScreen() {
                 return (
                   <View
                     key={field.id}
-                    className={`p-5 ${!isLast ? 'border-b border-zinc-200 dark:border-zinc-800' : ''}`}>
+                    className={`p-5 ${!isLast ? 'border-b border-zinc-200 dark:border-zinc-800' : ''}`}
+                  >
                     <Text className="mb-1 text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
                       {field.label}
                     </Text>
@@ -230,7 +241,8 @@ export default function ViewSecretScreen() {
                     <View className="flex-row items-center justify-between">
                       <Text
                         className="flex-1 text-lg font-medium text-zinc-900 dark:text-white"
-                        numberOfLines={field.type === 'multiline' ? undefined : 1}>
+                        numberOfLines={field.type === 'multiline' ? undefined : 1}
+                      >
                         {field.masked && !visibleFieldIds.includes(field.id)
                           ? '••••••••••••••••'
                           : field.value}
@@ -240,9 +252,14 @@ export default function ViewSecretScreen() {
                         {field.masked && (
                           <TouchableOpacity
                             onPress={() => toggleVisibility(field.id)}
-                            className="rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700">
+                            className="rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700"
+                          >
                             <Ionicons
-                              name={visibleFieldIds.includes(field.id) ? 'eye-off-outline' : 'eye-outline'}
+                              name={
+                                visibleFieldIds.includes(field.id)
+                                  ? 'eye-off-outline'
+                                  : 'eye-outline'
+                              }
                               size={22}
                               color="#10b981"
                             />
@@ -251,14 +268,16 @@ export default function ViewSecretScreen() {
                         {(field.copyable || field.masked) && (
                           <TouchableOpacity
                             onPress={() => copyToClipboard(field.value)}
-                            className="rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700">
+                            className="rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700"
+                          >
                             <Ionicons name="copy-outline" size={22} color="#10b981" />
                           </TouchableOpacity>
                         )}
                         {field.type === 'url' && (
                           <TouchableOpacity
                             onPress={() => openUrl(field.value)}
-                            className="rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700">
+                            className="rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700"
+                          >
                             <Ionicons name="open-outline" size={22} color="#10b981" />
                           </TouchableOpacity>
                         )}
@@ -296,7 +315,8 @@ export default function ViewSecretScreen() {
                 {selectedSecret.meta.tags.map((tag: string) => (
                   <View
                     key={tag}
-                    className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1">
+                    className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1"
+                  >
                     <Text className="text-xs font-bold text-emerald-600 dark:text-emerald-500">
                       #{tag}
                     </Text>
@@ -362,14 +382,16 @@ export default function ViewSecretScreen() {
           <View className="mt-4 gap-4">
             <TouchableOpacity
               onPress={handleEdit}
-              className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98]">
+              className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98]"
+            >
               <Text className="ml-2 text-lg font-bold text-[#022c22]">Change it up</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               disabled={isDeleting}
               onPress={handleDelete}
-              className="w-full flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-transparent py-4 active:scale-[0.98] active:bg-red-500/10">
+              className="w-full flex-row items-center justify-center rounded-2xl border border-red-500/30 bg-transparent py-4 active:scale-[0.98] active:bg-red-500/10"
+            >
               {isDeleting ? (
                 <ActivityIndicator color="#ef4444" size="small" />
               ) : (

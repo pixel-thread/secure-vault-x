@@ -27,8 +27,12 @@ export const notificationSchedule = sqliteTable('notification_schedule', {
   firedAt: integer('fired_at'),
   dismissedAt: integer('dismissed_at'),
   status: text('status').notNull().default('pending'),
-  createdAt: integer('created_at').notNull().$defaultFn(() => Date.now()),
-  updatedAt: integer('updated_at').notNull().$defaultFn(() => Date.now()),
+  createdAt: integer('created_at')
+    .notNull()
+    .$defaultFn(() => Date.now()),
+  updatedAt: integer('updated_at')
+    .notNull()
+    .$defaultFn(() => Date.now()),
 });
 
 export type Vault = typeof vault.$inferSelect;

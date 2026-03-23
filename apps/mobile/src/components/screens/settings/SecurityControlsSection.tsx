@@ -51,7 +51,7 @@ export default function SecurityControlsSection() {
       setBiometricEnabled(value);
       toast.success(value ? 'Secure AF' : 'Security lowered');
     },
-    [biometricAvailable]
+    [biometricAvailable],
   );
 
   const { mutate: toggleMfaMutate, isPending: mfaPending } = useMutation({
@@ -61,11 +61,7 @@ export default function SecurityControlsSection() {
       // Toggle successful
       if (data.success && data.data) {
         setMfaEnabled(data.data.mfaEnabled);
-        toast.success(
-          data.data.mfaEnabled
-            ? '2FA is on!'
-            : '2FA is off'
-        );
+        toast.success(data.data.mfaEnabled ? '2FA is on!' : '2FA is off');
       } else {
         // Toggle failed but returned 200 OK (e.g. wrapper error)
         toast.error(data.message || 'Failed to toggle MFA');
@@ -93,10 +89,10 @@ export default function SecurityControlsSection() {
             style: value ? 'default' : 'destructive',
             onPress: () => toggleMfaMutate(value),
           },
-        ]
+        ],
       );
     },
-    [toggleMfaMutate]
+    [toggleMfaMutate],
   );
 
   return (
@@ -188,7 +184,8 @@ export default function SecurityControlsSection() {
           </View>
           <TouchableOpacity
             onPress={() => router.push('/settings/change-password')}
-            className="rounded-full bg-zinc-200 p-2 dark:bg-zinc-800">
+            className="rounded-full bg-zinc-200 p-2 dark:bg-zinc-800"
+          >
             <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#a1a1aa' : '#52525b'} />
           </TouchableOpacity>
         </View>

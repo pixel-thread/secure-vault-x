@@ -21,7 +21,7 @@ export const LoadingScreen = ({ message = 'Securing your vault...' }: Props) => 
     scale.value = withRepeat(
       withSequence(withTiming(1.1, { duration: 1500 }), withTiming(1, { duration: 1500 })),
       -1,
-      true
+      true,
     );
   }, [scale]);
 
@@ -30,14 +30,13 @@ export const LoadingScreen = ({ message = 'Securing your vault...' }: Props) => 
   }));
 
   return (
-    <View
-      style={StyleSheet.absoluteFill}
-      className="items-center justify-center bg-background">
+    <View style={StyleSheet.absoluteFill} className="items-center justify-center bg-background">
       <View className="items-center justify-center">
         {/* Icon Container - Matching LoginScreen Style */}
         <Animated.View
           style={animatedIconStyle}
-          className="mb-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-2 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
+          className="mb-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-2 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10"
+        >
           <Image
             source={require('../../../assets/icon.png')}
             width={100}
@@ -50,7 +49,8 @@ export const LoadingScreen = ({ message = 'Securing your vault...' }: Props) => 
         <Animated.View
           entering={FadeIn.delay(200).duration(800)}
           exiting={FadeOut}
-          className="items-center">
+          className="items-center"
+        >
           <Text className="text-4xl font-extrabold tracking-tighter text-zinc-900 dark:text-white">
             SecureVault <Text className="text-emerald-500">X</Text>
           </Text>

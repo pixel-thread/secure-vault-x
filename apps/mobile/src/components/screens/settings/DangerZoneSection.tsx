@@ -23,7 +23,7 @@ export default function DangerZoneSection() {
             router.replace('/');
           },
         },
-      ]
+      ],
     );
   }, [purgeLocalEnclave]);
 
@@ -35,7 +35,8 @@ export default function DangerZoneSection() {
       <View className="mb-8 overflow-hidden rounded-3xl border border-red-200 bg-zinc-50 shadow-sm dark:border-red-900/40 dark:bg-zinc-900/50">
         <TouchableOpacity
           className="flex-row items-center p-5 active:bg-red-50 dark:active:bg-red-500/10"
-          onPress={handlePurge}>
+          onPress={handlePurge}
+        >
           <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-red-100 dark:bg-red-500/10">
             <Ionicons name="warning-outline" size={22} color="#ef4444" />
           </View>

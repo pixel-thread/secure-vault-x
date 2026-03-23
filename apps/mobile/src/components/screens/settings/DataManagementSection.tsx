@@ -43,8 +43,18 @@ export default function DataManagementSection() {
       const rows = vaultItems
         .map((item) => {
           const u = item.fields?.find((f) => f.label.toLowerCase().includes('user'))?.value || '';
-          const p = item.fields?.find((f) => f.label.toLowerCase().includes('password') || f.label.toLowerCase().includes('card') || f.label.toLowerCase().includes('cvv'))?.value || '';
-          const w = item.fields?.find((f) => f.label.toLowerCase().includes('url') || f.label.toLowerCase().includes('website'))?.value || '';
+          const p =
+            item.fields?.find(
+              (f) =>
+                f.label.toLowerCase().includes('password') ||
+                f.label.toLowerCase().includes('card') ||
+                f.label.toLowerCase().includes('cvv'),
+            )?.value || '';
+          const w =
+            item.fields?.find(
+              (f) =>
+                f.label.toLowerCase().includes('url') || f.label.toLowerCase().includes('website'),
+            )?.value || '';
           return `${item.title || ''},${u},${p}, ${w},${item.note || ''}`;
         })
         .join('\n');
@@ -85,7 +95,8 @@ export default function DataManagementSection() {
       <View className="mb-8 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/50">
         <TouchableOpacity
           className="flex-row items-center p-5 active:bg-zinc-200 dark:active:bg-zinc-800/60"
-          onPress={handleExportVault}>
+          onPress={handleExportVault}
+        >
           <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
             <Ionicons
               name="download-outline"
@@ -112,17 +123,18 @@ export default function DataManagementSection() {
               onPress={async () => {
                 await scheduleTestNotifications(vaultItems, scheduleTest);
                 toast.success('Alerts queued... testing the vibe.');
-              }}>
+              }}
+            >
               <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
-                <Ionicons
-                  name="flask-outline"
-                  size={22}
-                  color="#d97706"
-                />
+                <Ionicons name="flask-outline" size={22} color="#d97706" />
               </View>
               <View className="flex-1">
-                <Text className="text-lg font-bold text-zinc-900 dark:text-white">Schedule Test Alerts</Text>
-                <Text className="text-sm text-zinc-500 dark:text-zinc-400">Fire alerts for all types (+1m each)</Text>
+                <Text className="text-lg font-bold text-zinc-900 dark:text-white">
+                  Schedule Test Alerts
+                </Text>
+                <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Fire alerts for all types (+1m each)
+                </Text>
               </View>
               <Ionicons name="notifications-outline" size={20} color="#71717a" />
             </TouchableOpacity>

@@ -75,7 +75,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   onPress={this.handleReset}
-                  className="w-full items-center rounded-2xl bg-zinc-900 py-4 shadow-lg active:scale-[0.98] dark:bg-white">
+                  className="w-full items-center rounded-2xl bg-zinc-900 py-4 shadow-lg active:scale-[0.98] dark:bg-white"
+                >
                   <Text className="text-lg font-bold text-white dark:text-zinc-900">Try Again</Text>
                 </TouchableOpacity>
 

@@ -11,7 +11,7 @@ export type MutationMode = 'create' | 'edit';
 export function getSecretDefaults(
   template: SecretTemplate,
   mode: MutationMode = 'create',
-  initialValues?: Partial<VaultSecretT>
+  initialValues?: Partial<VaultSecretT>,
 ) {
   if (mode === 'edit' && initialValues) {
     // Re-hydrate from dynamic Secret object OR legacy Password/Card structure

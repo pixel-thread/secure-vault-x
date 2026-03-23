@@ -18,7 +18,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#10b981',
         tabBarInactiveTintColor: isDarkMode ? '#a1a1aa' : '#71717a',
         tabBarLabelStyle: { fontSize: 12, fontWeight: 'bold', paddingBottom: 4 },
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{

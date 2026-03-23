@@ -49,7 +49,8 @@ export default function SignOutButton() {
   return (
     <TouchableOpacity
       className="mb-6 mt-auto w-full flex-row items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 py-4 shadow-sm active:bg-zinc-200 dark:border-zinc-800/80 dark:bg-zinc-900/80 dark:active:bg-zinc-800"
-      onPress={handleLogout}>
+      onPress={handleLogout}
+    >
       <Ionicons name="log-out-outline" size={22} color={isDarkMode ? '#a1a1aa' : '#71717a'} />
       <Text className="ml-2 text-lg font-bold text-zinc-600 dark:text-zinc-300">
         Sign Out Device

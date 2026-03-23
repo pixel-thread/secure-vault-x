@@ -78,7 +78,8 @@ export default function RootLayout() {
                   presentation: 'card',
                   gestureEnabled: true,
                   fullScreenGestureEnabled: true,
-                }}>
+                }}
+              >
                 <Stack.Screen name="(drawer)" />
                 <Stack.Screen name="auth/index" />
                 <Stack.Screen

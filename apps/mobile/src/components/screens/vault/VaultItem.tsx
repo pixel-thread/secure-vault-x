@@ -25,7 +25,8 @@ export const VaultItem = ({
     <TouchableOpacity
       key={item.id}
       className="mb-4 flex-row items-center gap-x-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 active:bg-zinc-200 dark:border-zinc-800/80 dark:bg-zinc-900/40 dark:active:bg-zinc-800/60"
-      onPress={() => onSelectItem(item)}>
+      onPress={() => onSelectItem(item)}
+    >
       <VaultItemIcon item={item} />
       <View className="flex-1">
         <Text className="mb-1 text-xl font-bold capitalize text-zinc-900 dark:text-white">
@@ -36,9 +37,7 @@ export const VaultItem = ({
         {item.fields && item.fields.length > 0 ? (
           <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
             {item.fields[0]?.masked ? '••••••••' : item.fields[0]?.value}
-            {item.fields[1]
-              ? ` • ${item.fields[1]?.masked ? '••••' : item.fields[1]?.value}`
-              : ''}
+            {item.fields[1] ? ` • ${item.fields[1]?.masked ? '••••' : item.fields[1]?.value}` : ''}
           </Text>
         ) : (
           <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -57,7 +56,8 @@ export const VaultItem = ({
                     : item.meta.environment === 'staging'
                       ? 'border-amber-500/20 bg-amber-500/10'
                       : 'border-emerald-500/20 bg-emerald-500/10'
-                }`}>
+                }`}
+              >
                 <Text
                   className={`text-[8px] font-black uppercase ${
                     item.meta.environment === 'prod'
@@ -65,7 +65,8 @@ export const VaultItem = ({
                       : item.meta.environment === 'staging'
                         ? 'text-amber-600'
                         : 'text-emerald-600'
-                  }`}>
+                  }`}
+                >
                   {item.meta.environment}
                 </Text>
               </View>
@@ -73,7 +74,8 @@ export const VaultItem = ({
             {item.meta?.tags?.slice(0, 3).map((tag) => (
               <View
                 key={tag}
-                className="rounded-md bg-zinc-200/50 px-1.5 py-0.5 dark:bg-zinc-800/80">
+                className="rounded-md bg-zinc-200/50 px-1.5 py-0.5 dark:bg-zinc-800/80"
+              >
                 <Text className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400">
                   #{tag}
                 </Text>
@@ -93,7 +95,8 @@ export const VaultItem = ({
           toast.success('Say Less', {
             description: 'Copied to clipboard... vibes.',
           });
-        }}>
+        }}
+      >
         <Ionicons name="copy-outline" size={20} color={isDarkMode ? '#a1a1aa' : '#71717a'} />
       </TouchableOpacity>
     </TouchableOpacity>

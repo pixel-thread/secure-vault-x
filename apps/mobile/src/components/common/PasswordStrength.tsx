@@ -8,7 +8,7 @@ type Props = {
 };
 
 export const PasswordStrength = (
-  { password, confirmPassword }: Props = { password: '', confirmPassword: '' }
+  { password, confirmPassword }: Props = { password: '', confirmPassword: '' },
 ) => {
   const hasMinLength = password.length >= 12;
   const hasUppercase = /[A-Z]/.test(password);

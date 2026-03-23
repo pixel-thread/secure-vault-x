@@ -8,17 +8,17 @@
       "name": "expo-router",
       "type": "navigation",
       "options": {
-        "type": "drawer + tabs"
-      }
+        "type": "drawer + tabs",
+      },
     },
     {
       "name": "nativewind",
-      "type": "styling"
+      "type": "styling",
     },
     {
       "name": "zustand",
-      "type": "state-management"
-    }
+      "type": "state-management",
+    },
   ],
   "flags": {
     "noGit": false,
@@ -27,16 +27,16 @@
     "importAlias": true,
     "packageManager": "npm",
     "eas": false,
-    "publish": false
+    "publish": false,
   },
   "packageManager": {
     "type": "npm",
-    "version": "unknown"
+    "version": "unknown",
   },
   "os": {
     "type": "Darwin",
     "platform": "darwin",
     "arch": "arm64",
-    "kernelVersion": "25.3.0"
-  }
+    "kernelVersion": "25.3.0",
+  },
 }

@@ -32,18 +32,20 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
   // Deep-link listener
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response: Notifications.NotificationResponse) => {
-      const { item_id, item_type, action } = response.notification.request.content.data;
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response: Notifications.NotificationResponse) => {
+        const { item_id, item_type, action } = response.notification.request.content.data;
 
-      if (action === 'open_item' && item_id) {
-        logger.info('[NotificationProvider] Deep linking to secret', { item_id, item_type });
-        // @ts-ignore - Dynamic path is safe here
-        router.push({
-          pathname: `/secret/${item_id}` as any,
-          params: { id: String(item_id), type: String(item_type) },
-        });
-      }
-    });
+        if (action === 'open_item' && item_id) {
+          logger.info('[NotificationProvider] Deep linking to secret', { item_id, item_type });
+          // @ts-ignore - Dynamic path is safe here
+          router.push({
+            pathname: `/secret/${item_id}` as any,
+            params: { id: String(item_id), type: String(item_type) },
+          });
+        }
+      },
+    );
 
     return () => subscription.remove();
   }, [router]);
@@ -60,7 +62,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       if (!service || !isNotificationsEnabled) return;
       await service.scheduleForItem(item);
     },
-    [service, isNotificationsEnabled]
+    [service, isNotificationsEnabled],
   );
 
   const cancelForItem = useCallback(
@@ -68,15 +70,15 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       if (!service) return;
       await service.cancelForItem(itemId);
     },
-    [service]
+    [service],
   );
-  
+
   const scheduleTest = useCallback(
     async (item: VaultSecretT, delayMs: number) => {
       if (!service) return null;
       return await service.scheduleTest(item, delayMs);
     },
-    [service]
+    [service],
   );
 
   const cancelAll = useCallback(async () => {
@@ -87,7 +89,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const toggleNotifications = useCallback(
     async (enabled: boolean) => {
       if (!user?.id) return;
-      
+
       await NotificationStoreManager.setEnabled(user.id, enabled);
       setIsNotificationsEnabled(enabled);
 
@@ -97,7 +99,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         await service?.reconcile(vaultItems);
       }
     },
-    [user?.id, service, vaultItems]
+    [user?.id, service, vaultItems],
   );
 
   const value = useMemo<NotificationContextT>(
@@ -109,7 +111,14 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       toggleNotifications,
       scheduleTest,
     }),
-    [scheduleForItem, cancelForItem, cancelAll, isNotificationsEnabled, toggleNotifications, scheduleTest]
+    [
+      scheduleForItem,
+      cancelForItem,
+      cancelAll,
+      isNotificationsEnabled,
+      toggleNotifications,
+      scheduleTest,
+    ],
   );
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

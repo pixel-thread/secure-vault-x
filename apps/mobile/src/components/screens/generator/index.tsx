@@ -82,11 +82,13 @@ export default function GeneratorScreen() {
         active
           ? 'border-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/20'
           : 'border-zinc-200 bg-zinc-100/30 dark:border-zinc-800/80 dark:bg-zinc-900/30'
-      }`}>
+      }`}
+    >
       <View
         className={`mb-3 h-12 w-12 items-center justify-center rounded-2xl ${
           active ? 'bg-emerald-500/20' : 'bg-zinc-200/50 dark:bg-zinc-800'
-        }`}>
+        }`}
+      >
         <Ionicons
           name={icon as any}
           size={24}
@@ -96,7 +98,8 @@ export default function GeneratorScreen() {
       <Text
         className={`font-bold tracking-tight ${
           active ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'
-        }`}>
+        }`}
+      >
         {label}
       </Text>
     </TouchableOpacity>
@@ -118,23 +121,27 @@ export default function GeneratorScreen() {
               tintColor="#10b981"
               colors={['#10b981']}
             />
-          }>
+          }
+        >
           <View className="mt-6 overflow-hidden rounded-[32px] border border-zinc-200 bg-white shadow-2xl shadow-emerald-500/10 dark:border-white/10 dark:bg-zinc-900/80">
             <View className="items-center justify-center p-8">
               <TouchableOpacity
                 onPress={handleCopy}
                 activeOpacity={0.7}
-                className="items-center justify-center">
+                className="items-center justify-center"
+              >
                 <Text
                   numberOfLines={2}
-                  className="mb-2 text-center font-mono text-3xl font-extrabold tracking-widest text-emerald-600 dark:text-emerald-400">
+                  className="mb-2 text-center font-mono text-3xl font-extrabold tracking-widest text-emerald-600 dark:text-emerald-400"
+                >
                   {password}
                 </Text>
 
                 <View className="flex-row items-center justify-center rounded-full bg-emerald-500/10 px-4 py-1">
                   <Ionicons name="shield-checkmark" size={14} color="#10b981" />
                   <Text
-                    className={`ml-1.5 text-xs font-bold uppercase tracking-widest ${strength.color}`}>
+                    className={`ml-1.5 text-xs font-bold uppercase tracking-widest ${strength.color}`}
+                  >
                     {strength.label}
                   </Text>
                 </View>
@@ -177,13 +184,15 @@ export default function GeneratorScreen() {
               <View className="flex-row items-center rounded-2xl bg-zinc-200/50 p-1.5 dark:bg-zinc-800/50">
                 <TouchableOpacity
                   onPress={() => setLength(Math.max(8, length - 1))}
-                  className="h-10 w-10 items-center justify-center rounded-xl bg-zinc-300/50 active:scale-90 dark:bg-zinc-700/50">
+                  className="h-10 w-10 items-center justify-center rounded-xl bg-zinc-300/50 active:scale-90 dark:bg-zinc-700/50"
+                >
                   <Ionicons name="remove" size={20} color="#10b981" />
                 </TouchableOpacity>
                 <View className="w-4" />
                 <TouchableOpacity
                   onPress={() => setLength(Math.min(64, length + 1))}
-                  className="h-10 w-10 items-center justify-center rounded-xl bg-zinc-300/50 active:scale-90 dark:bg-zinc-700/50">
+                  className="h-10 w-10 items-center justify-center rounded-xl bg-zinc-300/50 active:scale-90 dark:bg-zinc-700/50"
+                >
                   <Ionicons name="add" size={20} color="#10b981" />
                 </TouchableOpacity>
               </View>
@@ -219,7 +228,8 @@ export default function GeneratorScreen() {
 
           <TouchableOpacity
             className="mt-6 overflow-hidden rounded-3xl shadow-xl shadow-emerald-500/30 active:scale-95"
-            onPress={generate}>
+            onPress={generate}
+          >
             <View className="flex-row items-center justify-center bg-emerald-500 py-5">
               <Ionicons name="sparkles" size={24} color="#022c22" />
               <Text className="ml-3 text-xl font-black uppercase tracking-widest text-[#022c22]">

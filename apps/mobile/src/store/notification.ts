@@ -9,6 +9,9 @@ export class NotificationStoreManager {
   }
 
   static async setEnabled(userId: string, enabled: boolean): Promise<void> {
-    await AsyncStorage.setItem(`${NOTIFICATIONS_ENABLED_KEY}_${userId}`, enabled ? 'true' : 'false');
+    await AsyncStorage.setItem(
+      `${NOTIFICATIONS_ENABLED_KEY}_${userId}`,
+      enabled ? 'true' : 'false',
+    );
   }
 }
