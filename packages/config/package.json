@@ -13,6 +13,7 @@
     }
   },
   "scripts": {
+    "format": "prettier --write .",
     "generate": "tsc",
     "build": "tsc",
     "lint": "eslint ."

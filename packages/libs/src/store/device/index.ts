@@ -51,7 +51,8 @@ export const DeviceStoreManager = {
   },
   setUser: async (user: any) =>
     await SecureStore.setItemAsync(KEYS.DEVICE_USER_KEY, JSON.stringify(user)),
-  removeUser: async () => await SecureStore.deleteItemAsync(KEYS.DEVICE_USER_KEY),
+  removeUser: async () =>
+    await SecureStore.deleteItemAsync(KEYS.DEVICE_USER_KEY),
 
   // Biometric Settings
   getBiometricEnabled: async () =>

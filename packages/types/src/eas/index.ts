@@ -74,19 +74,25 @@ export interface EasSubmitPayload {
   completedAt?: string;
 }
 
-export type EasWebhookPayload = 
+export type EasWebhookPayload =
   | EasBuildPayload
   | EasUpdatePayload
   | EasSubmitPayload;
 
-export function isEasBuildPayload(payload: EasWebhookPayload): payload is EasBuildPayload {
+export function isEasBuildPayload(
+  payload: EasWebhookPayload,
+): payload is EasBuildPayload {
   return "buildDetailsPageUrl" in payload;
 }
 
-export function isEasUpdatePayload(payload: EasWebhookPayload): payload is EasUpdatePayload {
+export function isEasUpdatePayload(
+  payload: EasWebhookPayload,
+): payload is EasUpdatePayload {
   return "updateDetailsPageUrl" in payload;
 }
 
-export function isEasSubmitPayload(payload: EasWebhookPayload): payload is EasSubmitPayload {
+export function isEasSubmitPayload(
+  payload: EasWebhookPayload,
+): payload is EasSubmitPayload {
   return "submissionDetailsPageUrl" in payload;
 }
