@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }
       } catch (e) {
         setIsLoading(false);
-        logger.error('Error initializing auth provider');
+        logger.error('Error initializing auth provider', e);
       }
     }
 

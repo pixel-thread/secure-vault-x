@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { VaultSecretT } from '@src/types/vault';
 import { SecretType } from '@securevault/types';
 import { getIcon } from '@src/utils/helper/getIcon';
+import { logger } from '@securevault/utils-native';
 
 export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
   const [imgError, setImgError] = useState(false);
@@ -12,11 +13,9 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
 
   const renderIcon = () => {
     // 1. Try to find a website URL from the fields or a direct property
-    const websiteUrl =
-      item.fields?.find(
-        (f) =>
-          f.label.toLowerCase().includes('url') || f.label.toLowerCase().includes('website')
-      )?.value;
+    const websiteUrl = item.fields?.find(
+      (f) => f.label.toLowerCase().includes('url') || f.label.toLowerCase().includes('website'),
+    )?.value;
 
     if (websiteUrl && !imgError) {
       let domain = websiteUrl;
@@ -25,6 +24,7 @@ export const VaultItemIcon = ({ item }: { item: VaultSecretT }) => {
         domain = new URL(urlStr).hostname;
       } catch (e) {
         domain = websiteUrl; // Fallback if not a strict URL format
+        logger.error('Failed to parse website URL', e);
       }
       return (
         <Image

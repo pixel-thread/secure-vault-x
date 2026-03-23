@@ -3,7 +3,6 @@ import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactNative from "eslint-plugin-react-native";
 import tailwindcss from "eslint-plugin-tailwindcss";
-import { config as baseConfig } from "./base.js";
 
 /**
  * React Native + Expo + NativeWind ESLint config
@@ -55,5 +54,8 @@ export const config = [
       "tailwindcss/no-custom-classname": "off",
       "tailwindcss/classnames-order": "warn",
     },
+  },
+  {
+    ignores: ["dist/**", "*.apk", "*.zip", ".expo/**", "ios/**", "android/**"],
   },
 ];

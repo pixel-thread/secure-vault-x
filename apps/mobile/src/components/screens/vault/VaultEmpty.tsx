@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 
 interface VaultEmptyProps {
   onRefresh?: () => void;
@@ -13,8 +13,8 @@ interface VaultEmptyProps {
  */
 export const VaultEmpty = ({ onRefresh, isRefreshing = false }: VaultEmptyProps) => {
   return (
-    <View className="flex-1 items-center justify-center px-10 pb-20 mt-20">
-      <View className="mb-8 rounded-3xl border border-zinc-200 bg-zinc-50/50 p-10 dark:border-zinc-800/50 dark:bg-zinc-900/40 shadow-sm">
+    <View className="mt-20 flex-1 items-center justify-center px-10 pb-20">
+      <View className="mb-8 rounded-3xl border border-zinc-200 bg-zinc-50/50 p-10 shadow-sm dark:border-zinc-800/50 dark:bg-zinc-900/40">
         <Ionicons name="sparkles-outline" size={80} color="#10b981" />
       </View>
       <Text className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">

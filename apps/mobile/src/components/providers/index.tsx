@@ -10,11 +10,9 @@ import { ScreenCaptureProvider } from './capture';
 import { VaultProvider } from './vault';
 import { NotificationProvider } from './notification';
 import { CronProvider } from './cron';
-import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'nativewind';
 
 import { ThemeProvider, Toaster } from '@securevault/ui-native';
-import { useThemeStore } from '../../store/theme';
+import { useThemeStore } from '@store/theme';
 
 type Props = { children: React.ReactNode };
 

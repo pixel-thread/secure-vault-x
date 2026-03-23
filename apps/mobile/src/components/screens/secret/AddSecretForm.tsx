@@ -1,8 +1,6 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Ionicons } from '@expo/vector-icons';
 import { encryptData } from '@securevault/crypto';
 import { SecretTemplate, SecretField } from '@securevault/types';
-import { getSecretSchema } from '@securevault/validators';
 import { logger } from '@securevault/utils-native';
 import { FormField } from '@src/components/common/FormField';
 import { DeviceStoreManager } from '@store/device';
@@ -45,25 +43,26 @@ export function AddSecretForm({
   const { scheduleForItem } = useNotification();
 
   // --- FORM SETUP ---
-  
-  // Initialize default values based on template and mode (create/edit)
-  const defaultValues = useMemo(
-    () => {
-       const base = getSecretDefaults(template, mode, initialValues);
-       return {
-         ...base,
-         metaRotateDays: initialValues?.meta?.autoRotateDays?.toString() || '90',
-         metaTags: initialValues?.meta?.tags?.join(', ') || '',
-         metaEnvironment: initialValues?.meta?.environment || 'prod',
-         metaExpiresDays: initialValues?.meta?.expiresAt 
-           ? Math.ceil((initialValues.meta.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)).toString() 
-           : '',
-       }
-    },
-    [mode, initialValues, template]
-  );
 
-  const { control, handleSubmit, formState: { errors } } = useForm<Record<string, string>>({
+  // Initialize default values based on template and mode (create/edit)
+  const defaultValues = useMemo(() => {
+    const base = getSecretDefaults(template, mode, initialValues);
+    return {
+      ...base,
+      metaRotateDays: initialValues?.meta?.autoRotateDays?.toString() || '90',
+      metaTags: initialValues?.meta?.tags?.join(', ') || '',
+      metaEnvironment: initialValues?.meta?.environment || 'prod',
+      metaExpiresDays: initialValues?.meta?.expiresAt
+        ? Math.ceil((initialValues.meta.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)).toString()
+        : '',
+    };
+  }, [mode, initialValues, template]);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Record<string, string>>({
     defaultValues,
     // We append the metaRotateDays so validation doesn't fail, but ideally the validator is flexible
     // resolver: zodResolver(getSecretSchema(template.type)),
@@ -78,8 +77,8 @@ export function AddSecretForm({
   const onSubmitForm = async (values: Record<string, string>) => {
     const mek = await DeviceStoreManager.getMek();
     if (!mek) {
-      toast.error('MEK is missing, hold up.', { 
-        description: 'Master Encryption Key not found.' 
+      toast.error('MEK is missing, hold up.', {
+        description: 'Master Encryption Key not found.',
       });
       return;
     }
@@ -107,23 +106,25 @@ export function AddSecretForm({
           updatedAt: Date.now(),
           autoRotateDays: parseInt(values.metaRotateDays || '90', 10),
           tags: values.metaTags ? values.metaTags.split(',').map((t: string) => t.trim()) : [],
-          environment: (values.metaEnvironment as "dev" | "staging" | "prod" | undefined) || 'prod',
-          expiresAt: values.metaExpiresDays ? Date.now() + parseInt(values.metaExpiresDays, 10) * 86400000 : undefined,
+          environment: (values.metaEnvironment as 'dev' | 'staging' | 'prod' | undefined) || 'prod',
+          expiresAt: values.metaExpiresDays
+            ? Date.now() + parseInt(values.metaExpiresDays, 10) * 86400000
+            : undefined,
         },
         version,
       };
 
       const { encryptedData, iv } = await encryptData(secretPayload, mek);
       mutate({ id: secretPayload.id, encryptedData, iv, version });
-      
+
       // Reschedule notifications (background)
-      scheduleForItem(secretPayload).catch(e => 
-        logger.error('[AddSecretForm] Auto-reschedule failed', { error: e })
+      scheduleForItem(secretPayload).catch((e) =>
+        logger.error('[AddSecretForm] Auto-reschedule failed', { error: e }),
       );
     } catch (err) {
       logger.error('[AddSecretForm] Submission failed', { error: err });
-      toast.error("Major L", { 
-        description: "Couldn't secure your stash." 
+      toast.error('Major L', {
+        description: "Couldn't secure your stash.",
       });
     }
   };
@@ -167,13 +168,12 @@ export function AddSecretForm({
   // --- RENDER ---
   return (
     <View className="flex-1 pb-12">
-      
       {/* Primary Details Card */}
       <View className="mb-6 rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/60">
         <Text className="mb-4 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-500">
           Core Details
         </Text>
-        
+
         <FormField
           label="Name it"
           name="title"
@@ -229,7 +229,7 @@ export function AddSecretForm({
 
       {/* Advanced / Meta Section */}
       <View className="mb-6 rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/60">
-        <TouchableOpacity 
+        <TouchableOpacity
           className="flex-row items-center justify-between"
           onPress={() => setShowAdvanced(!showAdvanced)}
           activeOpacity={0.7}
@@ -240,7 +240,7 @@ export function AddSecretForm({
               Advanced Configuration
             </Text>
           </View>
-          <Ionicons name={showAdvanced ? "chevron-up" : "chevron-down"} size={24} color="#71717a" />
+          <Ionicons name={showAdvanced ? 'chevron-up' : 'chevron-down'} size={24} color="#71717a" />
         </TouchableOpacity>
 
         {showAdvanced && (
@@ -298,7 +298,8 @@ export function AddSecretForm({
         <TouchableOpacity
           disabled={isPending}
           className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
-          onPress={handleSubmit(onSubmitForm)}>
+          onPress={handleSubmit(onSubmitForm)}
+        >
           <Ionicons name="lock-closed-outline" size={24} color="#022c22" />
           <Text className="ml-2 text-lg font-bold text-[#022c22]">
             {isPending ? 'Securing...' : 'Lock it in'}
@@ -306,15 +307,14 @@ export function AddSecretForm({
         </TouchableOpacity>
 
         {onCancel && (
-          <TouchableOpacity 
-            onPress={onCancel} 
-            className="w-full flex-row items-center justify-center rounded-2xl border border-zinc-200 bg-transparent py-4 active:scale-[0.98] dark:border-zinc-800">
+          <TouchableOpacity
+            onPress={onCancel}
+            className="w-full flex-row items-center justify-center rounded-2xl border border-zinc-200 bg-transparent py-4 active:scale-[0.98] dark:border-zinc-800"
+          >
             <Text className="text-lg font-bold text-zinc-900 dark:text-white">Abort mission</Text>
           </TouchableOpacity>
         )}
       </View>
-
     </View>
   );
 }
-

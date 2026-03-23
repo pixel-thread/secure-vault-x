@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { http, logger } from '@securevault/utils-native';
@@ -22,7 +22,6 @@ import { useMutation } from '@tanstack/react-query';
 import { Container } from '@securevault/ui-native';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import Header from '@src/components/common/Header';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackHeader } from '@src/components/common/StackHeader';
 
 type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
@@ -76,7 +75,11 @@ const ChangePasswordScreen = () => {
 
   // Mutations
   const { mutate: requestOtp, isPending: isRequestingOtp } = useMutation({
-    mutationFn: () => http.post<{ success: boolean; message?: string }>(AUTH_ENDPOINT.POST_PASSWORD_RESET_REQUEST, {}),
+    mutationFn: () =>
+      http.post<{ success: boolean; message?: string }>(
+        AUTH_ENDPOINT.POST_PASSWORD_RESET_REQUEST,
+        {},
+      ),
     onSuccess: (res: { success: boolean; message?: string }) => {
       if (res.success) {
         toast.success('Code dropped');
@@ -159,7 +162,8 @@ const ChangePasswordScreen = () => {
                 <TouchableOpacity
                   className="absolute right-4"
                   onPressIn={() => setShowCurrent(true)}
-                  onPressOut={() => setShowCurrent(false)}>
+                  onPressOut={() => setShowCurrent(false)}
+                >
                   <Ionicons name={showCurrent ? 'eye' : 'eye-off'} size={20} color="#71717a" />
                 </TouchableOpacity>
               </View>
@@ -195,7 +199,8 @@ const ChangePasswordScreen = () => {
                 <TouchableOpacity
                   onPressIn={() => setShowNew(true)}
                   onPressOut={() => setShowNew(false)}
-                  className="absolute right-4">
+                  className="absolute right-4"
+                >
                   <Ionicons name={showNew ? 'eye' : 'eye-off'} size={20} color="#71717a" />
                 </TouchableOpacity>
               </View>
@@ -279,12 +284,14 @@ const ChangePasswordScreen = () => {
                 : 'bg-emerald-500 shadow-emerald-500/20 active:scale-[0.98]'
             }`}
             disabled={loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6)}
-            onPress={handleSubmit(handleContinue)}>
+            onPress={handleSubmit(handleContinue)}
+          >
             {loading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
               <Text
-                className={`text-lg font-bold ${loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6) ? 'text-zinc-400 dark:text-zinc-600' : 'text-white'}`}>
+                className={`text-lg font-bold ${loading || !isStrong || !isMatch || (isOtpSent && watchOtp?.length !== 6) ? 'text-zinc-400 dark:text-zinc-600' : 'text-white'}`}
+              >
                 {isOtpSent ? 'Unlock New Key' : 'Send Code'}
               </Text>
             )}

@@ -82,10 +82,12 @@ export default function MfaScreen() {
           });
           router.replace('/(drawer)/(tabs)');
         }
+        return data.data;
       } else {
         toast.error('Major L', {
           description: data.message || 'Invalid code, try again.',
         });
+        return data.data;
       }
     },
     onError: (err: unknown) => {
@@ -107,7 +109,7 @@ export default function MfaScreen() {
               <View className="mb-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5 shadow-lg shadow-emerald-500/20">
                 <Ionicons name="shield-checkmark-outline" size={48} color="#10b981" />
               </View>
-              <Text className="text-4xl font-extrabold tracking-tighter text-zinc-900 dark:text-white text-center">
+              <Text className="text-center text-4xl font-extrabold tracking-tighter text-zinc-900 dark:text-white">
                 Security Check
               </Text>
               <Text className="mt-3 text-center text-base font-medium tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -155,20 +157,27 @@ export default function MfaScreen() {
                     />
                   )}
                 />
-                {errors.code && <Text className="ml-1 mt-1 text-sm text-red-500 text-center">{errors.code.message}</Text>}
+                {errors.code && (
+                  <Text className="ml-1 mt-1 text-center text-sm text-red-500">
+                    {errors.code.message}
+                  </Text>
+                )}
               </View>
 
               <TouchableOpacity
                 className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
                 disabled={isPending}
-                onPress={handleSubmit(onSubmit)}>
+                onPress={handleSubmit(onSubmit)}
+              >
                 <Ionicons name="lock-open-outline" size={24} color="#064e3b" />
                 <Text className="ml-2 text-xl font-bold text-[#022c22]">Unlock</Text>
               </TouchableOpacity>
 
               <View className="mt-6 flex-row justify-center">
                 <TouchableOpacity onPress={() => router.replace('/auth')}>
-                  <Text className="font-bold text-zinc-500 dark:text-zinc-400 text-lg">Wait, go back</Text>
+                  <Text className="text-lg font-bold text-zinc-500 dark:text-zinc-400">
+                    Wait, go back
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -178,4 +187,3 @@ export default function MfaScreen() {
     </Container>
   );
 }
-

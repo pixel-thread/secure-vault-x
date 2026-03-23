@@ -4,7 +4,7 @@ import { VaultContext } from '@src/libs/context/VaultContext';
 import { VaultService } from '@src/services/VaultService';
 import { SyncService } from '@src/services/SyncService';
 import { VaultContextT, VaultSecretT } from '@src/types/vault';
-import { useMutation, useInfiniteQuery, useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 import { useDB } from '@hooks/useDB';
 import { useAuthStore } from '@src/store/auth';
@@ -104,6 +104,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     },
     onError: (err: Error) => {
       toast.error('Major L', { description: 'Sync acting up.' });
+      logger.error('Sync failed', err);
     },
   });
 
@@ -134,6 +135,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     },
     onError: (err: Error) => {
       toast.error('Major L', { description: 'Could not delete.' });
+      logger.error('Document Delete failed', err);
     },
   });
 
@@ -164,6 +166,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     },
     onError: (err: Error) => {
       toast.error('Major L', { description: 'Could not update.' });
+      logger.error('Document Update failed', err);
     },
   });
 
@@ -180,6 +183,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     },
     onError: (err: Error) => {
       toast.error('Major L', { description: 'Update failed.' });
+      logger.error('Document Update failed', err);
     },
   });
 
@@ -193,35 +197,35 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       if (!vaultService) return [];
       return vaultService.getVaultItems(params);
     },
-    [vaultService]
+    [vaultService],
   );
 
   const removeVaultItem = useCallback(
     async (id: string) => {
       await deleteItem(id);
     },
-    [deleteItem]
+    [deleteItem],
   );
 
   const addVaultItem = useCallback(
     async (input: unknown) => {
       await saveItem(input);
     },
-    [saveItem]
+    [saveItem],
   );
 
   const updateVaultItem = useCallback(
     async (input: unknown) => {
       await updateItem(input);
     },
-    [updateItem]
+    [updateItem],
   );
 
   const getVaultItem = useCallback(
     async (id: string) => {
       return vaultItems.find((i: VaultSecretT) => i.id === id) || null;
     },
-    [vaultItems]
+    [vaultItems],
   );
 
   const sync = useCallback(async () => {
@@ -271,7 +275,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
       isDeleting,
       isSyncing,
       isUpdating,
-    ]
+    ],
   );
 
   /**
