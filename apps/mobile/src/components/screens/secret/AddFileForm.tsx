@@ -43,7 +43,7 @@ export function AddFileForm({ onSuccess, onCancel }: Props) {
     handleSubmit,
     formState: { errors },
     setValue,
-  } = useForm<any>({
+  } = useForm<{ title: string }>({
     defaultValues: { title: '' },
     // We don't use the full fileSchema here for the form because base64 is handled internally
     resolver: zodResolver(
@@ -53,15 +53,15 @@ export function AddFileForm({ onSuccess, onCancel }: Props) {
 
   const { mutate, isPending } = usePasswordMutation('create', onSuccess);
 
-  const onSubmitForm = async (values: any) => {
+  const onSubmitForm = async (values: { title: string }) => {
     if (!fileInfo) {
-      toast.error('No file selected');
+      toast.error('No file selected... awkward.');
       return;
     }
 
     const payload = await prepareEncryptionPayload(values.title, fileInfo);
     if (payload) {
-      mutate(payload);
+      mutate({ ...payload, version: Date.now() });
     }
   };
 

@@ -18,7 +18,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   const { mutate } = useMutation({
     mutationFn: () => http.get<UserT>(AUTH_ENDPOINT.GET_ME),
-    onSuccess: async (data) => {
+    onSuccess: async (data: { success: boolean; data?: UserT }) => {
       logger.info('Auth background verification successful');
       if (data.success && data?.data) {
         setUser(data.data);
@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       setIsLoading(false);
     },
     onError: async (error: any) => {
-      logger.error('Auth background verification failed', error);
+      logger.error('Auth background verification failed');
 
       // If it's a definitive auth failure (401/403), clear session
       if (error?.status === 401 || error?.status === 403) {
@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }
       } catch (e) {
         setIsLoading(false);
-        logger.error('Error initializing auth provider', e);
+        logger.error('Error initializing auth provider');
       }
     }
 

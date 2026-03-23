@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: configVars.name,
   slug: 'secure-vault-x',
-  version: '0.0.9',
+  version: '0.1.2',
   scheme: ['securevaultx'],
   platforms: ['ios', 'android'],
   newArchEnabled: true,
@@ -38,7 +38,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: 'static',
     favicon: './assets/favicon.png',
   },
-  plugins: ['expo-router', 'expo-secure-store'],
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    [
+      'expo-notifications',
+      {
+        icon: './assets/icon.png',
+        color: '#ffffff',
+        defaultChannel: 'default',
+        enableBackgroundRemoteNotifications: true,
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
     tsconfigPaths: true,

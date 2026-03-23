@@ -17,7 +17,7 @@ export const VaultItem = ({
 }) => {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const title = (item as any).title || (item as any).serviceName;
+  const title = item.title;
 
   if (!item) return <Redirect href={'/(drawer)/(tabs)'} />;
 
@@ -33,19 +33,16 @@ export const VaultItem = ({
         </Text>
 
         {/* Dynamic Field Preview */}
-        {(item as any).fields ? (
+        {item.fields && item.fields.length > 0 ? (
           <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            {(item as any).fields[0]?.masked ? '••••••••' : (item as any).fields[0]?.value}
-            {(item as any).fields[1]
-              ? ` • ${(item as any).fields[1]?.masked ? '••••' : (item as any).fields[1]?.value}`
+            {item.fields[0]?.masked ? '••••••••' : item.fields[0]?.value}
+            {item.fields[1]
+              ? ` • ${item.fields[1]?.masked ? '••••' : item.fields[1]?.value}`
               : ''}
           </Text>
         ) : (
-          /* Legacy Fallback */
           <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            {item.type === 'login'
-              ? (item as any).username
-              : `•••• ${(item as any).cardNumber?.slice(-4) || '****'}`}
+            Empty details
           </Text>
         )}
 
@@ -89,15 +86,13 @@ export const VaultItem = ({
         className="h-10 w-10 items-center justify-center rounded-full bg-zinc-200 active:bg-zinc-300 dark:bg-zinc-800/80 dark:active:bg-zinc-700"
         onPress={() => {
           let textToCopy = '';
-          if ((item as any).fields) {
-            // Copy the first primary field (usually username, API key, etc.)
-            textToCopy = (item as any).fields[0]?.value || '';
-          } else {
-            textToCopy =
-              item.type === 'login' ? (item as any).secretInfo : (item as any).cardNumber;
+          if (item.fields && item.fields.length > 0) {
+            textToCopy = item.fields[0]?.value || '';
           }
           Clipboard.setStringAsync(textToCopy);
-          toast.success('Copied to clipboard');
+          toast.success('Say Less', {
+            description: 'Copied to clipboard... vibes.',
+          });
         }}>
         <Ionicons name="copy-outline" size={20} color={isDarkMode ? '#a1a1aa' : '#71717a'} />
       </TouchableOpacity>

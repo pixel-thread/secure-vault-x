@@ -4,8 +4,8 @@ import { logger } from '@securevault/utils-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { toast } from 'sonner-native';
 import { ScreenContainer } from '@src/components/common/ScreenContainer';
 import { StackHeader } from '@src/components/common/StackHeader';
@@ -13,6 +13,10 @@ import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { FileDetailView } from '@src/components/screens/secret/FileDetailView';
 import { truncateText } from '@securevault/utils';
 import { VaultItemIcon } from '../vault/VaultIcon';
+import { UrgencyBadge } from './UrgencyBadge';
+import { useNotification } from '@hooks/useNotification';
+import { encryptData } from '@securevault/crypto';
+import { DeviceStoreManager } from '@store/device';
 
 /**
  * ============================================================================
@@ -25,11 +29,13 @@ import { VaultItemIcon } from '../vault/VaultIcon';
 export default function ViewSecretScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { vaultItems, deleteVaultItem, isLoading } = useVaultContext();
+  const { vaultItems, deleteVaultItem, updateVaultItem, isLoading, sync } = useVaultContext();
+  const { scheduleForItem } = useNotification();
 
   // --- CORE LOGIC ---
 
   const selectedSecret = useMemo(() => vaultItems.find((item) => item.id === id), [vaultItems, id]);
+  const [visibleFieldIds, setVisibleFieldIds] = useState<string[]>([]);
 
   const isDeleting = isLoading.isDeleting;
 
@@ -62,13 +68,19 @@ export default function ViewSecretScreen() {
     );
   };
 
+  const toggleVisibility = (fieldId: string) => {
+    setVisibleFieldIds((prev) =>
+      prev.includes(fieldId) ? prev.filter((id) => id !== fieldId) : [...prev, fieldId]
+    );
+  };
+
   const copyToClipboard = (value: string) => {
     Clipboard.setStringAsync(value);
-    toast.success('Copied it!');
+    toast.success('Say Less');
   };
 
   const openUrl = (url: string) => {
-    toast.success('Opening...');
+    toast.success('Vibe check... opening URL');
     Linking.openURL(url);
   };
 
@@ -76,19 +88,18 @@ export default function ViewSecretScreen() {
 
   if (!selectedSecret) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-[#09090b]">
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color="#10b981" />
       </View>
     );
   }
 
-  const title =
-    (selectedSecret as any).title || (selectedSecret as any).serviceName || 'Secret Details';
+  const title = selectedSecret.title || 'Secret Details';
 
   // Extract primary detail (like username or email) for the subtitle
   const primaryDetail =
-    (selectedSecret as any).fields?.find(
-      (f: any) => f.label.toLowerCase().includes('user') || f.label.toLowerCase().includes('email')
+    selectedSecret.fields?.find(
+      (f) => f.label.toLowerCase().includes('user') || f.label.toLowerCase().includes('email')
     )?.value || selectedSecret.type;
 
   return (
@@ -97,16 +108,33 @@ export default function ViewSecretScreen() {
       <ScreenContainer>
         <ScrollView
           contentContainerClassName="px-6 py-4 pb-12"
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading.isSyncing}
+              onRefresh={sync}
+              tintColor="#10b981"
+              colors={['#10b981']}
+            />
+          }>
           {/* 1. HERO SECTION */}
           <View className="mb-8 items-center justify-center pt-6">
             <View className="mb-6 flex-1 scale-150 flex-row items-center justify-center">
-              <VaultItemIcon item={selectedSecret as any} />
+              <VaultItemIcon item={selectedSecret} />
             </View>
             <View className="flex-col items-center gap-2">
               <Text className="text-3xl font-extrabold capitalize text-zinc-900 dark:text-white">
                 {truncateText({ text: title, maxLength: 28 })}
               </Text>
+              <UrgencyBadge
+                expiresAt={selectedSecret.meta?.expiresAt}
+                nextRotationAt={
+                  selectedSecret.meta?.autoRotateDays && selectedSecret.meta?.updatedAt
+                    ? Number(selectedSecret.meta.updatedAt) +
+                      selectedSecret.meta.autoRotateDays * 86400000
+                    : undefined
+                }
+              />
               <View className="flex-row items-center gap-1.5">
                 {selectedSecret.meta?.environment && (
                   <View className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5">
@@ -133,27 +161,52 @@ export default function ViewSecretScreen() {
                 <View className="flex-row items-center">
                   <Ionicons name="shield-checkmark" size={20} color="#10b981" />
                   <Text className="ml-2 font-bold text-emerald-700 dark:text-emerald-400">
-                    Security Status
+                    Security Rotation
                   </Text>
                 </View>
-                <Text className="text-xs font-bold text-emerald-600 dark:text-emerald-500">
-                  STRONG
-                </Text>
+                <TouchableOpacity
+                  onPress={async () => {
+                    const now = Date.now();
+                    const updatedSecret = {
+                      ...selectedSecret,
+                      meta: { ...selectedSecret.meta, updatedAt: now },
+                    };
+
+                    const mek = await DeviceStoreManager.getMek();
+                    if (!mek) {
+                      toast.error('Major L. Key missing.');
+                      return;
+                    }
+
+                    const { encryptedData, iv } = await encryptData(updatedSecret, mek);
+                    await updateVaultItem({
+                      id: updatedSecret.id,
+                      encryptedData,
+                      iv,
+                      version: Date.now(),
+                    });
+
+                    await scheduleForItem(updatedSecret);
+                    toast.success('Manifested! Rotation reset.');
+                  }}
+                  className="rounded-full bg-emerald-500/20 px-3 py-1">
+                  <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500">
+                    ROTATE NOW
+                  </Text>
+                </TouchableOpacity>
               </View>
-              {/* Fake Password Strength Meter */}
-              <View className="mb-4 flex-row gap-1">
-                <View className="h-1.5 flex-1 rounded-full bg-emerald-500" />
-                <View className="h-1.5 flex-1 rounded-full bg-emerald-500" />
-                <View className="h-1.5 flex-1 rounded-full bg-emerald-500" />
-                <View className="h-1.5 flex-1 rounded-full bg-emerald-500/30" />
-              </View>
-              {/* Fake Rotate Reminder */}
+
               <View className="flex-row items-center justify-between border-t border-emerald-500/10 pt-3">
                 <Text className="text-sm font-medium text-emerald-700 dark:text-emerald-400/80">
-                  Auto-Rotate Reminder
+                  Next Scheduled
                 </Text>
                 <Text className="text-sm font-semibold text-emerald-600 dark:text-emerald-500">
-                  In {selectedSecret.meta?.autoRotateDays || 90} days
+                  {selectedSecret.meta?.autoRotateDays
+                    ? new Date(
+                        Number(selectedSecret.meta.updatedAt) +
+                          selectedSecret.meta.autoRotateDays * 86400000
+                      ).toLocaleDateString()
+                    : 'Not set'}
                 </Text>
               </View>
             </View>
@@ -161,11 +214,11 @@ export default function ViewSecretScreen() {
 
           {/* 3. STRUCTURAL CARDS FOR FIELDS */}
           {selectedSecret.type === 'file' ? (
-            <FileDetailView item={selectedSecret as any} />
+            <FileDetailView item={selectedSecret} />
           ) : (
             <View className="mb-6 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/40">
-              {(selectedSecret as any).fields?.map((field: any, index: number) => {
-                const isLast = index === ((selectedSecret as any).fields?.length || 0) - 1;
+              {selectedSecret.fields?.map((field, index) => {
+                const isLast = index === (selectedSecret.fields?.length || 0) - 1;
                 return (
                   <View
                     key={field.id}
@@ -178,10 +231,23 @@ export default function ViewSecretScreen() {
                       <Text
                         className="flex-1 text-lg font-medium text-zinc-900 dark:text-white"
                         numberOfLines={field.type === 'multiline' ? undefined : 1}>
-                        {field.masked ? '••••••••••••••••' : field.value}
+                        {field.masked && !visibleFieldIds.includes(field.id)
+                          ? '••••••••••••••••'
+                          : field.value}
                       </Text>
 
                       <View className="ml-4 flex-row gap-3">
+                        {field.masked && (
+                          <TouchableOpacity
+                            onPress={() => toggleVisibility(field.id)}
+                            className="rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800 dark:active:bg-zinc-700">
+                            <Ionicons
+                              name={visibleFieldIds.includes(field.id) ? 'eye-off-outline' : 'eye-outline'}
+                              size={22}
+                              color="#10b981"
+                            />
+                          </TouchableOpacity>
+                        )}
                         {(field.copyable || field.masked) && (
                           <TouchableOpacity
                             onPress={() => copyToClipboard(field.value)}

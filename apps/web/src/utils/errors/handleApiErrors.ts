@@ -9,6 +9,7 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "./common";
+import { logger } from "../logger";
 
 const isJwtError = (error: unknown): boolean => {
   const isJoseClass =
@@ -43,11 +44,8 @@ const isJwtError = (error: unknown): boolean => {
 };
 
 export const handleApiErrors = (error: unknown) => {
-  if (process.env.NODE_ENV === "development") {
-    console.log("Logs", JSON.stringify(error, null, 2));
-  }
-
   if (isJwtError(error)) {
+    logger.error("JWT Error", error);
     return ErrorResponse({
       message: "Unauthorized",
       status: 401,
@@ -55,6 +53,7 @@ export const handleApiErrors = (error: unknown) => {
   }
 
   if (error instanceof UnauthorizedError) {
+    logger.error("Unauthorized", error);
     return ErrorResponse({
       message: error.message || "Unauthorized",
       status: 401,
@@ -62,6 +61,7 @@ export const handleApiErrors = (error: unknown) => {
   }
 
   if (error instanceof ZodError || error?.constructor?.name === "ZodError") {
+    logger.warn("Zod Error", error);
     return ErrorResponse({
       message: (error as ZodError)?.issues?.[0]?.message || "Validation error",
       status: 400,
@@ -69,6 +69,7 @@ export const handleApiErrors = (error: unknown) => {
   }
 
   if (error instanceof NotFoundError) {
+    logger.error("Not Found Error", error);
     return ErrorResponse({
       message: error.message,
       status: 404,
@@ -76,6 +77,7 @@ export const handleApiErrors = (error: unknown) => {
   }
 
   if (error instanceof ConflictError) {
+    logger.error("Conflict", error);
     return ErrorResponse({
       message: error.message,
       status: 409,
@@ -83,6 +85,7 @@ export const handleApiErrors = (error: unknown) => {
   }
 
   if (error instanceof ForbiddenError) {
+    logger.error("Forbidden", error);
     return ErrorResponse({
       message: error.message,
       status: 403,
@@ -90,6 +93,7 @@ export const handleApiErrors = (error: unknown) => {
   }
 
   if (error instanceof BadRequestError) {
+    logger.error("Bad Request", error);
     return ErrorResponse({
       message: error.message,
       status: 400,
@@ -106,6 +110,7 @@ export const handleApiErrors = (error: unknown) => {
       process.env.NODE_ENV === "development"
         ? err.message
         : "Internal Database Error";
+    logger.error(message, error);
     return ErrorResponse({
       message,
       status: 500,
@@ -117,6 +122,7 @@ export const handleApiErrors = (error: unknown) => {
       process.env.NODE_ENV === "development"
         ? error.message
         : "Internal Server Error";
+    logger.error(message, error);
     return ErrorResponse({
       message,
       status: 500,

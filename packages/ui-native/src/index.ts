@@ -5,3 +5,6 @@ export * from './components/EditScreenInfo';
 export * from './components/HeaderButton';
 export * from './components/ScreenContent';
 export * from './components/TabBarIcon';
+export * from './components/Text';
+export * from './providers';
+export * from './lib/utils';

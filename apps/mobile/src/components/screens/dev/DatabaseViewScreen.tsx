@@ -13,7 +13,7 @@ import { StackHeader } from '@src/components/common/StackHeader';
  */
 export function DatabaseViewScreen() {
   const db = useContext(DrizzleContext);
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<typeof schema.vault.$inferSelect[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
@@ -37,7 +37,7 @@ export function DatabaseViewScreen() {
     fetchData();
   }, [db]);
 
-  const renderItem = ({ item }: { item: any }) => {
+  const renderItem = ({ item }: { item: typeof schema.vault.$inferSelect }) => {
     const isDeleted = !!item.deletedAt;
     const isCorrupted = !!item.isCorrupted;
 

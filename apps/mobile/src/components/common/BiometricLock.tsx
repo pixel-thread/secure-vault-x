@@ -5,7 +5,7 @@ type Props = {
 };
 export const BioMetricLock = ({ onPressUnlock }: Props) => {
   return (
-    <View className="flex-1 items-center justify-center bg-white dark:bg-[#09090b]">
+    <View className="flex-1 items-center justify-center bg-background">
       <View className="items-center">
         <View className="mb-6 h-20 w-20 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
           <Ionicons name="finger-print" size={48} color="#10b981" />

@@ -19,7 +19,7 @@ export default function DangerZoneSection() {
           style: 'destructive',
           onPress: async () => {
             await purgeLocalEnclave();
-            toast.success('Local enclave purged');
+            toast.success('Everything yeeted');
             router.replace('/');
           },
         },

@@ -54,7 +54,7 @@ export default function LoginScreen() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_PASSWORD_LOGIN, data),
-    onSuccess: async (data) => {
+    onSuccess: async (data: { success: boolean; data?: ApiRes; message?: string }) => {
       if (data.success) {
         const loginData = data?.data;
         if (loginData?.requiresMfa) {
@@ -89,14 +89,14 @@ export default function LoginScreen() {
           }
 
           setIsAuthenticated(true);
-          toast.success('Welcome back!', {
+          toast.success('you r in', {
             description: 'The vibe is immaculate.',
           });
           router.replace('/(drawer)/(tabs)');
         }
       } else {
-        toast.error('Oof, Login failed', {
-          description: (data as any).message || 'Check your handle or the key.',
+        toast.error('Major L', {
+          description: data.message || 'Check your handle or the key.',
         });
       }
     },

@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <SafeAreaView className="flex-1 bg-white dark:bg-[#09090b]">
+        <SafeAreaView className="flex-1 bg-background">
           <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="px-6 py-12">
             <View className="flex-1 items-center justify-center">
               <View className="mb-8 h-24 w-24 items-center justify-center rounded-3xl bg-red-500/10 shadow-xl shadow-red-500/10 dark:bg-red-500/20">

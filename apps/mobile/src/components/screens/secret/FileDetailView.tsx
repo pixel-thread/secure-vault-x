@@ -22,8 +22,8 @@ interface Props {
  */
 export function FileDetailView({ item }: Props) {
   // Extract metadata from the vault item's dynamic fields
-  const fields = (item as any).fields || [];
-  const getFieldValue = (label: string) => fields.find((f: any) => f.label === label)?.value;
+  const fields = item.fields || [];
+  const getFieldValue = (label: string) => fields.find((f) => f.label === label)?.value;
 
   const fileName = getFieldValue('fileName') || 'secured_file';
   const fileSizeInBytes = parseInt(getFieldValue('fileSize') || '0', 10);
@@ -35,7 +35,7 @@ export function FileDetailView({ item }: Props) {
 
   const handleDecryptAndOpenFile = () => {
     if (!encryptedBase64Payload) {
-      toast.error('File data corrupted');
+      toast.error('File data is acting up.');
       return;
     }
     decryptAndOpen(fileName, contentType, encryptedBase64Payload);

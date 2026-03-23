@@ -1,0 +1,1 @@
+ALTER TABLE `vault` ADD `corrupted_at` integer;

@@ -4,6 +4,7 @@ import * as Crypto from 'expo-crypto';
 import * as SQLite from 'expo-sqlite';
 import { logger } from '@securevault/utils-native';
 import { SECRET_TEMPLATES } from '@securevault/constants';
+import { VaultSecretT } from '@src/types/vault';
 
 /**
  * Helper to generate realistic mock values based on field label and type
@@ -49,7 +50,7 @@ function generateMockValue(label: string, type: string, index: number): string {
  * @param count - Number of items to generate (default 100)
  */
 export async function seedVaultItems(
-  addVaultItem: (item: { id: string; encryptedData: string; iv: string }) => Promise<void>,
+  addVaultItem: (item: { id: string; encryptedData: string; iv: string; version: number }) => Promise<void>,
   count: number = 10
 ) {
   const mek = await DeviceStoreManager.getMek();
@@ -67,7 +68,7 @@ export async function seedVaultItems(
     const id = Crypto.randomUUID();
 
     // Map template fields to mock data
-    const fields = template.fields.map((f: any) => ({
+    const fields = template.fields.map((f) => ({
       id: Crypto.randomUUID(),
       label: f.label,
       value: generateMockValue(f.label, f.type, i),
@@ -95,6 +96,7 @@ export async function seedVaultItems(
       id,
       encryptedData,
       iv,
+      version: Date.now(),
     });
   });
 
@@ -137,5 +139,27 @@ export async function dropDatabase(dbName: string = 'app.db') {
     logger.error(`[DevUtils] Failed to drop database ${dbName}`, error);
     throw error;
   }
+}
+
+/**
+ * Schedules test notifications for all types of secrets, staggered by 1 minute.
+ */
+export async function scheduleTestNotifications(
+  vaultItems: VaultSecretT[],
+  scheduleTest: (item: VaultSecretT, delayMs: number) => Promise<string | null>
+) {
+  logger.info(`[DevUtils] Scheduling test notifications for ${vaultItems.length} items`);
+
+  // Group by type to ensure we hit one of each
+  const types = Array.from(new Set(vaultItems.map(i => i.type)));
+  const uniqueItems = types.map(t => vaultItems.find(i => i.type === t)).filter(Boolean) as VaultSecretT[];
+
+  for (let i = 0; i < uniqueItems.length; i++) {
+    const item = uniqueItems[i];
+    const delayMs = (i + 1) * 60000; // 1 min, 2 min, etc.
+    await scheduleTest(item, delayMs);
+  }
+  
+  logger.info(`[DevUtils] Successfully scheduled ${uniqueItems.length} test notifications`);
 }
 

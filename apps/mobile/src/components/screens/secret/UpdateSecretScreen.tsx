@@ -29,7 +29,7 @@ export default function UpdateSecretPage() {
 
   if (!selectedSecret) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-[#09090b]">
+      <View className="flex-1 items-center justify-center bg-background">
         <Stack.Screen options={{ title: 'Update Secret' }} />
         <ActivityIndicator size="large" color="#10b981" />
       </View>
@@ -40,8 +40,7 @@ export default function UpdateSecretPage() {
   const template =
     SECRET_TEMPLATES.find((t) => t.type === selectedSecret.type) || SECRET_TEMPLATES[0];
 
-  const title =
-    (selectedSecret as any).title || (selectedSecret as any).serviceName || 'Secret Details';
+  const title = selectedSecret.title || 'Secret Details';
 
   return (
     <Container>
@@ -51,7 +50,7 @@ export default function UpdateSecretPage() {
         {/* Robust Hero Section */}
         <View className="mb-8 items-center justify-center pt-6">
           <View className="mb-4 scale-125 transform">
-            <VaultItemIcon item={selectedSecret as any} />
+            <VaultItemIcon item={selectedSecret} />
           </View>
           <Text className="text-3xl font-extrabold capitalize text-zinc-900 dark:text-white">
             Update {template.label}

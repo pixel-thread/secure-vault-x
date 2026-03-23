@@ -28,7 +28,7 @@ export class VaultService {
    * Ensures data integrity via Zod and enforces user isolation.
    */
   async saveVaultItem(input: unknown) {
-    logger.info('Attempting to save vault item', { userId: !!this.userId });
+    logger.info('Attempting to save vault item');
 
     try {
       // Validate input schema
@@ -106,8 +106,11 @@ export class VaultService {
   /**
    * Get paginated non-deleted vault items for the current user and decrypt them.
    */
-  async getVaultItems({ limit = 20, offset = 0 }: { limit?: number; offset?: number } = {}): Promise<VaultSecretT[]> {
-    logger.log('Fetching local vault items', { limit, offset });
+  async getVaultItems({
+    limit = 20,
+    offset = 0,
+  }: { limit?: number; offset?: number } = {}): Promise<VaultSecretT[]> {
+    logger.log('Fetching local vault items');
 
     try {
       const entries = await this.db
@@ -125,9 +128,7 @@ export class VaultService {
         .offset(offset);
 
       if (entries.length === 0) {
-        logger.info('No vault items found for user', {
-          vaults: entries,
-        });
+        logger.info('No vault items found for user');
         return [];
       }
 
@@ -147,7 +148,7 @@ export class VaultService {
         }
 
         try {
-          const payload = await decryptData<any>(entry.encryptedData, entry.iv, mek);
+          const payload = await decryptData<VaultSecretT>(entry.encryptedData, entry.iv, mek);
 
           if (!payload) {
             logger.warn('Decryption returned null payload', { vaultId: entry.id });
@@ -168,7 +169,10 @@ export class VaultService {
             // Mark as corrupted to avoid trying again
             await this.db
               .update(schema.vault)
-              .set({ isCorrupted: true })
+              .set({
+                isCorrupted: true,
+                corruptedAt: new Date(),
+              })
               .where(eq(schema.vault.id, entry.id))
               .execute();
           } catch (error) {
@@ -193,17 +197,21 @@ export class VaultService {
    * Transforms raw decrypted payload into a structured VaultSecretT
    * Centralizes mapping logic for easier maintenance.
    */
-  private transformToVaultSecret(id: string, payload: any, version: number): VaultSecretT {
-    if (!payload) return null as any;
+  private transformToVaultSecret(
+    id: string,
+    payload: unknown,
+    version: number
+  ): VaultSecretT | null {
+    if (!payload) return null;
 
     try {
       // Step 0: Robust payload detection (handle potential double-serialization from user manual stringification)
-      let data = payload;
+      let data = payload as Record<string, unknown>;
       if (typeof payload === 'string') {
         try {
-          data = JSON.parse(payload);
+          data = JSON.parse(payload) as Record<string, unknown>;
         } catch (e) {
-          logger.warn('Failed to parse payload string - using raw string', { id });
+          logger.warn('Failed to parse payload string - using raw string', { id, error: e });
         }
       }
 
@@ -213,7 +221,7 @@ export class VaultService {
           ...data,
           id, // Ensure database ID matches the object ID
           version,
-        } as any;
+        } as VaultSecretT;
       }
 
       // 2. Handle legacy Card format
@@ -222,38 +230,65 @@ export class VaultService {
         return {
           id,
           type: 'card',
-          serviceName: data.serviceName || 'Unknown Card',
-          cardholderName: data.cardName || data.cardholderName || '',
-          cardNumber: data.cardNumber || '',
-          expirationDate: data.exp || data.expirationDate || '',
-          cvv: data.cvv || '',
+          title: data.serviceName || 'Unknown Card',
+          fields: [
+            {
+              id: '1',
+              label: 'Cardholder Name',
+              value: data.cardName || data.cardholderName || '',
+              type: 'text',
+            },
+            {
+              id: '2',
+              label: 'Card Number',
+              value: data.cardNumber || '',
+              type: 'text',
+              copyable: true,
+            },
+            {
+              id: '3',
+              label: 'Expiration Date',
+              value: data.exp || data.expirationDate || '',
+              type: 'date',
+            },
+            { id: '4', label: 'CVV', value: data.cvv || '', type: 'password', masked: true },
+          ],
           note: data.note || '',
-          meta: data.meta || {
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          },
+          meta: data.meta || { createdAt: Date.now(), updatedAt: Date.now() },
           version,
-        } as any;
+        } as VaultSecretT;
       }
 
       // 3. Fallback to legacy Password format
       return {
         id,
         type: 'login',
-        serviceName: data.serviceName || 'Unknown',
-        website: data.url ?? data.website ?? '',
-        username: data.username ?? '',
-        secretInfo: data.password ?? data.secretInfo ?? '',
+        title: data.serviceName || 'Unknown',
+        fields: [
+          {
+            id: '1',
+            label: 'Website',
+            value: data.url ?? data.website ?? '',
+            type: 'url',
+            copyable: true,
+          },
+          { id: '2', label: 'Username', value: data.username ?? '', type: 'text', copyable: true },
+          {
+            id: '3',
+            label: 'Password',
+            value: data.password ?? data.secretInfo ?? '',
+            type: 'password',
+            masked: true,
+            copyable: true,
+          },
+        ],
         note: data.note || '',
-        meta: data.meta || {
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        },
+        meta: data.meta || { createdAt: Date.now(), updatedAt: Date.now() },
         version,
-      } as any;
+      } as VaultSecretT;
     } catch (err) {
       logger.error('Transformation failed for vault item', { id, error: err });
-      return null as any;
+      return null;
     }
   }
 
@@ -263,7 +298,7 @@ export class VaultService {
    * userId is intentionally excluded from .set() to prevent IDOR.
    */
   async updateVaultItem(input: unknown) {
-    logger.info('Attempting to update vault item', { userId: !!this.userId });
+    logger.info('Attempting to update vault item');
 
     try {
       const data = VaultItemSchema.parse(input);

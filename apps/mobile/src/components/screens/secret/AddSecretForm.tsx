@@ -13,14 +13,16 @@ import { useColorScheme } from 'nativewind';
 import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useNotification } from '@hooks/useNotification';
 import { toast } from 'sonner-native';
+import { VaultSecretT } from '@src/types/vault';
 
 interface Props {
   template: SecretTemplate;
   onSuccess?: () => void;
   onCancel?: () => void;
   mode?: MutationMode;
-  initialValues?: any;
+  initialValues?: Partial<VaultSecretT>;
 }
 
 /**
@@ -40,6 +42,7 @@ export function AddSecretForm({
   // --- STATE ---
   const [showMasked, setShowMasked] = useState<Record<string, boolean>>({});
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { scheduleForItem } = useNotification();
 
   // --- FORM SETUP ---
   
@@ -60,7 +63,7 @@ export function AddSecretForm({
     [mode, initialValues, template]
   );
 
-  const { control, handleSubmit, formState: { errors } } = useForm<any>({
+  const { control, handleSubmit, formState: { errors } } = useForm<Record<string, string>>({
     defaultValues,
     // We append the metaRotateDays so validation doesn't fail, but ideally the validator is flexible
     // resolver: zodResolver(getSecretSchema(template.type)),
@@ -72,7 +75,7 @@ export function AddSecretForm({
 
   // --- HANDLERS ---
 
-  const onSubmitForm = async (values: any) => {
+  const onSubmitForm = async (values: Record<string, string>) => {
     const mek = await DeviceStoreManager.getMek();
     if (!mek) {
       toast.error('MEK is missing, hold up.', { 
@@ -91,7 +94,9 @@ export function AddSecretForm({
         copyable: f.copyable,
       }));
 
-      const secretPayload = {
+      const version = mode === 'edit' ? (initialValues?.version || 1) + 1 : 1;
+
+      const secretPayload: VaultSecretT = {
         id: mode === 'edit' && initialValues?.id ? initialValues.id : Crypto.randomUUID(),
         title: values.title || template.label,
         type: template.type,
@@ -102,19 +107,23 @@ export function AddSecretForm({
           updatedAt: Date.now(),
           autoRotateDays: parseInt(values.metaRotateDays || '90', 10),
           tags: values.metaTags ? values.metaTags.split(',').map((t: string) => t.trim()) : [],
-          environment: values.metaEnvironment || 'prod',
-          expiresAt: values.metaExpiresDays ? Date.now() + parseInt(values.metaExpiresDays, 10) * 1000 * 60 * 60 * 24 : undefined,
+          environment: (values.metaEnvironment as "dev" | "staging" | "prod" | undefined) || 'prod',
+          expiresAt: values.metaExpiresDays ? Date.now() + parseInt(values.metaExpiresDays, 10) * 86400000 : undefined,
         },
+        version,
       };
-
-      const version = mode === 'edit' ? (initialValues?.version || 1) + 1 : 1;
 
       const { encryptedData, iv } = await encryptData(secretPayload, mek);
       mutate({ id: secretPayload.id, encryptedData, iv, version });
+      
+      // Reschedule notifications (background)
+      scheduleForItem(secretPayload).catch(e => 
+        logger.error('[AddSecretForm] Auto-reschedule failed', { error: e })
+      );
     } catch (err) {
       logger.error('[AddSecretForm] Submission failed', { error: err });
-      toast.error("Darn, couldn't save that.", { 
-        description: 'Could not secure your data.' 
+      toast.error("Major L", { 
+        description: "Couldn't secure your stash." 
       });
     }
   };

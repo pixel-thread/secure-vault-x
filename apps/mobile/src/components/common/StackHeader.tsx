@@ -17,7 +17,7 @@ export type CustomHeaderProps = {
   rightElement?: React.ReactNode;
   backButton?: boolean;
   isDrawer?: boolean;
-} & Record<string, any>; // Allow any other props from navigators
+} & Record<string, unknown>; // Allow any other props from navigators
 
 /**
  * Expo Router Stack Helper

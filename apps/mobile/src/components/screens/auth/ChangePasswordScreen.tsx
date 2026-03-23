@@ -47,12 +47,11 @@ const ChangePasswordScreen = () => {
     watch,
     formState: { errors },
   } = useForm<ChangePasswordFormData>({
-    resolver: async (values: ChangePasswordFormData, context: any, options: any) => {
+    resolver: async (values, context, options) => {
       const activeSchema = isOtpSent ? changePasswordSchema : changePasswordWithOutOtpSchema;
       const resolver = zodResolver(activeSchema);
-      const result = await resolver(values, context, options);
 
-      return result as any;
+      return (resolver as any)(values, context, options);
     },
     mode: 'onChange',
     defaultValues: {
@@ -77,37 +76,39 @@ const ChangePasswordScreen = () => {
 
   // Mutations
   const { mutate: requestOtp, isPending: isRequestingOtp } = useMutation({
-    mutationFn: () => http.post(AUTH_ENDPOINT.POST_PASSWORD_RESET_REQUEST, {}),
-    onSuccess: (res) => {
+    mutationFn: () => http.post<{ success: boolean; message?: string }>(AUTH_ENDPOINT.POST_PASSWORD_RESET_REQUEST, {}),
+    onSuccess: (res: { success: boolean; message?: string }) => {
       if (res.success) {
-        toast.success('Code dropped in your inbox!');
+        toast.success('Code dropped');
         setIsOtpSent(true);
         return;
       } else {
-        toast.error(res.message || 'Failed to request OTP');
+        toast.error('Major L', { description: res.message || 'Failed to request code.' });
         return;
       }
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       logger.error('Failed to request OTP', err);
-      toast.error(err.response?.data?.message || 'Failed to request OTP');
+      const message = err instanceof Error ? err.message : 'Failed to request OTP';
+      toast.error(message);
     },
   });
 
   const { mutate: changePassword, isPending: isChangingPassword } = useMutation({
     mutationFn: (data: ChangePasswordFormData) =>
-      http.post<any>(AUTH_ENDPOINT.POST_PASSWORD_CHANGE, data),
-    onSuccess: (res) => {
+      http.post<{ success: boolean; message?: string }>(AUTH_ENDPOINT.POST_PASSWORD_CHANGE, data),
+    onSuccess: (res: { success: boolean; message?: string }) => {
       if (res.success) {
-        toast.success('Password updated! Clean vibes.');
+        toast.success('Glow up complete');
         router.back();
       } else {
         toast.error(res?.message || 'Failed to update password');
       }
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       logger.error('Failed to update password', err);
-      toast.error(err.response?.data?.message || 'An error occurred server-side');
+      const message = err instanceof Error ? err.message : 'An error occurred server-side';
+      toast.error(message);
     },
   });
 

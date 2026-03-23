@@ -71,7 +71,7 @@ export function useFileEncrypter() {
       
       // Enforce zero-knowledge friendly size limits
       if (file.size && file.size > MAX_FILE_SIZE_BYTES) {
-        toast.error('File too large', { description: `Files must be under 5MB.` });
+        toast.error('File too chunky', { description: `Keep it under 5MB.` });
         return null;
       }
 
@@ -86,7 +86,7 @@ export function useFileEncrypter() {
       return info;
     } catch (err) {
       logger.error('[useFileEncrypter] Picker failed', { error: err });
-      toast.error('Could not access files');
+      toast.error('Files are acting up');
       return null;
     }
   }, []);
@@ -99,7 +99,7 @@ export function useFileEncrypter() {
     try {
       const mek = await DeviceStoreManager.getMek();
       if (!mek) {
-        toast.error('Vault locked', { description: 'Encryption key not found.' });
+        toast.error('Vault locked', { description: 'MEK missing.' });
         return null;
       }
 
@@ -132,10 +132,10 @@ export function useFileEncrypter() {
       }
 
       return { id: secretPayload.id, encryptedData, iv };
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Security: Obscure the error message to ensure no part of the Base64 payload is logged
-      logger.error('[useFileEncrypter] Encryption failed', { message: err?.message || 'Unknown error' });
-      toast.error('Failed to secure file');
+      logger.error('[useFileEncrypter] Encryption failed', { message: err instanceof Error ? err.message : String(err) });
+      toast.error('Major L. File failed.');
       return null;
     } finally {
       setIsProcessing(false);
@@ -167,9 +167,9 @@ export function useFileEncrypter() {
       } else {
         toast.error("Viewer unavailable", { description: "Format not supported by installed apps." });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Security: Obscure the error message to ensure no part of the payload is logged
-      logger.error('[useFileEncrypter] Decryption/Sharing failed', { message: err?.message || 'Unknown error' });
+      logger.error('[useFileEncrypter] Decryption/Sharing failed', { message: err instanceof Error ? err.message : String(err) });
       toast.error('Failed to open file');
     } finally {
       setIsProcessing(false);

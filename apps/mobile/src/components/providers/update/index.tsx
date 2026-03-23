@@ -57,7 +57,7 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (update.isAvailable) {
           await onFetchUpdateAsync();
         } else {
-          if (!silent) toast.success('SecureVault is up to date');
+          if (!silent) toast.success('Vibe check passed', { description: 'SecureVault is fresh.' });
         }
       } catch (error) {
         if (!silent) toast.error('Failed to check for updates');
