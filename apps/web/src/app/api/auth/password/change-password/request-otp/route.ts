@@ -5,10 +5,10 @@ import { withValidation } from "@/utils/middleware/withValidiation";
 import { UnauthorizedError } from "@/utils/errors/unAuthError";
 
 export const POST = withValidation({}, async (_data, req) => {
- const userId = req.headers.get("x-user-id");
- if (!userId) throw new UnauthorizedError("Unauthorized");
+  const userId = req.headers.get("x-user-id");
+  if (!userId) throw new UnauthorizedError("Unauthorized");
 
- const result = await AuthService.requestPasswordChangeOtp(userId);
+  const result = await AuthService.requestPasswordChangeOtp(userId);
 
- return SuccessResponse({ data: result });
+  return SuccessResponse({ data: result });
 });

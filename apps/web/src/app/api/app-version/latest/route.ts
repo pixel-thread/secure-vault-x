@@ -6,14 +6,15 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const platformParam = searchParams.get("platform");
-    const platform = (platformParam?.toUpperCase() as AppVersionPlatform) || "ANDROID";
+    const platform =
+      (platformParam?.toUpperCase() as AppVersionPlatform) || "ANDROID";
 
     const latestVersion = await AppVersionService.getLatestAppVersion(platform);
 
     if (!latestVersion || !latestVersion.downloadUrl) {
       return NextResponse.json(
         { error: "No active version found for this platform" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
     console.error("Error fetching latest app version:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

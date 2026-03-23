@@ -4,7 +4,9 @@ import GlassCard from "@/components/ui/GlassCard";
 const Divider = () => <div className="my-8 h-px w-full bg-white/10" />;
 
 const Heading1 = ({ children }: { children: React.ReactNode }) => (
-  <h1 className="mb-4 mt-2 text-2xl font-bold text-white tracking-tight">{children}</h1>
+  <h1 className="mb-4 mt-2 text-2xl font-bold text-white tracking-tight">
+    {children}
+  </h1>
 );
 
 const Heading2 = ({ children }: { children: React.ReactNode }) => (
@@ -44,9 +46,7 @@ export default function DocumentationScreen(): React.ReactNode {
     <div className="flex h-full flex-col text-white w-full">
       {/* Header */}
       <div className="z-10 rounded-lg flex flex-col justify-end border-b border-white/5 bg-black/40 px-6 pb-6 pt-12 lg:pt-8 w-full backdrop-blur-md">
-        <h1 className="text-3xl font-extrabold tracking-tight">
-          README
-        </h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">README</h1>
         <p className="mt-1 text-sm font-semibold uppercase tracking-wider text-emerald-400">
           SecureVault X App Documentation
         </p>
@@ -60,7 +60,9 @@ export default function DocumentationScreen(): React.ReactNode {
             <Paragraph>
               Zero-Knowledge, End-to-End Encrypted Password Manager
               <br />
-              <span className="text-emerald-400/80 font-mono text-sm mt-2 inline-block">Monorepo • TypeScript • Next.js • Tailwind • WebAuthn</span>
+              <span className="text-emerald-400/80 font-mono text-sm mt-2 inline-block">
+                Monorepo • TypeScript • Next.js • Tailwind • WebAuthn
+              </span>
             </Paragraph>
           </GlassCard>
 
@@ -68,8 +70,8 @@ export default function DocumentationScreen(): React.ReactNode {
           <GlassCard className="!p-8 bg-white/[0.02] border-white/10">
             <Heading2>🚀 Why SecureVault X?</Heading2>
             <Paragraph>
-              SecureVault X is a production-grade, zero-knowledge password manager
-              built to ensure maximum privacy and offline availability.
+              SecureVault X is a production-grade, zero-knowledge password
+              manager built to ensure maximum privacy and offline availability.
             </Paragraph>
             <Paragraph>
               The core philosophy is{" "}
@@ -91,8 +93,8 @@ export default function DocumentationScreen(): React.ReactNode {
           <GlassCard className="!p-8 bg-white/[0.02] border-white/10">
             <Heading1>🏗 Architecture & Stack</Heading1>
             <Paragraph>
-              SecureVault X uses a monorepo structure with shared packages across
-              mobile and web environments.
+              SecureVault X uses a monorepo structure with shared packages
+              across mobile and web environments.
             </Paragraph>
             <div className="mt-6 flex flex-col space-y-1">
               <ListItem>
@@ -109,8 +111,8 @@ export default function DocumentationScreen(): React.ReactNode {
               </ListItem>
               <ListItem>
                 <span className="font-bold text-white">Shared Packages</span>:
-                Monorepo standardizing Types, Configs, and Cryptography across the
-                stack.
+                Monorepo standardizing Types, Configs, and Cryptography across
+                the stack.
               </ListItem>
             </div>
           </GlassCard>
@@ -151,8 +153,8 @@ export default function DocumentationScreen(): React.ReactNode {
               </div>
             </div>
             <Paragraph>
-              The MEK is heavily guarded and encrypted via native Device hardware
-              (or Web Storage limits) before being stored:
+              The MEK is heavily guarded and encrypted via native Device
+              hardware (or Web Storage limits) before being stored:
             </Paragraph>
             <div className="my-6 flex flex-col space-y-1">
               <ListItem>
@@ -170,10 +172,12 @@ export default function DocumentationScreen(): React.ReactNode {
             <Heading2>Encryption Standards</Heading2>
             <Paragraph>
               All Vault encryption runs on{" "}
-              <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded-md">AES-256-GCM</span> using
-              unique 12-byte random IVs (No IV Reuse) to ensure Authenticated
-              Encryption. Every piece of randomness utilizes cryptographically
-              secure RNG native APIs.
+              <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded-md">
+                AES-256-GCM
+              </span>{" "}
+              using unique 12-byte random IVs (No IV Reuse) to ensure
+              Authenticated Encryption. Every piece of randomness utilizes
+              cryptographically secure RNG native APIs.
             </Paragraph>
           </GlassCard>
 
@@ -186,8 +190,8 @@ export default function DocumentationScreen(): React.ReactNode {
             </Paragraph>
             <Paragraph>
               No passwords are ever stored or transmitted. During login, the
-              client signs a hardware-bound cryptographic challenge locally which
-              the server independently verifies.
+              client signs a hardware-bound cryptographic challenge locally
+              which the server independently verifies.
             </Paragraph>
           </GlassCard>
 
@@ -200,8 +204,8 @@ export default function DocumentationScreen(): React.ReactNode {
                 The new device generates a local asymmetric key pair.
               </NumberedListItem>
               <NumberedListItem number={2}>
-                An existing, already-trusted device encrypts the MEK with the new
-                device&apos;s public key.
+                An existing, already-trusted device encrypts the MEK with the
+                new device&apos;s public key.
               </NumberedListItem>
               <NumberedListItem number={3}>
                 The server ferries the encrypted MEK.
@@ -211,7 +215,8 @@ export default function DocumentationScreen(): React.ReactNode {
               </NumberedListItem>
             </div>
             <Paragraph>
-              At no point does the Server ever see the plaintext encryption keys.
+              At no point does the Server ever see the plaintext encryption
+              keys.
             </Paragraph>
           </GlassCard>
 
@@ -239,7 +244,6 @@ export default function DocumentationScreen(): React.ReactNode {
               </ListItem>
             </div>
           </GlassCard>
-
         </div>
       </div>
     </div>

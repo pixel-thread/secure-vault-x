@@ -83,7 +83,9 @@ export default function SignupScreen(): React.ReactNode {
             </GlassButton>
 
             <div className="mt-6 flex flex-row gap-1 justify-center">
-              <span className="text-zinc-400 text-sm">Already have an account? </span>
+              <span className="text-zinc-400 text-sm">
+                Already have an account?{" "}
+              </span>
               <Link
                 href="/login"
                 className="text-sm font-bold text-emerald-500 hover:text-emerald-400 transition-colors"

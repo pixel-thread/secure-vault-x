@@ -8,7 +8,11 @@ interface Props<T> {
   data?: T | unknown | null;
 }
 
-export const ErrorResponse = <T>({ message = "Unknown error", error, status = 500 }: Props<T>) => {
+export const ErrorResponse = <T>({
+  message = "Unknown error",
+  error,
+  status = 500,
+}: Props<T>) => {
   return NextResponse.json(
     {
       success: false,
@@ -16,6 +20,6 @@ export const ErrorResponse = <T>({ message = "Unknown error", error, status = 50
       error: error,
       timeStamp: new Date().toISOString(),
     },
-    { status: status }
+    { status: status },
   );
 };

@@ -1,14 +1,14 @@
 import { prisma } from "@/libs/db/prisma";
-import { 
-  EasBuildPayload, 
-  EasUpdatePayload, 
+import {
+  EasBuildPayload,
+  EasUpdatePayload,
   EasSubmitPayload,
-  AppVersionPlatform
+  AppVersionPlatform,
 } from "@securevault/types";
 
 export const upsertEASWebhook = async (
   type: "BUILD" | "UPDATE" | "SUBMIT",
-  payload: EasBuildPayload | EasUpdatePayload | EasSubmitPayload
+  payload: EasBuildPayload | EasUpdatePayload | EasSubmitPayload,
 ) => {
   const commonData = {
     easId: payload.id,

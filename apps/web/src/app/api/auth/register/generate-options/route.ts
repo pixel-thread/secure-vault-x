@@ -5,10 +5,10 @@ import { SuccessResponse } from "@/utils/next-response";
 import { withValidation } from "@/utils/middleware/withValidiation";
 
 export const POST = withValidation(
- { body: generateRegistrationOptionsSchema },
- async ({ body }) => {
-  const { email } = body;
-  const options = await AuthService.generateRegistrationOptions(email);
-  return SuccessResponse({ data: options });
- }
+  { body: generateRegistrationOptionsSchema },
+  async ({ body }) => {
+    const { email } = body;
+    const options = await AuthService.generateRegistrationOptions(email);
+    return SuccessResponse({ data: options });
+  },
 );

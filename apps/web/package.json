@@ -8,6 +8,7 @@
     "build:local": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "format": "prettier --write .",
     "db:generate": "prisma generate",
     "test": "NODE_ENV=test vitest run",
     "test:owasp": "node build-owasp-tests.js && RATE_LIMIT_THRESHOLD=5 vitest run tests/owasp",
