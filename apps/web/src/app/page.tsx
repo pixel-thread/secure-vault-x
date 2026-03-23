@@ -88,7 +88,26 @@ export default function LandingPage() {
               synced across all your devices with unbreakable precision.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <GlassButton variant="prominent" className="text-lg !px-8">
+              <GlassButton 
+                variant="prominent" 
+                className="text-lg !px-8"
+                onClick={async () => {
+                  try {
+                    const response = await fetch("/api/appVersion/latest");
+                    if (response.ok) {
+                      const data = await response.json();
+                      if (data.downloadUrl) {
+                        window.location.href = data.downloadUrl;
+                      }
+                    } else {
+                      console.error("Failed to fetch latest version");
+                      // Fallback or toast could be added here
+                    }
+                  } catch (error) {
+                    console.error("Error during download request:", error);
+                  }
+                }}
+              >
                 <Download size={20} />
                 Download App
               </GlassButton>
