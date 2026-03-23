@@ -51,8 +51,8 @@ model Device {
   deviceName       String
   publicKey        String? // Base64 encoded ECDSA P-256 SPKI public key
   encryptedMEK     String?
-  isTrusted        Boolean  @default(false)
   createdAt        DateTime @default(now())
+  isTrusted        Boolean  @default(false)
 
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshTokens RefreshToken[]
