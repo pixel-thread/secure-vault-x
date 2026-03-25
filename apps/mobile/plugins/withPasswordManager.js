@@ -165,6 +165,14 @@ class PasswordAutofillService : AutofillService() {
             "password", "passwd", "pass", "pwd", "secret",
             "passphrase", "credentials", "pin", "code", "cvv"
         )
+
+        // --- Regex patterns (Pre-compiled to prevent ReDoS) -------------------
+        private val REGEX_SCHEME           = Regex("^https?://")
+        private val REGEX_SUBDOMAINS       = Regex("^(www|login|auth|mobile|api|m|account|accounts)[.]")
+        private val REGEX_TLD              = Regex("[.](com|org|net|io|app|dev|co|uk|in|de|fr|es|it|jp|cn|ru|br|me|ai|info|biz|gov|edu)\$")
+        private val REGEX_PKG_PREFIX       = Regex("^(com|org|net|android|mobile|io|gov)[.]")
+        private val REGEX_PKG_SUFFIX       = Regex("[.](android|music|app|mobile|tv|watch|client|messaging|email|social|pay|lite|go|free|pro|plus)\$")
+        private val REGEX_NON_ALPHANUMERIC = Regex("[^a-z0-9]")
     }
 
     // --- Lifecycle -------------------------------------------------------------
@@ -238,7 +246,7 @@ class PasswordAutofillService : AutofillService() {
                         val mapped = mutableListOf<String>()
                         if (parsed.usernameNodes.isNotEmpty()) mapped.add("username")
                         if (parsed.passwordNodes.isNotEmpty()) mapped.add("password")
-                        Log.d(TAG, "[FILL] Dataset #\$idx mapped fields: \${mapped.joinToString(", ")} for user=\${cred.username}")
+                        Log.d(TAG, "[FILL] Dataset #\$idx mapped fields: \${mapped.joinToString(", ")} for user=\${mask(cred.username)}")
                     }
                 }
             }
@@ -286,7 +294,7 @@ class PasswordAutofillService : AutofillService() {
                 .firstOrNull { it.isNotBlank() }
 
             val siteKey = parsed.webDomain ?: clientPackage
-            Log.d(TAG, "[SAVE] Detected credential for \$siteKey: user='\$username'")
+            Log.d(TAG, "[SAVE] Detected credential for \$siteKey: user='\${mask(username)}'")
 
             if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
                 Log.i(TAG, "[SAVE] saving credential for \$siteKey via JS sync bridge (TODO)")
@@ -472,7 +480,7 @@ class PasswordAutofillService : AutofillService() {
         request: FillRequest,
         index: Int
     ): Dataset? {
-        val presentation = buildPresentation("SecureVaultX: \${cred.username}")
+        val presentation = buildPresentation("SecureVaultX: \${mask(cred.username)}")
         val datasetBuilder = Dataset.Builder(presentation)
         
         val inline = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -524,7 +532,7 @@ class PasswordAutofillService : AutofillService() {
             val slice = androidx.autofill.inline.v1.InlineSuggestionUi
                 .newContentBuilder(pendingIntent)
                 .apply {
-                    setTitle(cred.username)
+                    setTitle(mask(cred.username))
                     setSubtitle("SecureVaultX")
                 }
                 .build().slice
@@ -600,7 +608,7 @@ class PasswordAutofillService : AutofillService() {
         var s = raw.lowercase().trim()
         
         // 1. Strip scheme
-        s = s.replace(Regex("^https?://"), "")
+        s = s.replace(REGEX_SCHEME, "")
         
         // 2. Strip path and query if present (for cross-page matching)
         if (s.contains("/")) {
@@ -608,23 +616,29 @@ class PasswordAutofillService : AutofillService() {
         }
         
         // 3. Strip common subdomains that don't differentiate login services
-        s = s.replace(Regex("^(www|login|auth|mobile|api|m|account|accounts)[.]"), "")
+        s = s.replace(REGEX_SUBDOMAINS, "")
         
         // 4. Strip TLD (broad list to isolate the core brand name)
-        s = s.replace(Regex("[.](com|org|net|io|app|dev|co|uk|in|de|fr|es|it|jp|cn|ru|br|me|ai|info|biz|gov|edu)$"), "")
+        s = s.replace(REGEX_TLD, "")
         
         // 5. Strip common package prefixes/suffixes
-        s = s.replace(Regex("^(com|org|net|android|mobile|io|gov)[.]"), "")
-             .replace(Regex("[.](android|music|app|mobile|tv|watch|client|messaging|email|social|pay|lite|go|free|pro|plus)$"), "")
+        s = s.replace(REGEX_PKG_PREFIX, "")
+             .replace(REGEX_PKG_SUFFIX, "")
         
         // 6. Final cleanup (eliminate remaining dots and non-alphanumeric)
-        return s.replace(Regex("[^a-z0-9]"), "")
+        return s.replace(REGEX_NON_ALPHANUMERIC, "")
     }
 
     private fun extractCredentials(arr: JSONArray) = (0 until arr.length()).map {
         arr.getJSONObject(it).let { o ->
             Credential(o.getString("username"), o.getString("password"))
         }
+    }
+
+    private fun mask(s: String?): String {
+        if (s == null) return "null"
+        if (s.length <= 4) return "****"
+        return s.take(2) + "***" + s.takeLast(2)
     }
 
     // ─── Data ──────────────────────────────────────────────────────────────────
@@ -664,6 +678,9 @@ import org.json.JSONObject
 object SharedVault {
     @Volatile
     var vault: JSONObject? = null
+    
+    @Volatile
+    var lastAccessedAt: Long = 0
 }
 
 /**
@@ -678,17 +695,31 @@ class PasswordRepository(private val context: Context) {
         private const val TAG = "SecureVaultX"
     }
 
-    /** Get the current decrypted vault from memory. */
+    /** Get the current decrypted vault from memory with 15-minute auto-lock. */
     fun getVault(): JSONObject {
-        return SharedVault.vault ?: JSONObject().also {
-            Log.d(TAG, "[VAULT] SharedVault is empty (locked)")
+        val now = System.currentTimeMillis()
+        val timeout = 15 * 60 * 1000 // 15 mins
+        
+        val vault = SharedVault.vault
+        if (vault != null) {
+            if (now - SharedVault.lastAccessedAt > timeout) {
+                Log.i(TAG, "[VAULT] 🔐 Auto-lock triggered (inactivity)")
+                SharedVault.vault = null
+                return JSONObject()
+            }
+            SharedVault.lastAccessedAt = now
+            return vault
         }
+        
+        Log.d(TAG, "[VAULT] SharedVault is empty (locked)")
+        return JSONObject()
     }
 
     /** Set the vault in memory from a JSON string. */
     fun syncVault(json: String): Boolean {
         return try {
             SharedVault.vault = JSONObject(json)
+            SharedVault.lastAccessedAt = System.currentTimeMillis()
             Log.i(TAG, "[VAULT] ✓ SharedVault synced (\${SharedVault.vault?.length()} sites)")
             true
         } catch (e: Exception) {
