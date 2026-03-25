@@ -159,7 +159,7 @@ class PasswordAutofillService : AutofillService() {
         private val USERNAME_ID_FRAGMENTS = setOf(
             "username", "user_name", "user", "email", "e-mail",
             "login", "loginid", "account", "userid", "uname",
-            "identifier", "handle", "mobile", "phone"
+            "identifier", "mobile", "phone"
         )
         private val PASSWORD_ID_FRAGMENTS = setOf(
             "password", "passwd", "pass", "pwd", "secret",
@@ -335,6 +335,7 @@ class PasswordAutofillService : AutofillService() {
         val inputType   = node.inputType
         val isEditText  = className.contains("edittext") ||
                           className.contains("textinputedittext") ||
+                          (className == "android.view.view" && inputType != 0) ||
                           node.isFocusable
 
         // ── STRATEGY 1: htmlInfo ─────────────────────────────────────────────
@@ -387,32 +388,35 @@ class PasswordAutofillService : AutofillService() {
 
         // ── STRATEGY 2+3+4: Native hints / inputType / attribute fragments ───
 
-        val isPasswordByHint = hints.any { it == View.AUTOFILL_HINT_PASSWORD }
-        val isPasswordByType = PASSWORD_INPUT_TYPE_MASKS.any { mask -> (inputType and mask) != 0 }
-        val isPasswordByAttr = PASSWORD_ID_FRAGMENTS.any { f ->
+        val isPasswordByHint = hints.any { h -> h.lowercase().contains("password") || h == View.AUTOFILL_HINT_PASSWORD }
+        val isPasswordByType = inputType != 0 && (inputType and InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_TEXT &&
+                               PASSWORD_INPUT_TYPE_MASKS.any { mask -> (inputType and InputType.TYPE_MASK_VARIATION) == (mask and InputType.TYPE_MASK_VARIATION) }
+        val matchingPasswordAttr = PASSWORD_ID_FRAGMENTS.firstOrNull { f ->
             idEntry.contains(f) || contentDesc.contains(f) || hintText.contains(f)
         }
+        val isPasswordByAttr = matchingPasswordAttr != null
 
         if (isEditText && (isPasswordByHint || isPasswordByType || isPasswordByAttr)) {
             if (form.passwordNodes.isEmpty()) {
                 form.passwordNodes.add(node)
                 Log.d(TAG, "[PARSE] NATIVE PASSWORD — id='\$idEntry' type=\$inputType depth=\$depth " +
-                    "hints=[\${hints.joinToString()}] " +
+                    "hints=[\${hints.joinToString()}] match='\$matchingPasswordAttr' " +
                     "byHint=\$isPasswordByHint byType=\$isPasswordByType byAttr=\$isPasswordByAttr")
             }
             recurseChildren(node, form, depth); return
         }
 
         val isUsernameByHint = hints.any { it in NATIVE_USERNAME_HINTS }
-        val isUsernameByAttr = USERNAME_ID_FRAGMENTS.any { f ->
+        val matchingUsernameAttr = USERNAME_ID_FRAGMENTS.firstOrNull { f ->
             idEntry.contains(f) || contentDesc.contains(f) || hintText.contains(f)
         }
+        val isUsernameByAttr = matchingUsernameAttr != null
 
-        if (isEditText && (isUsernameByHint || isUsernameByAttr)) {
+        if (isEditText && inputType != 0 && (isUsernameByHint || isUsernameByAttr)) {
             if (form.usernameNodes.isEmpty()) {
                 form.usernameNodes.add(node)
                 Log.d(TAG, "[PARSE] NATIVE USERNAME — id='\$idEntry' type=\$inputType depth=\$depth " +
-                    "hints=[\${hints.joinToString()}] " +
+                    "hints=[\${hints.joinToString()}] match='\$matchingUsernameAttr' " +
                     "byHint=\$isUsernameByHint byAttr=\$isUsernameByAttr")
             }
         }
