@@ -155,6 +155,7 @@ export default function VaultScreen() {
       />
 
       <TouchableOpacity
+        testID="add-button"
         className="absolute bottom-8 right-8 h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 active:scale-95"
         onPress={onOpenAdd}
       >

@@ -91,6 +91,7 @@ export default function SignupScreen() {
                 name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
+                    testID="signup-email"
                     className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
                       errors.email ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
                     }`}
@@ -123,6 +124,7 @@ export default function SignupScreen() {
                     }`}
                   >
                     <TextInput
+                      testID="signup-password"
                       className="flex-1 px-5 py-4 text-lg text-zinc-900 dark:text-white"
                       placeholder="The secret word..."
                       placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
@@ -166,6 +168,7 @@ export default function SignupScreen() {
                     }`}
                   >
                     <TextInput
+                      testID="signup-confirm-password"
                       className="flex-1 px-5 py-4 text-lg text-zinc-900 dark:text-white"
                       placeholder="Once more..."
                       placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
@@ -196,6 +199,7 @@ export default function SignupScreen() {
             </View>
 
             <TouchableOpacity
+              testID="signup-button"
               className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
               disabled={isPending}
               onPress={handleSubmit(onSubmit)}
@@ -209,7 +213,7 @@ export default function SignupScreen() {
             <View className="mt-6 flex-row justify-center">
               <Text className="text-zinc-500 dark:text-zinc-400">Already part of it? </Text>
               <Link href="/auth" asChild>
-                <TouchableOpacity>
+                <TouchableOpacity testID="login-link">
                   <Text className="font-bold text-emerald-600 dark:text-emerald-500">Log in</Text>
                 </TouchableOpacity>
               </Link>

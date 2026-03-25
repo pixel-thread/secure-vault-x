@@ -144,6 +144,7 @@ export default function MfaScreen() {
                   name="code"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
+                      testID="mfa-code"
                       className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-center font-mono text-3xl font-bold tracking-[0.5em] text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
                         errors.code ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
                       }`}
@@ -165,6 +166,7 @@ export default function MfaScreen() {
               </View>
 
               <TouchableOpacity
+                testID="mfa-button"
                 className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
                 disabled={isPending}
                 onPress={handleSubmit(onSubmit)}
@@ -174,7 +176,7 @@ export default function MfaScreen() {
               </TouchableOpacity>
 
               <View className="mt-6 flex-row justify-center">
-                <TouchableOpacity onPress={() => router.replace('/auth')}>
+                <TouchableOpacity testID="mfa-back" onPress={() => router.replace('/auth')}>
                   <Text className="text-lg font-bold text-zinc-500 dark:text-zinc-400">
                     Wait, go back
                   </Text>

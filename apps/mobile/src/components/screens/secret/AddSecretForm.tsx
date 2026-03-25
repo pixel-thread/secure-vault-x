@@ -13,7 +13,8 @@ import { useForm } from 'react-hook-form';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useNotification } from '@hooks/useNotification';
 import { toast } from 'sonner-native';
-import { VaultSecretT } from '@src/types/vault';
+import { VaultSecretT, SecretType } from '@src/types/vault';
+import { usePasswordManager } from '@hooks/usePasswordManager';
 
 interface Props {
   template: SecretTemplate;
@@ -36,6 +37,7 @@ export function AddSecretForm({
 }: Props) {
   const { colorScheme } = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  const { saveCredential } = usePasswordManager();
 
   // --- STATE ---
   const [showMasked, setShowMasked] = useState<Record<string, boolean>>({});
@@ -117,6 +119,45 @@ export function AddSecretForm({
       const { encryptedData, iv } = await encryptData(secretPayload, mek);
       mutate({ id: secretPayload.id, encryptedData, iv, version });
 
+      // --- AUTOFILL SYNC ---
+      // Sync to system-wide autofill for relevant types (login, card, api_key, server, database)
+      const autofillCompatibleTypes: SecretType[] = [
+        'login',
+        'card',
+        'api_key',
+        'server',
+        'database',
+      ];
+      if (autofillCompatibleTypes.includes(template.type)) {
+        // Find fields by type and common label keywords for more robust extraction
+        const getField = (type: string, keywords: string[]) => {
+          const field = template.fields.find(
+            (f) => f.type === type || keywords.some((k) => f.label.toLowerCase().includes(k)),
+          );
+          return field ? values[field.label] : '';
+        };
+
+        const domainOrPkg = getField('url', ['website', 'url', 'domain', 'package']);
+        const user = getField('text', ['user', 'email', 'login', 'handle']);
+        const pass = getField('password', ['pass', 'secret', 'key', 'token', 'cvv']);
+
+        if (domainOrPkg && user && pass) {
+          // Clean the domain (strip http/https and paths for easier matching)
+          const cleanDomain = domainOrPkg
+            .replace(/^https?:\/\//, '')
+            .split('/')[0]
+            .split(':')[0];
+          saveCredential(cleanDomain, user, pass).catch((e) =>
+            logger.error('[AddSecretForm] Autofill sync failed', { error: e }),
+          );
+
+          // Also save by package name if it looks like a package ID (optional enhancement)
+          if (domainOrPkg.includes('.') && !domainOrPkg.includes('/')) {
+            saveCredential(domainOrPkg, user, pass).catch(() => {});
+          }
+        }
+      }
+
       // Reschedule notifications (background)
       scheduleForItem(secretPayload).catch((e) =>
         logger.error('[AddSecretForm] Auto-reschedule failed', { error: e }),
@@ -177,6 +218,7 @@ export function AddSecretForm({
         <FormField
           label="Name it"
           name="title"
+          testID="field-title"
           control={control}
           errors={errors}
           isDarkMode={isDarkMode}
@@ -189,6 +231,7 @@ export function AddSecretForm({
             key={field.label}
             label={field.label}
             name={field.label}
+            testID={`field-${field.label.toLowerCase().replace(/\s/g, '-')}`}
             control={control}
             errors={errors}
             isDarkMode={isDarkMode}
@@ -297,6 +340,7 @@ export function AddSecretForm({
       <View className="mt-2 gap-4">
         <TouchableOpacity
           disabled={isPending}
+          testID="save-button"
           className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
           onPress={handleSubmit(onSubmitForm)}
         >
