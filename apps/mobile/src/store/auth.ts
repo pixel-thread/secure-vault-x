@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { UserT } from '@securevault/types';
 import { DeviceStoreManager } from './device';
+import { PasswordManager } from '@src/PasswordManager';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -28,11 +29,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: async (data: UserT) => set({ user: data }),
   setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
   setHasMek: (hasMek: boolean) => set({ hasMek }),
-  logout: () => set({ isAuthenticated: false, user: null, isLoading: false, hasMek: false }),
+  logout: () => {
+    PasswordManager.clearVault().catch(() => {}); // Security: Wipe RAM bridge on logout
+    set({ isAuthenticated: false, user: null, isLoading: false, hasMek: false });
+  },
   purgeLocalEnclave: async () => {
     // Physically destroy the DKEK backing the device trust.
     // This permanently bricks local Vault access on this device until re-registered.
     await DeviceStoreManager.clearAll();
+    await PasswordManager.clearVault().catch(() => {}); // Security: Wipe RAM bridge on purge
     set({ isAuthenticated: false, user: null, hasMek: false });
   },
   _hydrate: () => {

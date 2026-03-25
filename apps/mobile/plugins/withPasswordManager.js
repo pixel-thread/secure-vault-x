@@ -218,7 +218,8 @@ class PasswordAutofillService : AutofillService() {
                 return
             }
 
-            val vault = loadVault()
+            val repo  = PasswordRepository(this)
+            val vault = repo.getVault()
             val siteKey = parsed.webDomain ?: clientPackage
             val credentials = matchCredentials(vault, siteKey, clientPackage, parsed.webDomain)
 
@@ -288,8 +289,9 @@ class PasswordAutofillService : AutofillService() {
             Log.d(TAG, "[SAVE] Detected credential for \$siteKey: user='\$username'")
 
             if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
-                saveToVault(siteKey, username, password)
-                Log.i(TAG, "[SAVE] ✓ Credential saved for \$siteKey")
+                Log.i(TAG, "[SAVE] saving credential for \$siteKey via JS sync bridge (TODO)")
+                // For now, we rely on the main app saving its own vault.
+                // Native save to SharedPreferences is disabled for security.
             } else {
                 Log.w(TAG, "[SAVE] ✗ Incomplete credential - skipping save")
             }
@@ -329,11 +331,16 @@ class PasswordAutofillService : AutofillService() {
         val className   = node.className?.lowercase() ?: ""
         val contentDesc = node.contentDescription?.toString()?.lowercase() ?: ""
         val hintText    = node.hint?.toString()?.lowercase() ?: ""
+        val text        = node.text?.toString()?.lowercase() ?: ""
         val inputType   = node.inputType
+        val autofillType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) node.autofillType else 0
+        
+        // Expanded isEditText to catch generic views in Chrome/WebView that act as inputs
         val isEditText  = className.contains("edittext") ||
                           className.contains("textinputedittext") ||
+                          autofillType == View.AUTOFILL_TYPE_TEXT ||
                           (className == "android.view.view" && inputType != 0) ||
-                          node.isFocusable
+                          (node.isFocusable && (inputType != 0 || idEntry.isNotEmpty()))
 
         // --- STRATEGY 1: htmlInfo (Chrome / WebView) ---------------------------
         val htmlInfo  = node.htmlInfo
@@ -361,7 +368,7 @@ class PasswordAutofillService : AutofillService() {
         var matchUsername: String? = null
         var matchPassword: String? = null
 
-        if (htmlTag == "input") {
+        if (htmlTag == "input" || htmlAttrs.containsKey("type")) {
             val htmlType         = htmlAttrs["type"] ?: "text"
             val htmlAutocomplete = htmlAttrs["autocomplete"] ?: ""
             val htmlName         = htmlAttrs["name"] ?: ""
@@ -369,17 +376,17 @@ class PasswordAutofillService : AutofillService() {
             val htmlPlaceholder  = htmlAttrs["placeholder"] ?: ""
 
             if (htmlType in HTML_PASSWORD_TYPES || htmlAutocomplete in HTML_PASSWORD_AUTOCOMPLETE) {
-                scorePassword += 3
+                scorePassword += 5 // High confidence for explicit HTML signals
             } else {
                 val m = matchesFragment(htmlName, PASSWORD_ID_FRAGMENTS) ?: matchesFragment(htmlId, PASSWORD_ID_FRAGMENTS) ?: matchesFragment(htmlPlaceholder, PASSWORD_ID_FRAGMENTS)
-                if (m != null) { scorePassword += 1; matchPassword = m }
+                if (m != null) { scorePassword += 2; matchPassword = m }
             }
 
             if (htmlAutocomplete in HTML_USERNAME_AUTOCOMPLETE || (htmlType in HTML_USERNAME_TYPES && scorePassword < 3)) {
-                scoreUsername += 3
+                scoreUsername += 5
             } else {
                 val m = matchesFragment(htmlName, USERNAME_ID_FRAGMENTS) ?: matchesFragment(htmlId, USERNAME_ID_FRAGMENTS) ?: matchesFragment(htmlPlaceholder, USERNAME_ID_FRAGMENTS)
-                if (m != null) { scoreUsername += 1; matchUsername = m }
+                if (m != null) { scoreUsername += 2; matchUsername = m }
             }
         }
 
@@ -406,9 +413,12 @@ class PasswordAutofillService : AutofillService() {
         if (isUsernameByHint) scoreUsername += 3
         if (isEmailVar) scoreUsername += 3
 
-        val mUser = matchesFragment(idEntry, USERNAME_ID_FRAGMENTS) ?: matchesFragment(contentDesc, USERNAME_ID_FRAGMENTS) ?: matchesFragment(hintText, USERNAME_ID_FRAGMENTS)
+        val mUser = matchesFragment(idEntry, USERNAME_ID_FRAGMENTS) ?: 
+                    matchesFragment(contentDesc, USERNAME_ID_FRAGMENTS) ?: 
+                    matchesFragment(hintText, USERNAME_ID_FRAGMENTS) ?:
+                    matchesFragment(text, USERNAME_ID_FRAGMENTS)
         if (mUser != null) { 
-            scoreUsername += 1
+            scoreUsername += 2
             matchUsername = matchUsername ?: mUser
         }
 
@@ -524,6 +534,12 @@ class PasswordAutofillService : AutofillService() {
         }
     }
 
+    private fun buildPresentation(text: String): RemoteViews {
+        val p = RemoteViews(packageName, android.R.layout.simple_list_item_1)
+        p.setTextViewText(android.R.id.text1, text)
+        return p
+    }
+
     // ─── Save Info ─────────────────────────────────────────────────────────────
 
     private fun buildSaveInfo(form: ParsedForm): SaveInfo? {
@@ -542,55 +558,9 @@ class PasswordAutofillService : AutofillService() {
             .build()
     }
 
-    // ─── Presentation ──────────────────────────────────────────────────────────
-
-    private fun buildPresentation(text: String) =
-        RemoteViews(packageName, android.R.layout.simple_list_item_1).apply {
-            setTextViewText(android.R.id.text1, text)
-        }
-
     // ─── Vault I/O ─────────────────────────────────────────────────────────────
 
-    private fun getPrefs() = EncryptedSharedPreferences.create(
-        this, PREFS_FILE,
-        MasterKey.Builder(this).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
-
-    private fun loadVault(): JSONObject = try {
-        JSONObject(getPrefs().getString(PREFS_KEY, "{}") ?: "{}").also {
-            Log.d(TAG, "[VAULT] Loaded — \${it.length()} site(s)")
-        }
-    } catch (e: Exception) {
-        Log.e(TAG, "[ERROR] loadVault: \${e.message}", e); JSONObject()
-    }
-
-    private fun saveToVault(siteKey: String, username: String, password: String) {
-        try {
-            val prefs = getPrefs()
-            val vault = JSONObject(prefs.getString(PREFS_KEY, "{}") ?: "{}")
-            val arr = if (vault.has(siteKey)) vault.getJSONArray(siteKey) else JSONArray()
-            var updated = false
-            for (i in 0 until arr.length()) {
-                val item = arr.getJSONObject(i)
-                if (item.getString("username") == username) {
-                    item.put("password", password)
-                    item.put("updatedAt", System.currentTimeMillis())
-                    updated = true; break
-                }
-            }
-            if (!updated) arr.put(JSONObject().apply {
-                put("username", username); put("password", password)
-                put("createdAt", System.currentTimeMillis())
-            })
-            vault.put(siteKey, arr)
-            prefs.edit().putString(PREFS_KEY, vault.toString()).apply()
-            Log.i(TAG, "[VAULT] ✓ Vault persisted — total sites=\${vault.length()}")
-        } catch (e: Exception) {
-            Log.e(TAG, "[ERROR] saveToVault: \${e.message}", e)
-        }
-    }
+    private fun getVault() = PasswordRepository(this).getVault()
 
     // ─── Credential Matching ───────────────────────────────────────────────────
 
@@ -612,22 +582,44 @@ class PasswordAutofillService : AutofillService() {
         while (iter.hasNext()) {
             val key     = iter.next()
             val normKey = normalise(key)
+            
+            Log.v(TAG, "[MATCH] checking fuzzy: '\$key' (norm=\$normKey) vs target '\$siteKey' (norm=\$normTarget)")
+            
             if (normKey.length > 2 && (
                 normTarget.contains(normKey) ||
-                normKey.contains(normTarget) ||
-                normalise(packageName).contains(normKey)
+                normKey.contains(normTarget)
             )) {
+                Log.i(TAG, "[MATCH] ✓ Fuzzy match found! '\$key' matches '\$siteKey'")
                 return extractCredentials(vault.getJSONArray(key))
             }
         }
         return emptyList()
     }
 
-    private fun normalise(raw: String) = raw.lowercase()
-        .replace(Regex("^https?://"), "")
-        .replace(Regex("^www[.]"), "")
-        .replace(Regex("[.](com|org|net|io|app|dev|co|uk|in|de|fr|es|it|jp|cn|ru|br)$"), "")
-        .replace(Regex("[^a-z0-9]"), "")
+    private fun normalise(raw: String): String {
+        var s = raw.lowercase().trim()
+        
+        // 1. Strip scheme
+        s = s.replace(Regex("^https?://"), "")
+        
+        // 2. Strip path and query if present (for cross-page matching)
+        if (s.contains("/")) {
+            s = s.substringBefore("/")
+        }
+        
+        // 3. Strip common subdomains that don't differentiate login services
+        s = s.replace(Regex("^(www|login|auth|mobile|api|m|account|accounts)[.]"), "")
+        
+        // 4. Strip TLD (broad list to isolate the core brand name)
+        s = s.replace(Regex("[.](com|org|net|io|app|dev|co|uk|in|de|fr|es|it|jp|cn|ru|br|me|ai|info|biz|gov|edu)$"), "")
+        
+        // 5. Strip common package prefixes/suffixes
+        s = s.replace(Regex("^(com|org|net|android|mobile|io|gov)[.]"), "")
+             .replace(Regex("[.](android|music|app|mobile|tv|watch|client|messaging|email|social|pay|lite|go|free|pro|plus)$"), "")
+        
+        // 6. Final cleanup (eliminate remaining dots and non-alphanumeric)
+        return s.replace(Regex("[^a-z0-9]"), "")
+    }
 
     private fun extractCredentials(arr: JSONArray) = (0 until arr.length()).map {
         arr.getJSONObject(it).let { o ->
@@ -664,90 +656,59 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
+ * SharedVault (In-Memory Only)
+ * 
+ * Secure bridge between React Native (which decrypts the data) and 
+ * the AutofillService (which runs in the same process). 
+ */
+object SharedVault {
+    @Volatile
+    var vault: JSONObject? = null
+}
+
+/**
  * PasswordRepository
  *
- * Single source of truth for reading and writing credentials.
- * Shared between the AutofillService and the React Native bridge.
- * All I/O is encrypted with AES-256-GCM via EncryptedSharedPreferences.
- *
- * ADB tag: SecureVaultX  prefix: [VAULT]
+ * Volatile source of truth for reading credentials.
+ * Decrypted data is synced from JS into RAM and cleared on logout.
  */
 class PasswordRepository(private val context: Context) {
 
     companion object {
         private const val TAG = "SecureVaultX"
-        private const val PREFS_FILE = "secure_vault_autofill_prefs"
-        private const val PREFS_KEY  = "credentials"
     }
 
-    private fun getPrefs() = EncryptedSharedPreferences.create(
-        context,
-        PREFS_FILE,
-        MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build(),
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
-
-    private fun readVault(): JSONObject {
-        return try {
-            val raw = getPrefs().getString(PREFS_KEY, "{}") ?: "{}"
-            JSONObject(raw)
-        } catch (e: Exception) {
-            Log.e(TAG, "[VAULT] readVault error: \${e.message}", e)
-            JSONObject()
+    /** Get the current decrypted vault from memory. */
+    fun getVault(): JSONObject {
+        return SharedVault.vault ?: JSONObject().also {
+            Log.d(TAG, "[VAULT] SharedVault is empty (locked)")
         }
     }
 
-    private fun writeVault(vault: JSONObject) {
-        try {
-            getPrefs().edit().putString(PREFS_KEY, vault.toString()).apply()
-            Log.d(TAG, "[VAULT] writeVault — \${vault.length()} site(s) persisted")
-        } catch (e: Exception) {
-            Log.e(TAG, "[VAULT] writeVault error: \${e.message}", e)
-        }
-    }
-
-    /** Save or update a credential. Returns true on success. */
-    fun saveCredential(siteKey: String, username: String, password: String): Boolean {
-        Log.d(TAG, "[VAULT] saveCredential site='\$siteKey' user='\$username'")
+    /** Set the vault in memory from a JSON string. */
+    fun syncVault(json: String): Boolean {
         return try {
-            val vault = readVault()
-            val arr = if (vault.has(siteKey)) vault.getJSONArray(siteKey) else JSONArray()
-
-            var updated = false
-            for (i in 0 until arr.length()) {
-                val item = arr.getJSONObject(i)
-                if (item.getString("username") == username) {
-                    item.put("password", password)
-                    item.put("updatedAt", System.currentTimeMillis())
-                    updated = true
-                    break
-                }
-            }
-            if (!updated) {
-                arr.put(JSONObject().apply {
-                    put("username", username)
-                    put("password", password)
-                    put("createdAt", System.currentTimeMillis())
-                })
-            }
-            vault.put(siteKey, arr)
-            writeVault(vault)
-            Log.i(TAG, "[VAULT] ✓ Saved credential for site='\$siteKey' (updated=\$updated)")
+            SharedVault.vault = JSONObject(json)
+            Log.i(TAG, "[VAULT] ✓ SharedVault synced (\${SharedVault.vault?.length()} sites)")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "[VAULT] saveCredential error: \${e.message}", e)
+            Log.e(TAG, "[VAULT] syncVault error: \${e.message}")
             false
         }
+    }
+
+    /** Clear the vault from memory. */
+    fun clearVault(): Boolean {
+        SharedVault.vault = null
+        Log.i(TAG, "[VAULT] ✓ SharedVault cleared (locked)")
+        return true
     }
 
     /** Get all credentials for a site as a JSON string. */
     fun getCredentials(siteKey: String): String {
         Log.d(TAG, "[VAULT] getCredentials site='\$siteKey'")
         return try {
-            val vault = readVault()
+            val vault = getVault()
             if (vault.has(siteKey)) {
                 val arr = vault.getJSONArray(siteKey)
                 Log.d(TAG, "[VAULT] Found \${arr.length()} credential(s) for '\$siteKey'")
@@ -762,82 +723,12 @@ class PasswordRepository(private val context: Context) {
         }
     }
 
-    /** Delete one credential by username for a site. */
-    fun deleteCredential(siteKey: String, username: String): Boolean {
-        Log.d(TAG, "[VAULT] deleteCredential site='\$siteKey' user='\$username'")
-        return try {
-            val vault = readVault()
-            if (!vault.has(siteKey)) {
-                Log.w(TAG, "[VAULT] deleteCredential — site '\$siteKey' not found")
-                return false
-            }
-            val arr = vault.getJSONArray(siteKey)
-            val newArr = JSONArray()
-            var found = false
-            for (i in 0 until arr.length()) {
-                val item = arr.getJSONObject(i)
-                if (item.getString("username") == username) {
-                    found = true
-                    Log.d(TAG, "[VAULT] Removed credential user='\$username' from '\$siteKey'")
-                } else {
-                    newArr.put(item)
-                }
-            }
-            vault.put(siteKey, newArr)
-            writeVault(vault)
-            found
-        } catch (e: Exception) {
-            Log.e(TAG, "[VAULT] deleteCredential error: \${e.message}", e)
-            false
-        }
-    }
-
-    /** Delete all credentials for a site. */
-    fun deleteSite(siteKey: String): Boolean {
-        Log.d(TAG, "[VAULT] deleteSite site='\$siteKey'")
-        return try {
-            val vault = readVault()
-            if (vault.has(siteKey)) {
-                vault.remove(siteKey)
-                writeVault(vault)
-                Log.i(TAG, "[VAULT] ✓ Deleted all credentials for '\$siteKey'")
-                true
-            } else {
-                Log.w(TAG, "[VAULT] deleteSite — site '\$siteKey' not found")
-                false
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "[VAULT] deleteSite error: \${e.message}", e)
-            false
-        }
-    }
-
-    /** Return a JSON string of all sites (keys only). */
-    fun listSites(): String {
-        return try {
-            val vault = readVault()
-            val arr = JSONArray()
-            val keys = vault.keys()
-            while (keys.hasNext()) arr.put(keys.next())
-            Log.d(TAG, "[VAULT] listSites — \${arr.length()} site(s)")
-            arr.toString()
-        } catch (e: Exception) {
-            Log.e(TAG, "[VAULT] listSites error: \${e.message}", e)
-            "[]"
-        }
-    }
-
-    /** Wipe the entire vault. */
-    fun clearAll(): Boolean {
-        return try {
-            writeVault(JSONObject())
-            Log.i(TAG, "[VAULT] ✓ Vault cleared")
-            true
-        } catch (e: Exception) {
-            Log.e(TAG, "[VAULT] clearAll error: \${e.message}", e)
-            false
-        }
-    }
+    /** Stubs for legacy methods (no-op for security) */
+    fun saveCredential(s: String, u: String, p: String) = false
+    fun deleteCredential(s: String, u: String) = false
+    fun deleteSite(s: String) = false
+    fun listSites() = "[]"
+    fun clearAll() = true
 }
 `;
 
@@ -877,14 +768,31 @@ class PasswordManagerModule(reactContext: ReactApplicationContext)
     private val repo get() = PasswordRepository(reactApplicationContext)
 
     @ReactMethod
-    fun saveCredential(site: String, username: String, password: String, promise: Promise) {
-        Log.d(TAG, "[BRIDGE] saveCredential site='\$site' user='\$username'")
+    fun syncVault(json: String, promise: Promise) {
+        Log.d(TAG, "[BRIDGE] syncVault")
         try {
-            promise.resolve(repo.saveCredential(site, username, password))
+            promise.resolve(repo.syncVault(json))
         } catch (e: Exception) {
-            Log.e(TAG, "[BRIDGE] saveCredential error: \${e.message}", e)
-            promise.reject("SAVE_ERROR", e.message, e)
+            Log.e(TAG, "[BRIDGE] syncVault error: \${e.message}", e)
+            promise.reject("SYNC_ERROR", e.message, e)
         }
+    }
+
+    @ReactMethod
+    fun clearVault(promise: Promise) {
+        Log.d(TAG, "[BRIDGE] clearVault 🔐")
+        try {
+            promise.resolve(repo.clearVault())
+        } catch (e: Exception) {
+            Log.e(TAG, "[BRIDGE] clearVault error: \${e.message}", e)
+            promise.reject("CLEAR_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun saveCredential(site: String, username: String, password: String, promise: Promise) {
+        Log.d(TAG, "[BRIDGE] saveCredential — ⚠️ Deprecated for Security")
+        promise.resolve(false)
     }
 
     @ReactMethod
@@ -1006,6 +914,20 @@ export const PasswordManager = {
   save(siteKey: string, username: string, password: string): Promise<boolean> {
     assertAndroid();
     return Native.saveCredential(siteKey, username, password);
+  },
+
+  /** 
+   * Push decrypted vault data to the native memory bridge. 
+   * siteMap: Record<siteKey, Credential[]>
+   */
+  async syncVault(siteMap: Record<string, any[]>): Promise<boolean> {
+    assertAndroid();
+    return Native.syncVault(JSON.stringify(siteMap));
+  },
+
+  async clearVault(): Promise<boolean> {
+    assertAndroid();
+    return Native.clearVault();
   },
 
   async get(siteKey: string): Promise<Credential[]> {

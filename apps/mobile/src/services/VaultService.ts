@@ -7,6 +7,7 @@ import { DeviceStoreManager } from '@store/device';
 import { logger } from '@securevault/utils-native';
 import { z } from 'zod';
 import { VaultItemSchema } from '@utils/validators/vault';
+import { PasswordManager } from '@src/PasswordManager';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -184,12 +185,68 @@ export class VaultService {
         }
       }
 
+      await this.syncToNativeAutofill(decryptedItems);
+
       return decryptedItems;
     } catch (error) {
       logger.error('Failed to retrieve vault items', {
         error: error instanceof Error ? error.message : String(error),
       });
       return [];
+    }
+  }
+
+  /**
+   * Sync decrypted login items to the native Android Autofill bridge (In-Memory).
+   */
+  private async syncToNativeAutofill(items: VaultSecretT[]) {
+    try {
+      const loginItems = items.filter((i) => i.type === 'login');
+      const siteMap: Record<string, any[]> = {};
+
+      for (const item of loginItems) {
+        const usernameField = item.fields.find(
+          (f) => f.id === 'username' || f.id === 'user' || f.label.toLowerCase() === 'username',
+        );
+        const passwordField = item.fields.find(
+          (f) => f.id === 'password' || f.id === 'pass' || f.type === 'password',
+        );
+        const websiteField = item.fields.find(
+          (f) =>
+            f.id === 'website' ||
+            f.id === 'url' ||
+            f.type === 'url' ||
+            f.label.toLowerCase() === 'website',
+        );
+
+        if (usernameField && passwordField) {
+          const site = websiteField?.value || item.title;
+          if (!siteMap[site]) siteMap[site] = [];
+          siteMap[site].push({
+            username: usernameField.value,
+            password: passwordField.value,
+          });
+        }
+      }
+
+      await PasswordManager.syncVault(siteMap);
+    } catch (err) {
+      logger.error('Failed to sync to native autofill', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  /**
+   * Clear all decrypted data from native memory (security gate).
+   */
+  async clearAutofill() {
+    try {
+      await PasswordManager.clearVault();
+    } catch (err) {
+      logger.error('Failed to clear native autofill', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

@@ -38,6 +38,20 @@ export const PasswordManager = {
     return Native.saveCredential(siteKey, username, password);
   },
 
+  /**
+   * Push decrypted vault data to the native memory bridge.
+   * siteMap: Record<siteKey, Credential[]>
+   */
+  async syncVault(siteMap: Record<string, any[]>): Promise<boolean> {
+    assertAndroid();
+    return Native.syncVault(JSON.stringify(siteMap));
+  },
+
+  async clearVault(): Promise<boolean> {
+    assertAndroid();
+    return Native.clearVault();
+  },
+
   async get(siteKey: string): Promise<Credential[]> {
     assertAndroid();
     const raw: string = await Native.getCredentials(siteKey);
