@@ -124,7 +124,7 @@ class PasswordAutofillService : AutofillService() {
         private const val PREFS_FILE = "secure_vault_autofill_prefs"
         private const val PREFS_KEY  = "credentials"
 
-        // ── Native input type masks ──────────────────────────────────────────
+        // --- Native input type masks ------------------------------------------
         private val PASSWORD_INPUT_TYPE_MASKS = listOf(
             InputType.TYPE_TEXT_VARIATION_PASSWORD,
             InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
@@ -132,46 +132,46 @@ class PasswordAutofillService : AutofillService() {
             InputType.TYPE_NUMBER_VARIATION_PASSWORD
         )
 
-        // ── HTML autocomplete values → password ──────────────────────────────
+        // --- HTML autocomplete values → password ------------------------------
         private val HTML_PASSWORD_AUTOCOMPLETE = setOf(
             "current-password", "new-password", "password"
         )
 
-        // ── HTML autocomplete values → username ──────────────────────────────
+        // --- HTML autocomplete values → username ------------------------------
         private val HTML_USERNAME_AUTOCOMPLETE = setOf(
             "username", "email", "tel", "nickname",
             "given-name", "family-name", "name",
-            "webauthn"
+            "webauthn", "userid", "login"
         )
 
-        // ── HTML input type="..." values ─────────────────────────────────────
+        // --- HTML input type="..." values -------------------------------------
         private val HTML_PASSWORD_TYPES = setOf("password")
-        private val HTML_USERNAME_TYPES = setOf("email", "tel", "text", "search", "number")
+        private val HTML_USERNAME_TYPES = setOf("email", "tel", "text", "search", "number", "url")
 
-        // ── Native autofillHints ─────────────────────────────────────────────
+        // --- Native autofillHints ---------------------------------------------
         private val NATIVE_USERNAME_HINTS = setOf(
             View.AUTOFILL_HINT_USERNAME,
             View.AUTOFILL_HINT_EMAIL_ADDRESS,
             View.AUTOFILL_HINT_PHONE
         )
 
-        // ── id / description / hint text fragments ───────────────────────────
+        // --- id / description / hint text fragments ---------------------------
         private val USERNAME_ID_FRAGMENTS = setOf(
             "username", "user_name", "user", "email", "e-mail",
             "login", "loginid", "account", "userid", "uname",
-            "identifier", "mobile", "phone"
+            "identifier", "mobile", "phone", "member"
         )
         private val PASSWORD_ID_FRAGMENTS = setOf(
             "password", "passwd", "pass", "pwd", "secret",
-            "passphrase", "credentials", "pin"
+            "passphrase", "credentials", "pin", "code", "cvv"
         )
     }
 
-    // ─── Lifecycle ─────────────────────────────────────────────────────────────
+    // --- Lifecycle -------------------------------------------------------------
 
     override fun onConnected() {
         super.onConnected()
-        Log.i(TAG, "[FILL] AutofillService CONNECTED — SecureVaultX is active")
+        Log.i(TAG, "[FILL] AutofillService CONNECTED")
     }
 
     override fun onDisconnected() {
@@ -179,25 +179,24 @@ class PasswordAutofillService : AutofillService() {
         Log.i(TAG, "[FILL] AutofillService DISCONNECTED")
     }
 
-    // ─── Fill Request ──────────────────────────────────────────────────────────
+    // --- Fill Request ----------------------------------------------------------
 
     override fun onFillRequest(
         request: FillRequest,
         cancellationSignal: CancellationSignal,
         callback: FillCallback
     ) {
-        Log.d(TAG, "[FILL] ════════════════════════════════════════")
-        Log.d(TAG, "[FILL] onFillRequest START (PID=\${android.os.Process.myPid()}) session=\${request.id}")
+        val structure = request.fillContexts.last().structure
+        val clientPackage = structure.activityComponent.packageName
+        
+        // [FILL] Request started (package, domain)
+        Log.i(TAG, "[FILL] Request started (pkg=\$clientPackage, session=\${request.id})")
 
         cancellationSignal.setOnCancelListener {
             Log.w(TAG, "[FILL] Request CANCELLED by system")
         }
 
         try {
-            val structure = request.fillContexts.last().structure
-            val clientPackage = structure.activityComponent.packageName
-            Log.d(TAG, "[FILL] Client package: \$clientPackage")
-
             val parsed = ParsedForm()
             for (i in 0 until structure.windowNodeCount) {
                 structure.getWindowNodeAt(i)?.rootViewNode?.let {
@@ -210,16 +209,11 @@ class PasswordAutofillService : AutofillService() {
                 applyProximityHeuristic(parsed)
             }
 
-            Log.d(TAG, "[PARSE] FINAL — " +
-                "usernameFields=\${parsed.usernameNodes.size}, " +
-                "passwordFields=\${parsed.passwordNodes.size}, " +
-                "webDomain=\${parsed.webDomain}, " +
-                "totalNodes=\${parsed.nodeCount}, " +
-                "webFieldsFound=\${parsed.webFieldsFound}"
-            )
+            // [PARSE] Fields detected (username/password counts)
+            Log.d(TAG, "[PARSE] Fields detected: username=\${parsed.usernameNodes.size}, password=\${parsed.passwordNodes.size}, domain=\${parsed.webDomain ?: "N/A"}")
 
             if (parsed.usernameNodes.isEmpty() && parsed.passwordNodes.isEmpty()) {
-                Log.d(TAG, "[FILL] No autofillable fields — returning null response")
+                Log.d(TAG, "[FILL] No autofillable fields found")
                 callback.onSuccess(null)
                 return
             }
@@ -228,37 +222,47 @@ class PasswordAutofillService : AutofillService() {
             val siteKey = parsed.webDomain ?: clientPackage
             val credentials = matchCredentials(vault, siteKey, clientPackage, parsed.webDomain)
 
-            Log.d(TAG, "[MATCH] Site key='\$siteKey' → \${credentials.size} credential(s)")
+            // [MATCH] Vault matching result
+            Log.i(TAG, "[MATCH] Vault matching result: Found \${credentials.size} credential(s) for \$siteKey")
 
             val responseBuilder = FillResponse.Builder()
 
             if (credentials.isNotEmpty()) {
                 credentials.forEachIndexed { idx, cred ->
-                    responseBuilder.addDataset(buildDataset(cred, parsed, request, idx))
-                    Log.d(TAG, "[FILL] Added dataset #\$idx for username=\${cred.username}")
+                    val dataset = buildDataset(cred, parsed, request, idx)
+                    if (dataset != null) {
+                        responseBuilder.addDataset(dataset)
+                        
+                        // [FILL] Which fields were mapped
+                        val mapped = mutableListOf<String>()
+                        if (parsed.usernameNodes.isNotEmpty()) mapped.add("username")
+                        if (parsed.passwordNodes.isNotEmpty()) mapped.add("password")
+                        Log.d(TAG, "[FILL] Dataset #\$idx mapped fields: \${mapped.joinToString(", ")} for user=\${cred.username}")
+                    }
                 }
-            } else {
-                Log.d(TAG, "[FILL] No credentials in vault for '\$siteKey' — save-prompt only")
             }
 
             buildSaveInfo(parsed)?.let {
                 responseBuilder.setSaveInfo(it)
-                Log.d(TAG, "[FILL] SaveInfo attached — will prompt on form submit")
+                Log.d(TAG, "[FILL] SaveInfo attached")
             }
 
             callback.onSuccess(responseBuilder.build())
-            Log.d(TAG, "[FILL] onFillRequest END — success")
+            
+            // [FILL] Dataset returned (partial/full)
+            val isPartial = parsed.usernameNodes.isEmpty() || parsed.passwordNodes.isEmpty()
+            val resultStatus = if (credentials.isNotEmpty()) (if (isPartial) "PARTIAL" else "FULL") else "NONE"
+            Log.i(TAG, "[FILL] Request completed - dataset returned: \$resultStatus")
 
         } catch (e: Exception) {
-            Log.e(TAG, "[ERROR] onFillRequest crashed: \${e.javaClass.simpleName} — \${e.message}", e)
+            Log.e(TAG, "[ERROR] onFillRequest crashed: \${e.message}", e)
             callback.onSuccess(null)
         }
     }
 
-    // ─── Save Request ──────────────────────────────────────────────────────────
+    // --- Save Request ----------------------------------------------------------
 
     override fun onSaveRequest(request: SaveRequest, callback: SaveCallback) {
-        Log.d(TAG, "[SAVE] ════════════════════════════════════════")
         Log.d(TAG, "[SAVE] onSaveRequest START")
 
         try {
@@ -281,32 +285,25 @@ class PasswordAutofillService : AutofillService() {
                 .firstOrNull { it.isNotBlank() }
 
             val siteKey = parsed.webDomain ?: clientPackage
-            Log.d(TAG, "[SAVE] username='\$username' | site='\$siteKey' | pkg='\$clientPackage'")
+            Log.d(TAG, "[SAVE] Detected credential for \$siteKey: user='\$username'")
 
             if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
                 saveToVault(siteKey, username, password)
-                Log.i(TAG, "[SAVE] ✓ Credential saved for site='\$siteKey' user='\$username'")
+                Log.i(TAG, "[SAVE] ✓ Credential saved for \$siteKey")
             } else {
-                Log.w(TAG, "[SAVE] ✗ Incomplete credential — username='\$username' password=\${if (password != null) "***" else "null"}")
+                Log.w(TAG, "[SAVE] ✗ Incomplete credential - skipping save")
             }
 
             callback.onSuccess()
         } catch (e: Exception) {
-            Log.e(TAG, "[ERROR] onSaveRequest crashed: \${e.javaClass.simpleName} — \${e.message}", e)
+            Log.e(TAG, "[ERROR] onSaveRequest crashed: \${e.message}", e)
             callback.onSuccess()
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------------------
     //  NODE TRAVERSAL — multi-strategy field detection
-    //
-    //  Priority order:
-    //    1. htmlInfo  (Chrome / WebView / Firefox)          [WEB]
-    //    2. autofillHints  (well-behaved native apps)       [PARSE]
-    //    3. inputType bitmask  (native apps)                [PARSE]
-    //    4. id / description / hint text fragments          [PARSE]
-    //    5. proximity heuristic  (post-traversal fallback)  [PARSE]
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ---------------------------------------------------------------------------
 
     private fun traverseNode(
         node: AssistStructure.ViewNode,
@@ -319,7 +316,7 @@ class PasswordAutofillService : AutofillService() {
         // Collect web domain (set on any node inside Chrome / WebView)
         if (!node.webDomain.isNullOrBlank() && form.webDomain == null) {
             form.webDomain = node.webDomain
-            Log.d(TAG, "[PARSE] webDomain='\${form.webDomain}' found at depth=\$depth")
+            Log.v(TAG, "[PARSE] webDomain='\${form.webDomain}' found")
         }
 
         // Skip nodes with no autofillId — they cannot be filled
@@ -338,87 +335,90 @@ class PasswordAutofillService : AutofillService() {
                           (className == "android.view.view" && inputType != 0) ||
                           node.isFocusable
 
-        // ── STRATEGY 1: htmlInfo ─────────────────────────────────────────────
-        //
-        //  Chrome and most browsers set node.htmlInfo on every <input> element.
-        //    tag          → "input"
-        //    type         → "password" | "email" | "text" | …
-        //    autocomplete → "current-password" | "username" | …
-        //    name / id    → HTML name/id attribute
-        //
+        // --- STRATEGY 1: htmlInfo (Chrome / WebView) ---------------------------
         val htmlInfo  = node.htmlInfo
         val htmlTag   = htmlInfo?.tag?.lowercase()
         val htmlAttrs = htmlInfo?.attributes
             ?.associate { it.first.lowercase() to it.second.lowercase() }
             ?: emptyMap()
 
+        // Helper to match fragments with boundary awareness (avoids "shaping" matching "pin")
+        fun matchesFragment(text: String, frags: Set<String>): String? {
+            if (text.isBlank()) return null
+            return frags.firstOrNull { f ->
+                // Exact match or matches with standard delimiters (_ . - : / space)
+                text == f || text.contains("_\${f}") || text.contains("\${f}_") || 
+                text.contains(".\${f}") || text.contains("\${f}.") || 
+                text.contains(":\${f}") || text.contains("\${f}:") ||
+                text.contains("-\${f}") || text.contains("\${f}-") ||
+                text.contains("/\${f}") || text.contains("\${f}/") ||
+                text.contains(" \${f}") || text.contains("\${f} ")
+            }
+        }
+
+        var scoreUsername = 0
+        var scorePassword = 0
+        var matchUsername: String? = null
+        var matchPassword: String? = null
+
         if (htmlTag == "input") {
             val htmlType         = htmlAttrs["type"] ?: "text"
             val htmlAutocomplete = htmlAttrs["autocomplete"] ?: ""
             val htmlName         = htmlAttrs["name"] ?: ""
             val htmlId           = htmlAttrs["id"] ?: ""
+            val htmlPlaceholder  = htmlAttrs["placeholder"] ?: ""
 
-            Log.v(TAG, "[WEB] <input> depth=\$depth type='\$htmlType' " +
-                "autocomplete='\$htmlAutocomplete' name='\$htmlName' id='\$htmlId'")
-
-            val isWebPassword =
-                htmlType in HTML_PASSWORD_TYPES ||
-                htmlAutocomplete in HTML_PASSWORD_AUTOCOMPLETE ||
-                PASSWORD_ID_FRAGMENTS.any { htmlName.contains(it) || htmlId.contains(it) }
-
-            if (isWebPassword && form.passwordNodes.isEmpty()) {
-                form.passwordNodes.add(node)
-                form.webFieldsFound = true
-                Log.d(TAG, "[WEB] PASSWORD — type='\$htmlType' autocomplete='\$htmlAutocomplete' name='\$htmlName'")
-                recurseChildren(node, form, depth); return
+            if (htmlType in HTML_PASSWORD_TYPES || htmlAutocomplete in HTML_PASSWORD_AUTOCOMPLETE) {
+                scorePassword += 3
+            } else {
+                val m = matchesFragment(htmlName, PASSWORD_ID_FRAGMENTS) ?: matchesFragment(htmlId, PASSWORD_ID_FRAGMENTS) ?: matchesFragment(htmlPlaceholder, PASSWORD_ID_FRAGMENTS)
+                if (m != null) { scorePassword += 1; matchPassword = m }
             }
 
-            val isWebUsername =
-                htmlAutocomplete in HTML_USERNAME_AUTOCOMPLETE ||
-                (htmlType in HTML_USERNAME_TYPES && !isWebPassword) ||
-                USERNAME_ID_FRAGMENTS.any { htmlName.contains(it) || htmlId.contains(it) }
-
-            if (isWebUsername && form.usernameNodes.isEmpty()) {
-                form.usernameNodes.add(node)
-                form.webFieldsFound = true
-                Log.d(TAG, "[WEB] USERNAME — type='\$htmlType' autocomplete='\$htmlAutocomplete' name='\$htmlName'")
-                recurseChildren(node, form, depth); return
+            if (htmlAutocomplete in HTML_USERNAME_AUTOCOMPLETE || (htmlType in HTML_USERNAME_TYPES && scorePassword < 3)) {
+                scoreUsername += 3
+            } else {
+                val m = matchesFragment(htmlName, USERNAME_ID_FRAGMENTS) ?: matchesFragment(htmlId, USERNAME_ID_FRAGMENTS) ?: matchesFragment(htmlPlaceholder, USERNAME_ID_FRAGMENTS)
+                if (m != null) { scoreUsername += 1; matchUsername = m }
             }
         }
 
-        // ── STRATEGY 2+3+4: Native hints / inputType / attribute fragments ───
-
+        // --- STRATEGY 2+3+4: Native hints / inputType / attribute fragments ---
         val isPasswordByHint = hints.any { h -> h.lowercase().contains("password") || h == View.AUTOFILL_HINT_PASSWORD }
         val isPasswordByType = inputType != 0 && (inputType and InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_TEXT &&
-                               PASSWORD_INPUT_TYPE_MASKS.any { mask -> (inputType and InputType.TYPE_MASK_VARIATION) == (mask and InputType.TYPE_MASK_VARIATION) }
-        val matchingPasswordAttr = PASSWORD_ID_FRAGMENTS.firstOrNull { f ->
-            idEntry.contains(f) || contentDesc.contains(f) || hintText.contains(f)
-        }
-        val isPasswordByAttr = matchingPasswordAttr != null
-
-        if (isEditText && (isPasswordByHint || isPasswordByType || isPasswordByAttr)) {
-            if (form.passwordNodes.isEmpty()) {
-                form.passwordNodes.add(node)
-                Log.d(TAG, "[PARSE] NATIVE PASSWORD — id='\$idEntry' type=\$inputType depth=\$depth " +
-                    "hints=[\${hints.joinToString()}] match='\$matchingPasswordAttr' " +
-                    "byHint=\$isPasswordByHint byType=\$isPasswordByType byAttr=\$isPasswordByAttr")
+                                PASSWORD_INPUT_TYPE_MASKS.any { mask -> (inputType and InputType.TYPE_MASK_VARIATION) == (mask and InputType.TYPE_MASK_VARIATION) }
+        
+        if (isPasswordByHint) scorePassword += 3
+        if (isPasswordByType) scorePassword += 3
+        
+        val mPwd = matchesFragment(idEntry, PASSWORD_ID_FRAGMENTS) ?: matchesFragment(contentDesc, PASSWORD_ID_FRAGMENTS) ?: matchesFragment(hintText, PASSWORD_ID_FRAGMENTS)
+        if (mPwd != null) {
+            val isEmailVar = (inputType and InputType.TYPE_MASK_VARIATION) == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            if (!isEmailVar || isPasswordByType) {
+                scorePassword += 1
+                matchPassword = matchPassword ?: mPwd
             }
-            recurseChildren(node, form, depth); return
         }
 
         val isUsernameByHint = hints.any { it in NATIVE_USERNAME_HINTS }
-        val matchingUsernameAttr = USERNAME_ID_FRAGMENTS.firstOrNull { f ->
-            idEntry.contains(f) || contentDesc.contains(f) || hintText.contains(f)
-        }
-        val isUsernameByAttr = matchingUsernameAttr != null
+        val isEmailVar = inputType != 0 && (inputType and InputType.TYPE_MASK_VARIATION) == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        
+        if (isUsernameByHint) scoreUsername += 3
+        if (isEmailVar) scoreUsername += 3
 
-        if (isEditText && inputType != 0 && (isUsernameByHint || isUsernameByAttr)) {
-            if (form.usernameNodes.isEmpty()) {
-                form.usernameNodes.add(node)
-                Log.d(TAG, "[PARSE] NATIVE USERNAME — id='\$idEntry' type=\$inputType depth=\$depth " +
-                    "hints=[\${hints.joinToString()}] match='\$matchingUsernameAttr' " +
-                    "byHint=\$isUsernameByHint byAttr=\$isUsernameByAttr")
-            }
+        val mUser = matchesFragment(idEntry, USERNAME_ID_FRAGMENTS) ?: matchesFragment(contentDesc, USERNAME_ID_FRAGMENTS) ?: matchesFragment(hintText, USERNAME_ID_FRAGMENTS)
+        if (mUser != null) { 
+            scoreUsername += 1
+            matchUsername = matchUsername ?: mUser
+        }
+
+        // --- FINAL CLASSIFICATION ---
+        if (isEditText && scorePassword > 0 && scorePassword > scoreUsername) {
+            form.passwordNodes.add(node)
+            Log.d(TAG, "[PARSE] Classified PASSWORD (score=\$scorePassword vs \$scoreUsername, match=\$matchPassword)")
+        } else if (isEditText && scoreUsername > 0) {
+            form.usernameNodes.add(node)
+            Log.d(TAG, "[PARSE] Classified USERNAME (score=\$scoreUsername vs \$scorePassword, match=\$matchUsername)")
         }
 
         recurseChildren(node, form, depth)
@@ -434,12 +434,7 @@ class PasswordAutofillService : AutofillService() {
         }
     }
 
-    // ── STRATEGY 5: Proximity heuristic ──────────────────────────────────────
-    //
-    //  If a password field was found but no username (e.g. step-2 "enter password"
-    //  screen, or minimal WebView forms), walk backwards up to 10 nodes for the
-    //  nearest focusable text field and treat it as the username slot.
-    //
+    // --- STRATEGY 5: Proximity heuristic --------------------------------------
     private fun applyProximityHeuristic(form: ParsedForm) {
         val pwdNode = form.passwordNodes.firstOrNull() ?: return
         val pwdIdx  = form.allNodes.indexOf(pwdNode).takeIf { it > 0 } ?: return
@@ -453,58 +448,52 @@ class PasswordAutofillService : AutofillService() {
                 (candidate.inputType and InputType.TYPE_CLASS_TEXT) != 0
             ) {
                 form.usernameNodes.add(candidate)
-                Log.d(TAG, "[PARSE] PROXIMITY heuristic — id='\${candidate.idEntry}' " +
-                    "is \${pwdIdx - i} node(s) before password field")
+                Log.d(TAG, "[PARSE] PROXIMITY heuristic: Found username-like field near password")
                 break
             }
         }
     }
 
-    // ─── Dataset Builder ───────────────────────────────────────────────────────
+    // --- Dataset Builder -------------------------------------------------------
 
     private fun buildDataset(
         cred: Credential,
         form: ParsedForm,
         request: FillRequest,
         index: Int
-    ): Dataset {
+    ): Dataset? {
         val presentation = buildPresentation("SecureVaultX: \${cred.username}")
         val datasetBuilder = Dataset.Builder(presentation)
+        
+        val inline = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            tryBuildInlinePresentation(request, cred, index)
+        } else null
+
+        var fieldMapped = false
 
         form.usernameNodes.forEach { node ->
             node.autofillId?.let {
-                datasetBuilder.setValue(it, AutofillValue.forText(cred.username), buildPresentation(cred.username))
-                Log.v(TAG, "[FILL] Mapped username → autofillId=\$it")
+                if (inline != null) {
+                    datasetBuilder.setValue(it, AutofillValue.forText(cred.username), buildPresentation(cred.username), inline)
+                } else {
+                    datasetBuilder.setValue(it, AutofillValue.forText(cred.username), buildPresentation(cred.username))
+                }
+                fieldMapped = true
             }
         }
+        
         form.passwordNodes.forEach { node ->
             node.autofillId?.let {
-                datasetBuilder.setValue(it, AutofillValue.forText(cred.password), buildPresentation("••••••••"))
-                Log.v(TAG, "[FILL] Mapped password → autofillId=\$it")
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            tryBuildInlinePresentation(request, cred, index)?.let { inline ->
-                val targetId = form.usernameNodes.firstOrNull()?.autofillId
-                    ?: form.passwordNodes.firstOrNull()?.autofillId
-                targetId?.let {
-                    try {
-                        datasetBuilder.setValue(
-                            it,
-                            AutofillValue.forText(cred.username),
-                            buildPresentation(cred.username),
-                            inline
-                        )
-                        Log.d(TAG, "[INLINE] Inline suggestion attached index=\$index")
-                    } catch (e: Exception) {
-                        Log.w(TAG, "[INLINE] setValue with inline failed: \${e.message}")
-                    }
+                if (inline != null) {
+                    datasetBuilder.setValue(it, AutofillValue.forText(cred.password), buildPresentation("••••••••"), inline)
+                } else {
+                    datasetBuilder.setValue(it, AutofillValue.forText(cred.password), buildPresentation("••••••••"))
                 }
+                fieldMapped = true
             }
         }
 
-        return datasetBuilder.build()
+        return if (fieldMapped) datasetBuilder.build() else null
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
@@ -512,13 +501,10 @@ class PasswordAutofillService : AutofillService() {
         request: FillRequest,
         cred: Credential,
         index: Int
-    ): android.widget.inline.InlinePresentation? {
+    ): android.service.autofill.InlinePresentation? {
         return try {
             val specs = request.inlineSuggestionsRequest?.inlinePresentationSpecs
-            if (specs.isNullOrEmpty()) {
-                Log.v(TAG, "[INLINE] No InlinePresentationSpec in request")
-                return null
-            }
+            if (specs.isNullOrEmpty()) return null
             val spec = if (index < specs.size) specs[index] else specs.last()
             val pendingIntent = PendingIntent.getActivity(
                 this, index,
@@ -532,9 +518,8 @@ class PasswordAutofillService : AutofillService() {
                     setSubtitle("SecureVaultX")
                 }
                 .build().slice
-            android.widget.inline.InlinePresentation(slice, spec, false)
+            android.service.autofill.InlinePresentation(slice, spec, false)
         } catch (e: Exception) {
-            Log.w(TAG, "[INLINE] Build failed: \${e.message}")
             null
         }
     }
@@ -543,16 +528,15 @@ class PasswordAutofillService : AutofillService() {
 
     private fun buildSaveInfo(form: ParsedForm): SaveInfo? {
         val ids = (form.usernameNodes + form.passwordNodes).mapNotNull { it.autofillId }
-        if (ids.isEmpty()) {
-            Log.d(TAG, "[SAVE] No valid AutofillIds for SaveInfo")
-            return null
-        }
+        if (ids.isEmpty()) return null
+        
         val saveType = when {
             form.usernameNodes.isNotEmpty() && form.passwordNodes.isNotEmpty() ->
                 SaveInfo.SAVE_DATA_TYPE_USERNAME or SaveInfo.SAVE_DATA_TYPE_PASSWORD
             form.passwordNodes.isNotEmpty() -> SaveInfo.SAVE_DATA_TYPE_PASSWORD
             else -> SaveInfo.SAVE_DATA_TYPE_USERNAME
         }
+        
         return SaveInfo.Builder(saveType, ids.toTypedArray())
             .setFlags(SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE)
             .build()
@@ -616,21 +600,14 @@ class PasswordAutofillService : AutofillService() {
         packageName: String,
         webDomain: String?
     ): List<Credential> {
-        Log.d(TAG, "[MATCH] Searching — siteKey='\$siteKey' pkg='\$packageName' domain='\$webDomain'")
-
         // 1. Exact web domain
-        if (webDomain != null && vault.has(webDomain)) {
-            Log.d(TAG, "[MATCH] EXACT domain='\$webDomain'")
-            return extractCredentials(vault.getJSONArray(webDomain))
-        }
+        if (webDomain != null && vault.has(webDomain)) return extractCredentials(vault.getJSONArray(webDomain))
+        
         // 2. Exact package name
-        if (vault.has(packageName)) {
-            Log.d(TAG, "[MATCH] EXACT package='\$packageName'")
-            return extractCredentials(vault.getJSONArray(packageName))
-        }
+        if (vault.has(packageName)) return extractCredentials(vault.getJSONArray(packageName))
+        
         // 3. Fuzzy normalised match
         val normTarget = normalise(webDomain ?: packageName)
-        Log.d(TAG, "[MATCH] Fuzzy normalised target='\$normTarget'")
         val iter = vault.keys()
         while (iter.hasNext()) {
             val key     = iter.next()
@@ -640,18 +617,16 @@ class PasswordAutofillService : AutofillService() {
                 normKey.contains(normTarget) ||
                 normalise(packageName).contains(normKey)
             )) {
-                Log.d(TAG, "[MATCH] FUZZY key='\$key' normKey='\$normKey'")
                 return extractCredentials(vault.getJSONArray(key))
             }
         }
-        Log.d(TAG, "[MATCH] No match for '\$siteKey'")
         return emptyList()
     }
 
     private fun normalise(raw: String) = raw.lowercase()
         .replace(Regex("^https?://"), "")
         .replace(Regex("^www[.]"), "")
-        .replace(Regex("[.](com|org|net|io|app|dev|co|uk|in)$"), "")
+        .replace(Regex("[.](com|org|net|io|app|dev|co|uk|in|de|fr|es|it|jp|cn|ru|br)$"), "")
         .replace(Regex("[^a-z0-9]"), "")
 
     private fun extractCredentials(arr: JSONArray) = (0 until arr.length()).map {
