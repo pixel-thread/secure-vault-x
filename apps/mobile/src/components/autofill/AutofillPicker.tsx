@@ -142,14 +142,17 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
     });
 
   useEffect(() => {
+    // Entrance Animation (Run only once on mount)
     Keyboard.dismiss();
     opacity.value = withTiming(1, { duration: 350 });
     translateY.value = withTiming(0, {
       duration: 450,
       easing: Easing.out(Easing.cubic),
     });
+  }, []);
 
-    // Trigger the unpaginated fetch on mount
+  useEffect(() => {
+    // Data Fetch (Run when context/stable callback changes)
     fetchAllLogins();
   }, [fetchAllLogins]);
 
@@ -165,7 +168,8 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
 
   const animatedSheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
-    opacity: interpolate(translateY.value, [0, 400], [1, 0.3], Extrapolation.CLAMP),
+    // Corrected interpolation: Full transparency when off-screen (SCREEN_HEIGHT)
+    opacity: interpolate(translateY.value, [SCREEN_HEIGHT, 0], [0, 1], Extrapolation.CLAMP),
   }));
 
   const renderItem = ({ item }: { item: Credential }) => (
