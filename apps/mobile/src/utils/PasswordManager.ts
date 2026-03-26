@@ -3,6 +3,7 @@ import { NativeModules, Platform } from 'react-native';
 const { PasswordManager: Native } = NativeModules;
 
 export interface Credential {
+  id: string;
   username: string;
   password?: string;
 }
