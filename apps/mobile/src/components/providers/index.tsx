@@ -58,3 +58,40 @@ export const Wrapper = ({ children }: Props) => {
     </ThemeProvider>
   );
 };
+
+/**
+ * Minimal wrapper for the Autofill Overlay.
+ * Skips navigation-aware providers (Redirect) and app-level auth prompts (AuthProvider)
+ * to prevent Linking conflicts and redundant biometric triggers.
+ */
+export const AutofillWrapper = ({ children }: Props) => {
+  const { isDarkMode, _hydrate, isHydrating } = useThemeStore((state: any) => ({
+    isDarkMode: state.isDarkMode,
+    _hydrate: state._hydrate,
+    isHydrating: state.isHydrating,
+  }));
+
+  useEffect(() => {
+    if (!isHydrating) {
+      _hydrate();
+    }
+  }, [isHydrating, _hydrate]);
+
+  return (
+    <ThemeProvider initialTheme={isDarkMode ? 'dark' : 'light'}>
+      <ErrorBoundary>
+        <TQueryProvider>
+          <CryptoProvider>
+            <DBProvider>
+              <VaultProvider>
+                <Suspense>
+                  <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
+                </Suspense>
+              </VaultProvider>
+            </DBProvider>
+          </CryptoProvider>
+        </TQueryProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
+  );
+};

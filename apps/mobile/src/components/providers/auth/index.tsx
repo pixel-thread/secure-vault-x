@@ -4,10 +4,11 @@ import { tokenManager } from '@securevault/libs';
 import { UserT } from '@securevault/types';
 import { http, logger, isConnectedToNetwork } from '@securevault/utils-native';
 import { useMutation } from '@tanstack/react-query';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { authenticateWithBiometric } from '@utils/biometricLock';
 import { DeviceStoreManager } from '@store/device';
 import { BioMetricLock } from '@components/common/BiometricLock';
+import { useAutofillStore } from '@store/autofill';
 
 type Props = { children: React.ReactNode };
 
@@ -15,6 +16,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const { setIsLoading, setUser, setIsAuthenticated, setHasMek } = useAuthStore();
   const [biometricPassed, setBiometricPassed] = useState(false);
   const [biometricRequired, setBiometricRequired] = useState(false);
+  const { isAutofilling } = useAutofillStore();
 
   const { mutate } = useMutation({
     mutationFn: () => http.get<UserT>(AUTH_ENDPOINT.GET_ME),
@@ -25,23 +27,19 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setIsAuthenticated(true);
         await DeviceStoreManager.setUser(data.data);
       } else {
-        // This case might happen if success is false but status is not 4xx/5xx
         setIsAuthenticated(false);
         await DeviceStoreManager.removeUser();
       }
       setIsLoading(false);
     },
     onError: async (error: any) => {
-      logger.error('Auth background verification failed');
+      logger.error('Auth background verification failed', error);
 
-      // If it's a definitive auth failure (401/403), clear session
       if (error?.status === 401 || error?.status === 403) {
         setIsAuthenticated(false);
         await tokenManager.removeAllTokens();
         await DeviceStoreManager.removeUser();
       } else {
-        // For network errors or other non-auth failures,
-        // keep current state if we have a user
         const storedUser = await DeviceStoreManager.getUser();
         if (storedUser) {
           setUser(storedUser);
@@ -54,14 +52,24 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     },
   });
 
-  const promptBiometric = async () => {
-    const success = await authenticateWithBiometric();
-    if (success) {
-      setBiometricPassed(true);
+  const promptBiometric = useCallback(async () => {
+    try {
+      logger.info('Prompting for biometric authentication...');
+      const success = await authenticateWithBiometric();
+      if (success) {
+        logger.info('Biometric authentication successful');
+        setBiometricPassed(true);
+      } else {
+        logger.warn('Biometric authentication failed or cancelled');
+      }
+    } catch (e) {
+      logger.error('Uncaught error during manual biometric prompt', e);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    let active = true;
+
     async function init() {
       try {
         setIsLoading(true);
@@ -70,30 +78,33 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         const refreshToken = await tokenManager.getRefreshToken();
         const hasTokens = !!(access && refreshToken);
 
-        // Load cached user immediately for local-first feel
         const cachedUser = await DeviceStoreManager.getUser();
         if (cachedUser && hasTokens) {
           setUser(cachedUser);
           setIsAuthenticated(true);
         }
 
-        // Check biometric requirement only if we have an active session
-        if (hasTokens) {
+        // CRITICAL: Skip app-level biometric prompt if we are in autofill mode.
+        // The autofill flow should be as lightweight as possible and can prompt separately if needed.
+        if (hasTokens && active && !isAutofilling) {
           const biometricEnabled = await DeviceStoreManager.getBiometricEnabled();
           if (biometricEnabled) {
             setBiometricRequired(true);
+            logger.info('Biometric is enabled, prompting for initial unlock...');
+
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            if (!active) return;
+
             const success = await authenticateWithBiometric();
-            if (success) {
-              setBiometricPassed(true);
-            } else {
-              // Biometric failed or cancelled, we still need to clear initial loading
-              // but the biometric gate will handle the UI
-              setIsLoading(false);
+            if (active) {
+              if (success) setBiometricPassed(true);
+              else setIsLoading(false);
             }
           } else {
             setBiometricPassed(true);
           }
         } else {
+          // In autofill mode or if no biometrics, we mark as "passed" for app logic
           setBiometricPassed(true);
         }
 
@@ -101,27 +112,30 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setHasMek(!!mek);
 
         const isDeviceConnectedToNetwork = await isConnectedToNetwork();
-        if (hasTokens && isDeviceConnectedToNetwork) {
-          // Trigger background verification
+        if (hasTokens && isDeviceConnectedToNetwork && active) {
           mutate();
         } else {
-          if (!hasTokens) {
+          if (!hasTokens && active) {
             setIsAuthenticated(false);
           }
-          setIsLoading(false);
+          if (active) setIsLoading(false);
         }
       } catch (e) {
-        setIsLoading(false);
-        logger.error('Error initializing auth provider', e);
+        if (active) {
+          setIsLoading(false);
+          logger.error('Error initializing auth provider', e);
+        }
       }
     }
 
     init();
-  }, []); // Run once on mount
 
-  // Removed redundant effects that caused race conditions and stuck loading states
-  // Biometric gate — show lock screen if biometric is required but not passed
-  if (biometricRequired && !biometricPassed) {
+    return () => {
+      active = false;
+    };
+  }, [mutate, setHasMek, setIsLoading, setIsAuthenticated, setUser, isAutofilling]);
+
+  if (biometricRequired && !biometricPassed && !isAutofilling) {
     return <BioMetricLock onPressUnlock={promptBiometric} />;
   }
 
