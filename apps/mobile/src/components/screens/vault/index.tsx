@@ -7,7 +7,6 @@ import { View, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { toast } from 'sonner-native';
 import Header from '@components/common/Header';
-import { Ternary } from '@src/components/common/Ternary';
 import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { VaultSecretT } from '@src/types/vault';
 import { seedVaultItems, clearVaultItems } from '@utils/vault/dev';
@@ -80,7 +79,7 @@ export default function VaultScreen() {
 
   const onSelectItem = useCallback(
     (item: VaultSecretT) => router.push(`/secret/${item.id}`),
-    [router]
+    [router],
   );
 
   const onOpenAdd = useCallback(() => router.push('/secret'), [router]);
@@ -99,7 +98,8 @@ export default function VaultScreen() {
                 <TouchableOpacity
                   className="mr-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/80"
                   onPress={onSeedDevItems}
-                  disabled={isSeeding}>
+                  disabled={isSeeding}
+                >
                   {isSeeding ? (
                     <ActivityIndicator size="small" color="#f59e0b" />
                   ) : (
@@ -110,7 +110,8 @@ export default function VaultScreen() {
                 <TouchableOpacity
                   className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/80"
                   onPress={() => router.push('/dev/database')}
-                  disabled={isSeeding}>
+                  disabled={isSeeding}
+                >
                   {isSeeding ? (
                     <ActivityIndicator size="small" color="#ef4444" />
                   ) : (
@@ -120,7 +121,8 @@ export default function VaultScreen() {
                 <TouchableOpacity
                   className="mr-3 rounded-2xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/80"
                   onPress={onClearDevItems}
-                  disabled={isSeeding}>
+                  disabled={isSeeding}
+                >
                   {isSeeding ? (
                     <ActivityIndicator size="small" color="#ef4444" />
                   ) : (
@@ -153,8 +155,10 @@ export default function VaultScreen() {
       />
 
       <TouchableOpacity
+        testID="add-button"
         className="absolute bottom-8 right-8 h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 active:scale-95"
-        onPress={onOpenAdd}>
+        onPress={onOpenAdd}
+      >
         <Ionicons name="add" size={32} color="#022c22" />
       </TouchableOpacity>
     </Container>

@@ -66,7 +66,7 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsChecking(false);
       }
     },
-    [isChecking, onFetchUpdateAsync]
+    [isChecking, onFetchUpdateAsync],
   );
 
   const handleUpdate = async () => {
@@ -104,7 +104,8 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isDownloading,
         lastChecked,
         checkForUpdates: () => checkForUpdates(false),
-      }}>
+      }}
+    >
       {children}
       <OTAUpdateDialog
         isVisible={showUpdateDialog}

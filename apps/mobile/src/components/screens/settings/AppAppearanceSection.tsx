@@ -13,8 +13,9 @@ export default function AppAppearanceSection() {
       </Text>
       <View className="mb-8 overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
         <TouchableOpacity
-          className="flex-row items-center p-5 active:bg-accent/50"
-          onPress={toggleTheme}>
+          className="active:bg-accent/50 flex-row items-center p-5"
+          onPress={toggleTheme}
+        >
           <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800/80">
             <Ionicons
               name={isDarkMode ? 'moon-outline' : 'sunny-outline'}

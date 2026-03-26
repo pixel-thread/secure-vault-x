@@ -10,5 +10,5 @@ type HealthEndpointKeys = "GET_STATUS";
  * Health system API endpoints configuration.
  */
 export const HEALTH_ENDPOINT: EndpointT<HealthEndpointKeys> = {
- GET_STATUS: "/api/health",
+  GET_STATUS: "/api/health",
 };

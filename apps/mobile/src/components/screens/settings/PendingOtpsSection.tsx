@@ -50,7 +50,8 @@ export default function PendingOtpsSection({
         </Text>
         <TouchableOpacity
           className="items-center justify-center rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800/80 dark:active:bg-zinc-700"
-          onPress={() => refetchPendingOtps()}>
+          onPress={() => refetchPendingOtps()}
+        >
           <Ionicons name="reload" size={16} color={isDarkMode ? '#a1a1aa' : '#71717a'} />
         </TouchableOpacity>
       </View>
@@ -67,7 +68,8 @@ export default function PendingOtpsSection({
               key={otp.id}
               className={`flex-row items-center p-5 ${
                 index > 0 ? 'border-t border-zinc-100 dark:border-zinc-800/50' : ''
-              }`}>
+              }`}
+            >
               <View className="mr-4 h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-500/20">
                 <Ionicons
                   name="keypad-outline"
@@ -91,7 +93,8 @@ export default function PendingOtpsSection({
                 onPress={() => {
                   Clipboard.setStringAsync(otp.code);
                   toast.success('Code copied entirely');
-                }}>
+                }}
+              >
                 <Text className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Copy</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -105,7 +108,8 @@ export default function PendingOtpsSection({
                       onPress: () => revokeOtpMutate(otp.id),
                     },
                   ]);
-                }}>
+                }}
+              >
                 <Text className="text-sm font-bold text-red-600 dark:text-red-500">Revoke</Text>
               </TouchableOpacity>
             </View>

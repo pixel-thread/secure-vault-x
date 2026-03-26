@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@store/auth';
 import { DeviceStoreManager } from '@store/device';
 import { signDevicePayload } from '@securevault/crypto';
+import { getDeviceIdentifier } from '@utils/deviceId';
 
 export interface DeviceItem {
   id: string;
@@ -17,6 +18,7 @@ export interface DeviceItem {
   deviceIdentifier: string;
   createdAt: string;
 }
+
 type TrustedDeviceSectionProps = {
   onDevicesLoad?: (devices: DeviceItem[], currentDeviceId: string) => void;
 };
@@ -40,10 +42,10 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
     // Fallback: If ID is missing, try to find it by hardware identifier in the fetched list
     if (!id && (devices?.length ?? 0) > 0) {
       const hwId = (await DeviceStoreManager.getDeviceIdReserve()) || ''; // We'll store hardware ID as a reserve
-      const hardwareId = hwId || (await require('@utils/deviceId').getDeviceIdentifier());
+      const hardwareId = hwId || (await getDeviceIdentifier());
 
       const matched = (devices as DeviceItem[] | undefined)?.find(
-        (d) => d.deviceIdentifier === hardwareId
+        (d) => d.deviceIdentifier === hardwareId,
       );
       if (matched) {
         id = matched.id;
@@ -83,7 +85,7 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
 
       if (!actingId || !signature || !timestamp) {
         throw new Error(
-          `Missing required headers for removal: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`
+          `Missing required headers for removal: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`,
         );
       }
       const payload = {
@@ -117,7 +119,7 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
         },
       ]);
     },
-    [removeDeviceMutate]
+    [removeDeviceMutate],
   );
 
   const { mutate: toggleTrustMutate } = useMutation({
@@ -141,7 +143,7 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
       }
       if (!actingId || !signature || !timestamp) {
         throw new Error(
-          `Missing required headers for trust update: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`
+          `Missing required headers for trust update: actingId=${!!actingId}, signature=${!!signature}, timestamp=${!!timestamp}`,
         );
       }
       const payload = {
@@ -179,10 +181,10 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
             style: isTrusted ? 'default' : 'destructive',
             onPress: () => toggleTrustMutate({ deviceId, isTrusted }),
           },
-        ]
+        ],
       );
     },
-    [toggleTrustMutate]
+    [toggleTrustMutate],
   );
 
   return (
@@ -193,7 +195,8 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
         </Text>
         <TouchableOpacity
           className="items-center justify-center rounded-full bg-zinc-200/50 p-2 active:bg-zinc-200 dark:bg-zinc-800/80 dark:active:bg-zinc-700"
-          onPress={() => refetchDevices()}>
+          onPress={() => refetchDevices()}
+        >
           <Ionicons name="reload" size={16} color={isDarkMode ? '#a1a1aa' : '#71717a'} />
         </TouchableOpacity>
       </View>
@@ -208,13 +211,15 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
               key={device.id}
               className={`flex-row items-center p-5 ${
                 index < devices.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800/50' : ''
-              }`}>
+              }`}
+            >
               <View
                 className={`mr-4 h-10 w-10 items-center justify-center rounded-xl ${
                   device.isTrusted
                     ? 'bg-emerald-100 dark:bg-emerald-500/20'
                     : 'bg-zinc-200 dark:bg-zinc-800/80'
-                }`}>
+                }`}
+              >
                 <Ionicons
                   name={device.isTrusted ? 'shield-checkmark-outline' : 'phone-portrait-outline'}
                   size={22}
@@ -238,9 +243,8 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
                       ? 'bg-amber-100 active:bg-amber-200 dark:bg-amber-500/10 dark:active:bg-amber-500/20'
                       : 'bg-emerald-100 active:bg-emerald-200 dark:bg-emerald-500/10 dark:active:bg-emerald-500/20'
                   }`}
-                  onPress={() =>
-                    handleToggleTrust(device.id, device.deviceName, !device.isTrusted)
-                  }>
+                  onPress={() => handleToggleTrust(device.id, device.deviceName, !device.isTrusted)}
+                >
                   <Ionicons
                     name={device.isTrusted ? 'shield-half-outline' : 'shield-checkmark-outline'}
                     size={18}
@@ -249,7 +253,8 @@ export default function TrustedDevicesSection({ onDevicesLoad }: TrustedDeviceSe
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="h-10 w-10 items-center justify-center rounded-full bg-red-100 active:bg-red-200 dark:bg-red-500/10 dark:active:bg-red-500/20"
-                  onPress={() => handleRemoveDevice(device.id, device.deviceName)}>
+                  onPress={() => handleRemoveDevice(device.id, device.deviceName)}
+                >
                   <Ionicons name="trash-outline" size={18} color="#ef4444" />
                 </TouchableOpacity>
               </View>

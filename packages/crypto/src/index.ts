@@ -2,25 +2,25 @@ import { Buffer } from "buffer";
 import { generateInitialMEK, recoverMEK } from "./argon2";
 
 const getCryptoApi = (): Crypto => {
- if (
-  typeof globalThis !== "undefined" &&
-  globalThis.crypto &&
-  globalThis.crypto.subtle
- ) {
-  return globalThis.crypto as Crypto;
- }
- if (
-  typeof process !== "undefined" &&
-  process.versions &&
-  process.versions.node
- ) {
-  // Hide from Metro bundler's static analysis
-  const nodeRequire = eval("require");
-  return nodeRequire("node:crypto").webcrypto as Extract<Crypto, any>;
- }
- throw new Error(
-  "Web Crypto API not available natively via Expo Go. Please run the app via a Dev Client (`npx expo run:ios` or `npx expo run:android`) to inject Native Modules.",
- );
+  if (
+    typeof globalThis !== "undefined" &&
+    globalThis.crypto &&
+    globalThis.crypto.subtle
+  ) {
+    return globalThis.crypto as Crypto;
+  }
+  if (
+    typeof process !== "undefined" &&
+    process.versions &&
+    process.versions.node
+  ) {
+    // Hide from Metro bundler's static analysis
+    const nodeRequire = eval("require");
+    return nodeRequire("node:crypto").webcrypto as Extract<Crypto, any>;
+  }
+  throw new Error(
+    "Web Crypto API not available natively via Expo Go. Please run the app via a Dev Client (`npx expo run:ios` or `npx expo run:android`) to inject Native Modules.",
+  );
 };
 
 /**
@@ -28,10 +28,10 @@ const getCryptoApi = (): Crypto => {
  * Returned as a native base64 string.
  */
 export async function generateRandomKey(): Promise<string> {
- const cryptoApi = getCryptoApi();
- const keyBuffer = new Uint8Array(32);
- cryptoApi.getRandomValues(keyBuffer as any);
- return Buffer.from(keyBuffer).toString("base64");
+  const cryptoApi = getCryptoApi();
+  const keyBuffer = new Uint8Array(32);
+  cryptoApi.getRandomValues(keyBuffer as any);
+  return Buffer.from(keyBuffer).toString("base64");
 }
 
 /**
@@ -40,26 +40,26 @@ export async function generateRandomKey(): Promise<string> {
  * Returns both the derived MEK and the salt used as base64 strings.
  */
 export async function generateMEK(
- password: string,
- base64Salt?: string,
+  password: string,
+  base64Salt?: string,
 ): Promise<{ mek: string; salt: string }> {
- if (base64Salt) {
-  const saltBuffer = new Uint8Array(Buffer.from(base64Salt, "base64"));
-  const mekBuffer = await recoverMEK(password, saltBuffer);
-  return {
-   mek: Buffer.from(mekBuffer).toString("base64"),
-   salt: base64Salt,
-  };
- } else {
-  const cryptoApi = getCryptoApi();
-  const salt = new Uint8Array(16);
-  cryptoApi.getRandomValues(salt);
-  const { mek } = await generateInitialMEK(password, salt);
-  return {
-   mek: Buffer.from(mek).toString("base64"),
-   salt: Buffer.from(salt).toString("base64"),
-  };
- }
+  if (base64Salt) {
+    const saltBuffer = new Uint8Array(Buffer.from(base64Salt, "base64"));
+    const mekBuffer = await recoverMEK(password, saltBuffer);
+    return {
+      mek: Buffer.from(mekBuffer).toString("base64"),
+      salt: base64Salt,
+    };
+  } else {
+    const cryptoApi = getCryptoApi();
+    const salt = new Uint8Array(16);
+    cryptoApi.getRandomValues(salt);
+    const { mek } = await generateInitialMEK(password, salt);
+    return {
+      mek: Buffer.from(mek).toString("base64"),
+      salt: Buffer.from(salt).toString("base64"),
+    };
+  }
 }
 
 /**
@@ -67,33 +67,33 @@ export async function generateMEK(
  * The 128-bit auth tag is naturally appended to the cipher by the Web Crypto API.
  */
 export async function encryptData<T>(
- data: T,
- base64Key: string,
+  data: T,
+  base64Key: string,
 ): Promise<{ encryptedData: string; iv: string }> {
- const cryptoApi = getCryptoApi();
- const keyBuffer = Buffer.from(base64Key, "base64");
- const key = await cryptoApi.subtle.importKey(
-  "raw",
-  keyBuffer,
-  { name: "AES-GCM" },
-  false,
-  ["encrypt"],
- );
+  const cryptoApi = getCryptoApi();
+  const keyBuffer = Buffer.from(base64Key, "base64");
+  const key = await cryptoApi.subtle.importKey(
+    "raw",
+    keyBuffer,
+    { name: "AES-GCM" },
+    false,
+    ["encrypt"],
+  );
 
- const iv = cryptoApi.getRandomValues(new Uint8Array(12));
- const stringData = JSON.stringify(data);
- const encodedText = new TextEncoder().encode(stringData);
+  const iv = cryptoApi.getRandomValues(new Uint8Array(12));
+  const stringData = JSON.stringify(data);
+  const encodedText = new TextEncoder().encode(stringData);
 
- const encryptedBuffer = await cryptoApi.subtle.encrypt(
-  { name: "AES-GCM", iv },
-  key,
-  encodedText,
- );
+  const encryptedBuffer = await cryptoApi.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encodedText,
+  );
 
- return {
-  encryptedData: Buffer.from(encryptedBuffer).toString("base64"),
-  iv: Buffer.from(iv).toString("base64"),
- };
+  return {
+    encryptedData: Buffer.from(encryptedBuffer).toString("base64"),
+    iv: Buffer.from(iv).toString("base64"),
+  };
 }
 
 /**
@@ -101,31 +101,31 @@ export async function encryptData<T>(
  * Converts the decrypted string back into the generic type T.
  */
 export async function decryptData<T>(
- encryptedBase64: string,
- ivBase64: string,
- base64Key: string,
+  encryptedBase64: string,
+  ivBase64: string,
+  base64Key: string,
 ): Promise<T> {
- const cryptoApi = getCryptoApi();
- const keyBuffer = Buffer.from(base64Key, "base64");
- const key = await cryptoApi.subtle.importKey(
-  "raw",
-  keyBuffer,
-  { name: "AES-GCM" },
-  false,
-  ["decrypt"],
- );
+  const cryptoApi = getCryptoApi();
+  const keyBuffer = Buffer.from(base64Key, "base64");
+  const key = await cryptoApi.subtle.importKey(
+    "raw",
+    keyBuffer,
+    { name: "AES-GCM" },
+    false,
+    ["decrypt"],
+  );
 
- const iv = Buffer.from(ivBase64, "base64");
- const encryptedBuffer = Buffer.from(encryptedBase64, "base64");
+  const iv = Buffer.from(ivBase64, "base64");
+  const encryptedBuffer = Buffer.from(encryptedBase64, "base64");
 
- const decryptedBuffer = await cryptoApi.subtle.decrypt(
-  { name: "AES-GCM", iv },
-  key,
-  encryptedBuffer,
- );
+  const decryptedBuffer = await cryptoApi.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encryptedBuffer,
+  );
 
- const decryptedString = new TextDecoder().decode(decryptedBuffer);
- return JSON.parse(decryptedString) as T;
+  const decryptedString = new TextDecoder().decode(decryptedBuffer);
+  return JSON.parse(decryptedString) as T;
 }
 
 /**
@@ -133,32 +133,32 @@ export async function decryptData<T>(
  * Generate an ECDSA P-256 key pair to be used for Device-bound API requests.
  */
 export async function generateDeviceKeyPair(): Promise<{
- publicKey: string;
- privateKey: string;
+  publicKey: string;
+  privateKey: string;
 }> {
- const cryptoApi = getCryptoApi();
- const keyPair = await cryptoApi.subtle.generateKey(
-  {
-   name: "ECDSA",
-   namedCurve: "P-256",
-  },
-  true,
-  ["sign", "verify"],
- );
+  const cryptoApi = getCryptoApi();
+  const keyPair = await cryptoApi.subtle.generateKey(
+    {
+      name: "ECDSA",
+      namedCurve: "P-256",
+    },
+    true,
+    ["sign", "verify"],
+  );
 
- const exportedPubKey = await cryptoApi.subtle.exportKey(
-  "spki",
-  keyPair.publicKey,
- );
- const exportedPrivKey = await cryptoApi.subtle.exportKey(
-  "pkcs8",
-  keyPair.privateKey,
- );
+  const exportedPubKey = await cryptoApi.subtle.exportKey(
+    "spki",
+    keyPair.publicKey,
+  );
+  const exportedPrivKey = await cryptoApi.subtle.exportKey(
+    "pkcs8",
+    keyPair.privateKey,
+  );
 
- return {
-  publicKey: Buffer.from(exportedPubKey).toString("base64"),
-  privateKey: Buffer.from(exportedPrivKey).toString("base64"),
- };
+  return {
+    publicKey: Buffer.from(exportedPubKey).toString("base64"),
+    privateKey: Buffer.from(exportedPrivKey).toString("base64"),
+  };
 }
 
 /**
@@ -166,27 +166,27 @@ export async function generateDeviceKeyPair(): Promise<{
  * Returns a Base64 encoded signature.
  */
 export async function signDevicePayload(
- payload: string,
- base64PrivateKey: string,
+  payload: string,
+  base64PrivateKey: string,
 ): Promise<string> {
- const cryptoApi = getCryptoApi();
- const pkBuffer = Buffer.from(base64PrivateKey, "base64");
- const privateKeyObj = await cryptoApi.subtle.importKey(
-  "pkcs8",
-  pkBuffer,
-  { name: "ECDSA", namedCurve: "P-256" },
-  false,
-  ["sign"],
- );
+  const cryptoApi = getCryptoApi();
+  const pkBuffer = Buffer.from(base64PrivateKey, "base64");
+  const privateKeyObj = await cryptoApi.subtle.importKey(
+    "pkcs8",
+    pkBuffer,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
 
- const dataBuffer = new TextEncoder().encode(payload);
- const signatureBuffer = await cryptoApi.subtle.sign(
-  { name: "ECDSA", hash: { name: "SHA-256" } },
-  privateKeyObj,
-  dataBuffer,
- );
+  const dataBuffer = new TextEncoder().encode(payload);
+  const signatureBuffer = await cryptoApi.subtle.sign(
+    { name: "ECDSA", hash: { name: "SHA-256" } },
+    privateKeyObj,
+    dataBuffer,
+  );
 
- return Buffer.from(signatureBuffer).toString("base64");
+  return Buffer.from(signatureBuffer).toString("base64");
 }
 
 /**
@@ -194,31 +194,32 @@ export async function signDevicePayload(
  * Web Crypto APIs in some environments (e.g. some RN polyfills) produce DER.
  */
 function derToRaw(der: Buffer): Buffer {
- let offset = 0;
- if (der[offset++] !== 0x30) throw new Error("Invalid DER: not a sequence");
- offset++; // skip sequence length
+  let offset = 0;
+  if (der[offset++] !== 0x30) throw new Error("Invalid DER: not a sequence");
+  offset++; // skip sequence length
 
- const readInteger = () => {
-  if (der[offset++] !== 0x02) throw new Error("Invalid DER: expected integer");
-  const len = der[offset++] || 0;
-  let integer = der.slice(offset, offset + len);
-  offset += len;
+  const readInteger = () => {
+    if (der[offset++] !== 0x02)
+      throw new Error("Invalid DER: expected integer");
+    const len = der[offset++] || 0;
+    let integer = der.slice(offset, offset + len);
+    offset += len;
 
-  // Normalize to 32 bytes (remove 00 padding or add 00 padding)
-  if (integer.length > 32) {
-   integer = integer.slice(integer.length - 32);
-  } else if (integer.length < 32) {
-   const padded = Buffer.alloc(32, 0);
-   integer.copy(padded, 32 - integer.length);
-   integer = padded;
-  }
-  return integer;
- };
+    // Normalize to 32 bytes (remove 00 padding or add 00 padding)
+    if (integer.length > 32) {
+      integer = integer.slice(integer.length - 32);
+    } else if (integer.length < 32) {
+      const padded = Buffer.alloc(32, 0);
+      integer.copy(padded, 32 - integer.length);
+      integer = padded;
+    }
+    return integer;
+  };
 
- const r = readInteger();
- const s = readInteger();
+  const r = readInteger();
+  const s = readInteger();
 
- return Buffer.concat([r, s]);
+  return Buffer.concat([r, s]);
 }
 
 /**
@@ -226,38 +227,37 @@ function derToRaw(der: Buffer): Buffer {
  * Run primarily on the Backend.
  */
 export async function verifyDeviceSignature(
- payload: string,
- base64Signature: string,
- base64PublicKey: string,
+  payload: string,
+  base64Signature: string,
+  base64PublicKey: string,
 ): Promise<boolean> {
- const cryptoApi = getCryptoApi();
- const pubKeyBuffer = Buffer.from(base64PublicKey, "base64");
- let sigBuffer = Buffer.from(base64Signature, "base64");
+  const cryptoApi = getCryptoApi();
+  const pubKeyBuffer = Buffer.from(base64PublicKey, "base64");
+  let sigBuffer = Buffer.from(base64Signature, "base64");
 
- // If signature is DER (starts with 0x30), normalize to RAW
- if (sigBuffer[0] === 0x30 && sigBuffer.length > 64) {
-  try {
-   sigBuffer = derToRaw(sigBuffer) as any;
-  } catch (e) {
-   // Fallback to original, subtle.verify will likely fail
+  // If signature is DER (starts with 0x30), normalize to RAW
+  if (sigBuffer[0] === 0x30 && sigBuffer.length > 64) {
+    try {
+      sigBuffer = derToRaw(sigBuffer) as any;
+    } catch (e) {
+      // Fallback to original, subtle.verify will likely fail
+    }
   }
- }
 
- const publicKeyObj = await cryptoApi.subtle.importKey(
-  "spki",
-  pubKeyBuffer,
-  { name: "ECDSA", namedCurve: "P-256" },
-  false,
-  ["verify"],
- );
+  const publicKeyObj = await cryptoApi.subtle.importKey(
+    "spki",
+    pubKeyBuffer,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["verify"],
+  );
 
- const dataBuffer = new TextEncoder().encode(payload);
+  const dataBuffer = new TextEncoder().encode(payload);
 
- return await cryptoApi.subtle.verify(
-  { name: "ECDSA", hash: { name: "SHA-256" } },
-  publicKeyObj,
-  sigBuffer,
-  dataBuffer,
- );
+  return await cryptoApi.subtle.verify(
+    { name: "ECDSA", hash: { name: "SHA-256" } },
+    publicKeyObj,
+    sigBuffer,
+    dataBuffer,
+  );
 }
-

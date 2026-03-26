@@ -43,6 +43,7 @@ export const FormField = <T extends FieldValues>({
               </View>
             )}
             <TextInput
+              testID={props.testID}
               className={`rounded-3xl border bg-zinc-50 py-4 text-zinc-900 focus:bg-white dark:bg-zinc-900/40 dark:text-white dark:focus:bg-zinc-900/80 ${
                 errors[name] ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
               } ${leftIconName ? 'pl-11' : 'px-5'} ${extraElement ? 'pr-14' : 'pr-5'}`}

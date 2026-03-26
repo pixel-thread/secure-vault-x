@@ -18,7 +18,8 @@ export const BioMetricLock = ({ onPressUnlock }: Props) => {
         </Text>
         <TouchableOpacity
           className="rounded-2xl bg-emerald-500 px-8 py-4 shadow-xl shadow-emerald-500/20 active:scale-95"
-          onPress={onPressUnlock}>
+          onPress={onPressUnlock}
+        >
           <Text className="text-lg font-bold text-[#022c22]">Unlock</Text>
         </TouchableOpacity>
       </View>

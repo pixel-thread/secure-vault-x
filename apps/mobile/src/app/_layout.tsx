@@ -4,11 +4,18 @@ import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-rean
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
 import { Wrapper } from '@components/providers';
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useSyncTrigger } from '@hooks/useSyncTrigger';
-import { LoadingScreen } from '@src/components/common/LoadingScreen';
 import { GlobalErrorBoundary } from '@components/common/GlobalErrorBoundary';
 import * as SplashScreen from 'expo-splash-screen';
+import { PasswordManager } from '@utils/PasswordManager';
+import { AutofillPicker } from '@components/autofill/AutofillPicker';
+import { AppState, View } from 'react-native';
+import { useAutofillStore } from '@store/autofill';
+import { initGlobalErrorTracking } from '@utils/errors';
+import { NavigationIndependentTree, NavigationContainer } from '@react-navigation/native';
+import { logger } from '@securevault/utils-native';
+import { Ternary } from '@src/components/common/Ternary';
 import {
   useFonts,
   JetBrainsMono_400Regular,
@@ -20,14 +27,13 @@ import {
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
+// Initialize global error tracking to capture "uncaught errors"
+initGlobalErrorTracking();
+
 const AppSyncManager = ({ children }: { children: React.ReactNode }) => {
   useSyncTrigger();
   return <>{children}</>;
 };
-
-// Suppress the "[Reanimated] Reading from `value` during component render" warning.
-// This is triggered internally by @react-navigation/drawer v7 and is a known issue
-// in the library, not in our application code.
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -46,57 +52,93 @@ export default function RootLayout() {
     JetBrainsMono_800ExtraBold,
   });
 
-  const [isMounted, setIsMounted] = React.useState(false);
+  const { autofillSiteKey, setAutofillSiteKey, isAutofilling, reset } = useAutofillStore();
+  const [isInitializing, setIsInitializing] = React.useState(true);
+
+  const checkAutofill = useCallback(async () => {
+    try {
+      const context = await PasswordManager.getAutofillContext();
+      logger.info(`[LAYOUT] Context check: ${context?.siteKey ?? 'none'}`);
+      if (context?.siteKey) {
+        setAutofillSiteKey(context.siteKey);
+        await SplashScreen.hideAsync();
+      }
+    } catch (e) {
+      logger.warn('[LAYOUT] Autofill check error', e);
+    }
+  }, [setAutofillSiteKey]);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    let active = true;
+
+    async function init() {
+      await checkAutofill();
+      if (!active) return;
+      setIsInitializing(false);
+    }
+
+    init();
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkAutofill();
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, [checkAutofill]);
+
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && !isInitializing) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, isInitializing]);
 
-  useEffect(() => {
-    if (!isMounted) {
-      setIsMounted(true);
-    }
-  }, [isMounted]);
-
-  if (!isMounted || (!fontsLoaded && !fontError)) {
-    return <LoadingScreen />;
+  if (isInitializing || (!fontsLoaded && !fontError)) {
+    return <View style={{ flex: 1, backgroundColor: autofillSiteKey ? 'transparent' : '#000' }} />;
   }
+
+  // Use a key to force re-mounting of the Wrapper (and BiometricProvider)
+  // when switching between normal app and autofill modes.
+  const layoutMode = autofillSiteKey && isAutofilling ? 'autofill' : 'app';
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GlobalErrorBoundary>
         <SafeAreaProvider>
-          <Wrapper>
+          <Wrapper key={layoutMode}>
             <AppSyncManager>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: 'slide_from_right',
-                  animationTypeForReplace: 'push',
-                  presentation: 'card',
-                  gestureEnabled: true,
-                  fullScreenGestureEnabled: true,
-                }}>
-                <Stack.Screen name="(drawer)" />
-                <Stack.Screen name="auth/index" />
-                <Stack.Screen
-                  name="auth/mfa"
-                  options={{
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                  }}
-                />
-                <Stack.Screen
-                  name="auth/signup/index"
-                  options={{
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                  }}
-                />
-                <Stack.Screen name="+not-found" />
-              </Stack>
+              <Ternary
+                condition={layoutMode === 'autofill'}
+                ifTrue={
+                  <NavigationIndependentTree>
+                    <NavigationContainer>
+                      <AutofillPicker siteKey={autofillSiteKey || ''} onClose={reset} />
+                    </NavigationContainer>
+                  </NavigationIndependentTree>
+                }
+                ifFalse={
+                  <View style={{ flex: 1, backgroundColor: '#000' }}>
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        animation: 'slide_from_right',
+                        presentation: 'card',
+                        gestureEnabled: true,
+                      }}
+                    >
+                      <Stack.Screen name="(drawer)" />
+                      <Stack.Screen name="auth/index" />
+                      <Stack.Screen name="auth/mfa" options={{ presentation: 'modal' }} />
+                      <Stack.Screen name="auth/signup/index" options={{ presentation: 'modal' }} />
+                      <Stack.Screen name="+not-found" />
+                    </Stack>
+                  </View>
+                }
+              />
             </AppSyncManager>
           </Wrapper>
         </SafeAreaProvider>

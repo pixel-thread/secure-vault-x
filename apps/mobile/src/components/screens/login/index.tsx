@@ -53,7 +53,7 @@ export default function LoginScreen() {
   const isDarkMode = colorScheme === 'dark';
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (data: FormValue) => http.post<ApiRes>(AUTH_ENDPOINT.POST_PASSWORD_LOGIN, data),
+    mutationFn: (data: FormValue) => http.post<any>(AUTH_ENDPOINT.POST_PASSWORD_LOGIN, data),
     onSuccess: async (data: { success: boolean; data?: ApiRes; message?: string }) => {
       if (data.success) {
         const loginData = data?.data;
@@ -134,6 +134,7 @@ export default function LoginScreen() {
                 name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
+                    testID="login-email"
                     className={`w-full rounded-2xl border bg-zinc-50 px-5 py-4 text-lg text-zinc-900 focus:bg-white dark:bg-zinc-900/50 dark:text-white dark:focus:bg-zinc-900 ${
                       errors.email ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
                     }`}
@@ -163,8 +164,10 @@ export default function LoginScreen() {
                   <View
                     className={`flex-row items-center rounded-2xl border bg-zinc-50 pr-2 dark:bg-zinc-900/50 ${
                       errors.password ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-800'
-                    }`}>
+                    }`}
+                  >
                     <TextInput
+                      testID="login-password"
                       className="flex-1 px-5 py-4 text-lg text-zinc-900 dark:text-white"
                       placeholder="The secret word..."
                       placeholderTextColor={isDarkMode ? '#52525b' : '#a1a1aa'}
@@ -176,7 +179,8 @@ export default function LoginScreen() {
                     <TouchableOpacity
                       onPressIn={() => setShowPassword(true)}
                       onPressOut={() => setShowPassword(false)}
-                      className="p-3">
+                      className="p-3"
+                    >
                       <Ionicons
                         name={showPassword ? 'eye' : 'eye-off'}
                         size={22}
@@ -192,9 +196,11 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
+              testID="login-button"
               className="mt-4 w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
               disabled={isPending}
-              onPress={handleSubmit(onSubmit)}>
+              onPress={handleSubmit(onSubmit)}
+            >
               <Ionicons name="log-in-outline" size={24} color="#064e3b" />
               <Text className="ml-2 text-xl font-bold text-[#022c22]">
                 {isPending ? 'Checking Vibe...' : "Let's Go"}
@@ -204,7 +210,7 @@ export default function LoginScreen() {
             <View className="mt-6 flex-row justify-center">
               <Text className="text-zinc-500 dark:text-zinc-400">No account yet? </Text>
               <Link href="/auth/signup" asChild>
-                <TouchableOpacity>
+                <TouchableOpacity testID="signup-link">
                   <Text className="font-bold text-emerald-600 dark:text-emerald-500">
                     Join the Crew
                   </Text>

@@ -50,7 +50,8 @@ export function FileDetailView({ item }: Props) {
         <View className="flex-1">
           <Text
             className="text-xl font-bold capitalize text-zinc-900 dark:text-white"
-            numberOfLines={1}>
+            numberOfLines={1}
+          >
             {truncateText({ text: fileName, maxLength: 28 })}
           </Text>
           <Text className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -62,7 +63,8 @@ export function FileDetailView({ item }: Props) {
       <TouchableOpacity
         disabled={isProcessing}
         onPress={handleDecryptAndOpenFile}
-        className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 active:scale-[0.98] disabled:opacity-50">
+        className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 active:scale-[0.98] disabled:opacity-50"
+      >
         {isProcessing ? (
           <ActivityIndicator size="small" color="#022c22" />
         ) : (

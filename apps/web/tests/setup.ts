@@ -13,14 +13,20 @@ beforeAll(() => {
       body: string;
       constructor(url: string, init?: any) {
         this.url = url;
-        const headerMap = new Map<string, string>(Object.entries(init?.headers || {}));
+        const headerMap = new Map<string, string>(
+          Object.entries(init?.headers || {}),
+        );
         this.headers = {
-          get: (name: string) => headerMap.get(name.toLowerCase()) || null
+          get: (name: string) => headerMap.get(name.toLowerCase()) || null,
         };
         this.body = init?.body || "";
       }
-      async text() { return this.body; }
-      async json() { return JSON.parse(this.body); }
+      async text() {
+        return this.body;
+      }
+      async json() {
+        return JSON.parse(this.body);
+      }
     },
     NextResponse: {
       json: vi.fn((data, init) => ({

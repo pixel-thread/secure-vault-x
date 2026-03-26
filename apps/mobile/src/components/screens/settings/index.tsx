@@ -35,7 +35,8 @@ export default function SettingsScreen() {
               tintColor="#10b981"
               colors={['#10b981']}
             />
-          }>
+          }
+        >
           <AppAppearanceSection />
           <SecurityControlsSection />
           <PendingOtpsSection isCurrentDeviceTrusted={isCurrentDeviceTrusted} />

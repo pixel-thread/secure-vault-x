@@ -12,7 +12,8 @@ export function CustomDrawerContent({ ...props }: DrawerContentComponentProps) {
   return (
     <DrawerContentScrollView
       {...props}
-      contentContainerStyle={{ paddingTop: insetTop + 20, flex: 1 }}>
+      contentContainerStyle={{ paddingTop: insetTop + 20, flex: 1 }}
+    >
       <View className="items-center px-6">
         <View className="h-28 w-28 items-center justify-center rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-2 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
           <Image

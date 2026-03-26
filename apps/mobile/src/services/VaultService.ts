@@ -7,6 +7,7 @@ import { DeviceStoreManager } from '@store/device';
 import { logger } from '@securevault/utils-native';
 import { z } from 'zod';
 import { VaultItemSchema } from '@utils/validators/vault';
+import { PasswordManager } from '@utils/PasswordManager';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -20,7 +21,7 @@ export class VaultService {
    */
   constructor(
     private readonly db: DrizzleDB,
-    private readonly userId: string
+    private readonly userId: string,
   ) {}
 
   /**
@@ -88,8 +89,8 @@ export class VaultService {
         .where(
           and(
             eq(schema.vault.id, id),
-            eq(schema.vault.userId, this.userId) // Security: Prevent cross-user deletion
-          )
+            eq(schema.vault.userId, this.userId), // Security: Prevent cross-user deletion
+          ),
         );
 
       logger.info('Vault item soft-deleted successfully', { vaultId: id });
@@ -120,8 +121,8 @@ export class VaultService {
           and(
             isNull(schema.vault.deletedAt),
             eq(schema.vault.userId, this.userId), // Security: Enforce user isolation
-            eq(schema.vault.isCorrupted, false)
-          )
+            eq(schema.vault.isCorrupted, false),
+          ),
         )
         .orderBy(desc(schema.vault.updatedAt))
         .limit(limit)
@@ -184,6 +185,8 @@ export class VaultService {
         }
       }
 
+      await this.syncToNativeAutofill(decryptedItems);
+
       return decryptedItems;
     } catch (error) {
       logger.error('Failed to retrieve vault items', {
@@ -194,13 +197,68 @@ export class VaultService {
   }
 
   /**
+   * Sync decrypted login items to the native Android Autofill bridge (In-Memory).
+   */
+  private async syncToNativeAutofill(items: VaultSecretT[]) {
+    try {
+      const loginItems = items.filter((i) => i.type === 'login');
+      const siteMap: Record<string, any[]> = {};
+
+      for (const item of loginItems) {
+        const usernameField = item.fields.find(
+          (f) => f.id === 'username' || f.id === 'user' || f.label.toLowerCase() === 'username',
+        );
+        const passwordField = item.fields.find(
+          (f) => f.id === 'password' || f.id === 'pass' || f.type === 'password',
+        );
+        const websiteField = item.fields.find(
+          (f) =>
+            f.id === 'website' ||
+            f.id === 'url' ||
+            f.type === 'url' ||
+            f.label.toLowerCase() === 'website',
+        );
+
+        if (usernameField && passwordField) {
+          const site = websiteField?.value || item.title;
+          if (!siteMap[site]) siteMap[site] = [];
+          siteMap[site].push({
+            id: item.id,
+            username: usernameField.value,
+            password: passwordField.value,
+          });
+        }
+      }
+
+      await PasswordManager.syncVault(siteMap);
+    } catch (err) {
+      logger.error('Failed to sync to native autofill', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  /**
+   * Clear all decrypted data from native memory (security gate).
+   */
+  async clearAutofill() {
+    try {
+      await PasswordManager.clearVault();
+    } catch (err) {
+      logger.error('Failed to clear native autofill', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  /**
    * Transforms raw decrypted payload into a structured VaultSecretT
    * Centralizes mapping logic for easier maintenance.
    */
   private transformToVaultSecret(
     id: string,
     payload: unknown,
-    version: number
+    version: number,
   ): VaultSecretT | null {
     if (!payload) return null;
 
@@ -316,8 +374,8 @@ export class VaultService {
         .where(
           and(
             eq(schema.vault.id, data.id),
-            eq(schema.vault.userId, this.userId) // user may only update their own records
-          )
+            eq(schema.vault.userId, this.userId), // user may only update their own records
+          ),
         );
 
       logger.info('Vault item updated successfully', { id: data.id });

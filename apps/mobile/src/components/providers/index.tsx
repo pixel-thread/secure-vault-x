@@ -10,11 +10,16 @@ import { ScreenCaptureProvider } from './capture';
 import { VaultProvider } from './vault';
 import { NotificationProvider } from './notification';
 import { CronProvider } from './cron';
-import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'nativewind';
 
 import { ThemeProvider, Toaster } from '@securevault/ui-native';
-import { useThemeStore } from '../../store/theme';
+import { useThemeStore } from '@store/theme';
+import { useSyncTrigger } from '@src/hooks/useSyncTrigger';
+import { BiometricProvider } from './auth/BiometricProvider';
+
+const AppSyncManager = ({ children }: { children: React.ReactNode }) => {
+  useSyncTrigger();
+  return <>{children}</>;
+};
 
 type Props = { children: React.ReactNode };
 
@@ -34,27 +39,31 @@ export const Wrapper = ({ children }: Props) => {
   return (
     <ThemeProvider initialTheme={isDarkMode ? 'dark' : 'light'}>
       <ErrorBoundary>
-        <TQueryProvider>
-          <AuthProvider>
-            <Redirect>
-              <UpdateProvider>
-                <CryptoProvider>
-                  <DBProvider>
-                    <VaultProvider>
-                      <NotificationProvider>
-                        <CronProvider>
-                          <Suspense>
-                            <ScreenCaptureProvider>{children}</ScreenCaptureProvider>
-                          </Suspense>
-                        </CronProvider>
-                      </NotificationProvider>
-                    </VaultProvider>
-                  </DBProvider>
-                </CryptoProvider>
-              </UpdateProvider>
-            </Redirect>
-          </AuthProvider>
-        </TQueryProvider>
+        <BiometricProvider>
+          <TQueryProvider>
+            <AuthProvider>
+              <Redirect>
+                <UpdateProvider>
+                  <CryptoProvider>
+                    <DBProvider>
+                      <VaultProvider>
+                        <NotificationProvider>
+                          <CronProvider>
+                            <Suspense>
+                              <ScreenCaptureProvider>
+                                <AppSyncManager>{children}</AppSyncManager>
+                              </ScreenCaptureProvider>
+                            </Suspense>
+                          </CronProvider>
+                        </NotificationProvider>
+                      </VaultProvider>
+                    </DBProvider>
+                  </CryptoProvider>
+                </UpdateProvider>
+              </Redirect>
+            </AuthProvider>
+          </TQueryProvider>
+        </BiometricProvider>
         <Toaster duration={2000} />
       </ErrorBoundary>
     </ThemeProvider>

@@ -16,12 +16,13 @@
   },
   "private": true,
   "scripts": {
+    "format": "prettier --write .",
     "generate": "tsc",
     "build": "tsc",
     "lint": "eslint ."
   },
   "dependencies": {
-    "@securevault/eslint-config": "workspace:*",
+    "@securevault/config-eslint": "workspace:*",
     "@securevault/typescript-config": "workspace:*",
     "@securevault/types": "workspace:*"
   },

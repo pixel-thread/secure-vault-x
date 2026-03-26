@@ -331,14 +331,24 @@ export class AuthService {
     return { requiresMfa: true, message: "OTP sent to email" };
   }
 
-  static async changePassword(userId: string, currentPasswordRaw: string, newPasswordRaw: string, otp?: string) {
+  static async changePassword(
+    userId: string,
+    currentPasswordRaw: string,
+    newPasswordRaw: string,
+    otp?: string,
+  ) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundError("User not found");
 
     if (user.passwordHash) {
-      if (!currentPasswordRaw) throw new BadRequestError("Current password is required");
-      const validPassword = await bcrypt.compare(currentPasswordRaw, user.passwordHash);
-      if (!validPassword) throw new UnauthorizedError("Invalid current password");
+      if (!currentPasswordRaw)
+        throw new BadRequestError("Current password is required");
+      const validPassword = await bcrypt.compare(
+        currentPasswordRaw,
+        user.passwordHash,
+      );
+      if (!validPassword)
+        throw new UnauthorizedError("Invalid current password");
     }
 
     if (!otp) throw new BadRequestError("OTP is required");
@@ -347,7 +357,8 @@ export class AuthService {
       orderBy: { createdAt: "desc" },
     });
     if (!otpRecord) throw new BadRequestError("No pending OTP found");
-    if (otpRecord.expiresAt < new Date()) throw new BadRequestError("OTP Expired");
+    if (otpRecord.expiresAt < new Date())
+      throw new BadRequestError("OTP Expired");
     if (otpRecord.code !== otp) throw new BadRequestError("Invalid OTP");
 
     await prisma.otpVerification.updateMany({

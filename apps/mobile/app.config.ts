@@ -50,6 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         enableBackgroundRemoteNotifications: true,
       },
     ],
+    './plugins/withPasswordManager',
   ],
   experiments: {
     typedRoutes: true,

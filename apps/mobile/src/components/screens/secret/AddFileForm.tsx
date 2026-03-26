@@ -3,14 +3,12 @@ import { SecretTemplate } from '@securevault/types';
 import { FormField } from '@src/components/common/FormField';
 import { usePasswordMutation } from '@hooks/usePasswordMutation';
 import { useColorScheme } from 'nativewind';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { toast } from 'sonner-native';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { fileSchema } from '@securevault/validators';
 import { useFileEncrypter } from '@hooks/useFileEncrypter';
-import { MAX_FILE_SIZE_MB } from '@securevault/constants';
 
 interface Props {
   /** Template definition for the secret */
@@ -47,7 +45,7 @@ export function AddFileForm({ onSuccess, onCancel }: Props) {
     defaultValues: { title: '' },
     // We don't use the full fileSchema here for the form because base64 is handled internally
     resolver: zodResolver(
-      fileSchema.omit({ fileName: true, fileSize: true, contentType: true, base64Data: true })
+      fileSchema.omit({ fileName: true, fileSize: true, contentType: true, base64Data: true }),
     ),
   });
 
@@ -85,7 +83,8 @@ export function AddFileForm({ onSuccess, onCancel }: Props) {
               setValue('title', picked.name.split('.')[0]);
             }
           }}
-          className="flex-row items-center rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900/50">
+          className="flex-row items-center rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900/50"
+        >
           <View className="mr-4 h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
             <Ionicons
               name={fileInfo ? 'document' : 'cloud-upload-outline'}
@@ -109,7 +108,8 @@ export function AddFileForm({ onSuccess, onCancel }: Props) {
         <TouchableOpacity
           disabled={isPending || isProcessing || !fileInfo}
           className="w-full flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-xl shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
-          onPress={handleSubmit(onSubmitForm)}>
+          onPress={handleSubmit(onSubmitForm)}
+        >
           {isPending || isProcessing ? (
             <ActivityIndicator size="small" color="#022c22" />
           ) : (
@@ -123,7 +123,8 @@ export function AddFileForm({ onSuccess, onCancel }: Props) {
         {onCancel && (
           <TouchableOpacity
             onPress={onCancel}
-            className="w-full flex-row items-center justify-center rounded-2xl border border-zinc-200 bg-white py-4 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-900/50">
+            className="w-full flex-row items-center justify-center rounded-2xl border border-zinc-200 bg-white py-4 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-900/50"
+          >
             <Text className="text-lg font-bold text-zinc-900 dark:text-white">Cancel</Text>
           </TouchableOpacity>
         )}

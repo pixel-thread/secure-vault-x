@@ -23,8 +23,10 @@ export default function Secrets() {
             {SECRET_TEMPLATES.map((template) => (
               <TouchableOpacity
                 key={template.type}
+                testID={`template-${template.type}`}
                 onPress={() => router.push(`/secret/add-secret?type=${template.type}`)}
-                className="flex-row items-center rounded-2xl border border-zinc-200 bg-zinc-50 p-5 active:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900/50 dark:active:bg-zinc-800">
+                className="flex-row items-center rounded-2xl border border-zinc-200 bg-zinc-50 p-5 active:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900/50 dark:active:bg-zinc-800"
+              >
                 <View className="mr-4 h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
                   <Ionicons name={getIcon(template.type)} size={24} color="#10b981" />
                 </View>

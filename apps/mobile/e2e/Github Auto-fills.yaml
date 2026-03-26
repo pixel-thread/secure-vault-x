@@ -1,0 +1,4 @@
+appId: com.pixelthread.securevaultx
+---
+- launchApp:
+    clearState: true

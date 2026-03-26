@@ -3,12 +3,8 @@ import { View, Text, StatusBar } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
-import { useColorScheme } from 'nativewind';
 
 export const RecordingBlockedScreen: React.FC = () => {
-  const { colorScheme } = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
-
   return (
     <View className="absolute inset-0 z-[9999] items-center justify-center bg-black/60">
       <StatusBar barStyle="light-content" />
@@ -16,7 +12,8 @@ export const RecordingBlockedScreen: React.FC = () => {
         <BlurView intensity={80} tint="dark" className="flex-1 items-center justify-center px-8">
           <Animated.View
             entering={ZoomIn.delay(200)}
-            className="mb-8 h-24 w-24 items-center justify-center rounded-[32px] border border-red-500/30 bg-red-500/20 shadow-2xl shadow-red-500/50">
+            className="mb-8 h-24 w-24 items-center justify-center rounded-[32px] border border-red-500/30 bg-red-500/20 shadow-2xl shadow-red-500/50"
+          >
             <Ionicons name="videocam-off-outline" size={48} color="#ef4444" />
           </Animated.View>
 
@@ -32,7 +29,8 @@ export const RecordingBlockedScreen: React.FC = () => {
 
           <Animated.View
             entering={FadeIn.delay(600)}
-            className="mt-12 overflow-hidden rounded-2xl border border-white/10 bg-white/5 px-6 py-4">
+            className="mt-12 overflow-hidden rounded-2xl border border-white/10 bg-white/5 px-6 py-4"
+          >
             <View className="flex-row items-center space-x-3">
               <Ionicons name="shield-checkmark-outline" size={20} color="#10b981" />
               <Text className="text-sm font-medium text-emerald-400">Your data is protected</Text>

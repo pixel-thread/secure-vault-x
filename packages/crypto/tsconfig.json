@@ -1,17 +1,10 @@
 {
- "extends": "@securevault/typescript-config/node.json",
- "compilerOptions": {
-  "outDir": "dist",
-  "rootDir": "src",
-  "lib": [
-   "DOM"
-  ]
- },
- "include": [
-  "src"
- ],
- "exclude": [
-  "node_modules",
-  "dist"
- ]
+  "extends": "@securevault/typescript-config/node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "lib": ["DOM"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

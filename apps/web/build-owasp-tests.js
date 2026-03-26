@@ -235,6 +235,6 @@ templateKeys.forEach((baseName) => {
 
 console.log(
   "SUCCESS: Seeded " +
-  templateKeys.length +
-  " robust OWASP endpoints via Api-Guardian.",
+    templateKeys.length +
+    " robust OWASP endpoints via Api-Guardian.",
 );

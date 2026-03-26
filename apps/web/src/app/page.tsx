@@ -88,8 +88,8 @@ export default function LandingPage() {
               synced across all your devices with unbreakable precision.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <GlassButton 
-                variant="prominent" 
+              <GlassButton
+                variant="prominent"
                 className="text-lg !px-8"
                 onClick={async () => {
                   try {

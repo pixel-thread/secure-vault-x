@@ -1,0 +1,55 @@
+appId: com.pixelthread.securevaultx.dev
+---
+- launchApp:
+    clearState: false
+
+# 1. Login Flow
+- assertVisible: "SecureVault X"
+- tapOn:
+    id: "login-email"
+- inputText: "one@gmail.com"
+- tapOn:
+    id: "login-password"
+- inputText: "123Clashofclan@"
+- tapOn:
+    id: "login-button"
+
+# 2. Verify Vault Screen (Default)
+- assertVisible: "My Stash"
+- assertVisible: "Safe as houses"
+
+# 3. Navigate to Settings
+- swipe:
+    direction: RIGHT
+    duration: 400
+- tapOn: "Settings"
+- assertVisible: "Security Settings"
+
+# 4. Navigate to Documentation
+- swipe:
+    direction: RIGHT
+    duration: 400
+- tapOn: "Documentation"
+- assertVisible: "README"
+
+# 5. Navigate to About
+- swipe:
+    direction: RIGHT
+    duration: 400
+- tapOn: "About Us"
+- assertVisible: "About"
+
+# 6. Navigate back to Vault
+- swipe:
+    direction: RIGHT
+    duration: 400
+- tapOn: "My Vault"
+- assertVisible: "My Stash"
+
+# 7. Add Secret Screen
+- tapOn:
+    id: "add-button"
+- assertVisible: "What would you like to add?"
+- tapOn: "Login"
+- assertVisible: "Core Details"
+- tapOn: "Abort mission"

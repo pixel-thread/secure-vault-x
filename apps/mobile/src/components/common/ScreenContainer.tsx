@@ -44,7 +44,8 @@ export const ScreenContainer = memo(
     return (
       <KeyboardAvoidingView
         style={[{ flex: 1, backgroundColor: 'transparent' }, style]}
-        behavior={behaviour}>
+        behavior={behaviour}
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           {/* We wrap the inner content in a View that handles the safe area padding once */}
           <View style={{ flex: 1, backgroundColor: 'transparent', paddingBottom: insets.bottom }}>
@@ -64,7 +65,8 @@ export const ScreenContainer = memo(
                   ]}
                   keyboardDismissMode="on-drag"
                   keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}>
+                  showsVerticalScrollIndicator={false}
+                >
                   {children}
                 </ScrollView>
               }
@@ -73,5 +75,5 @@ export const ScreenContainer = memo(
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     );
-  }
+  },
 );

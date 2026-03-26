@@ -8,7 +8,7 @@ describe("A09: Security Logging (IP Spoofing)", () => {
       .post("/auth/password/change-password")
       .set("x-forwarded-for", "8.8.8.8, 127.0.0.1")
       .send({ current_password: "old", new_password: "new", otp: "123456" });
-    
-    expect([400, 401, 403, 429]).toContain(res.status); 
+
+    expect([400, 401, 403, 429]).toContain(res.status);
   });
 });

@@ -19,7 +19,7 @@ export class SyncService {
   constructor(
     private readonly db: DrizzleDB,
     private readonly userId: string,
-    private readonly onStatusChange?: (isSyncing: boolean) => void
+    private readonly onStatusChange?: (isSyncing: boolean) => void,
   ) {}
 
   /**
@@ -70,8 +70,8 @@ export class SyncService {
         and(
           gt(schema.vault.updatedAt, sinceDate),
           eq(schema.vault.userId, this.userId),
-          eq(schema.vault.isCorrupted, false) // OWASP: Only push healthy data
-        )
+          eq(schema.vault.isCorrupted, false), // OWASP: Only push healthy data
+        ),
       );
 
     if (localChanges.length === 0) {
@@ -85,14 +85,19 @@ export class SyncService {
       const response = await http.post(SYNC_ENDPOINT.POST_SYNC_PUSH, {
         items: localChanges.map((item) => {
           // Robust handling of updatedAt which might be Date or timestamp
-          const updatedTs = item.updatedAt instanceof Date 
-            ? item.updatedAt.getTime() 
-            : typeof item.updatedAt === 'number' 
-              ? item.updatedAt 
-              : Date.parse(String(item.updatedAt));
+          const updatedTs =
+            item.updatedAt instanceof Date
+              ? item.updatedAt.getTime()
+              : typeof item.updatedAt === 'number'
+                ? item.updatedAt
+                : Date.parse(String(item.updatedAt));
 
-          const deletedTs = item.deletedAt 
-            ? (item.deletedAt instanceof Date ? item.deletedAt.getTime() : typeof item.deletedAt === 'number' ? item.deletedAt : Date.parse(String(item.deletedAt)))
+          const deletedTs = item.deletedAt
+            ? item.deletedAt instanceof Date
+              ? item.deletedAt.getTime()
+              : typeof item.deletedAt === 'number'
+                ? item.deletedAt
+                : Date.parse(String(item.deletedAt))
             : null;
 
           return {
@@ -107,7 +112,10 @@ export class SyncService {
       });
 
       if (!response.success) {
-        logger.error('[Sync] Push request failed', { message: response.message, error: response.error });
+        logger.error('[Sync] Push request failed', {
+          message: response.message,
+          error: response.error,
+        });
       } else {
         logger.info('[Sync] Push successful');
       }
@@ -145,10 +153,10 @@ export class SyncService {
 
     // OWASP A04: Validation of server-supplied data before insertion
     const validationResult = z.array(syncItemSchema).safeParse(rawItems);
-    
+
     if (!validationResult.success) {
-      logger.error('[Sync] Pull data validation failed', { 
-        errors: validationResult.error.flatten().fieldErrors 
+      logger.error('[Sync] Pull data validation failed', {
+        errors: validationResult.error.flatten().fieldErrors,
       });
       return;
     }

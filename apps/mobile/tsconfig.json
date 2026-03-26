@@ -4,33 +4,15 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@src/*": [
-        "src/*"
-      ],
-      "@components/*": [
-        "src/components/*"
-      ],
-      "@hooks/*": [
-        "src/hooks/*"
-      ],
-      "@libs/*": [
-        "src/libs/*"
-      ],
-      "@database/*": [
-        "src/libs/database/*"
-      ],
-      "@utils/*": [
-        "src/utils/*"
-      ],
-      "@store/*": [
-        "src/store/*"
-      ],
-      "@types/*": [
-        "src/types/*"
-      ],
-      "@services/*": [
-        "src/services/*"
-      ],
+      "@src/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@libs/*": ["src/libs/*"],
+      "@database/*": ["src/libs/database/*"],
+      "@utils/*": ["src/utils/*"],
+      "@store/*": ["src/store/*"],
+      "@types/*": ["src/types/*"],
+      "@services/*": ["src/services/*"],
       "@securevault/constants": ["../../packages/constants/src"],
       "@securevault/crypto": ["../../packages/crypto/src"],
       "@securevault/libs": ["../../packages/libs/src"],
@@ -41,11 +23,5 @@
       "@securevault/validators": ["../../packages/validators/src"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
 }

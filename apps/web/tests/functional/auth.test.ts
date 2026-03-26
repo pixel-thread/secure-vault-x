@@ -30,7 +30,10 @@ describe("Auth Functional Tests", () => {
 
   it("should fail to return profile with an expired token", async () => {
     const secret = new TextEncoder().encode(JWT_SECRET);
-    const expiredToken = await new jose.SignJWT({ userId: testUserId, sessionId: testSessionId })
+    const expiredToken = await new jose.SignJWT({
+      userId: testUserId,
+      sessionId: testSessionId,
+    })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuer("securevault-api")
       .setAudience("securevault-client")

@@ -9,7 +9,11 @@ type Props = {
   options?: OptionsT;
 };
 
-export const truncateText = ({ text, maxLength = 20, options }: Props): string => {
+export const truncateText = ({
+  text,
+  maxLength = 20,
+  options,
+}: Props): string => {
   const { position = "end", ellipsis = "..." } = { ...options }; // ✅ Default values
 
   const ellipsisLength = ellipsis.length; // ✅ Safe - defaults defined

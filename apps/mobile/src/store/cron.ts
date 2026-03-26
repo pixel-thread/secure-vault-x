@@ -16,6 +16,6 @@ export const useCronStore = create<CronState>()(
     {
       name: 'cron-storage',
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );

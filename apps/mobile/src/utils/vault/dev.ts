@@ -23,7 +23,7 @@ function generateMockValue(label: string, type: string, index: number): string {
     return `user_${index + 1}`;
   }
   if (lowerLabel.includes('url') || lowerLabel.includes('website')) {
-    return `https://service-${index + 1}.io/auth`;
+    return `https://github.com`;
   }
   if (lowerLabel.includes('email')) {
     return `dev-${index + 1}@example.com`;
@@ -50,14 +50,19 @@ function generateMockValue(label: string, type: string, index: number): string {
  * @param count - Number of items to generate (default 100)
  */
 export async function seedVaultItems(
-  addVaultItem: (item: { id: string; encryptedData: string; iv: string; version: number }) => Promise<void>,
-  count: number = 10
+  addVaultItem: (item: {
+    id: string;
+    encryptedData: string;
+    iv: string;
+    version: number;
+  }) => Promise<void>,
+  count: number = 10,
 ) {
   const mek = await DeviceStoreManager.getMek();
 
   if (!mek) {
     throw new Error(
-      'MEK not found in device store. Please ensure you are logged in and have set up your vault.'
+      'MEK not found in device store. Please ensure you are logged in and have set up your vault.',
     );
   }
 
@@ -112,7 +117,7 @@ export async function seedVaultItems(
  */
 export async function clearVaultItems(
   vaultItems: { id: string }[],
-  deleteVaultItem: (id: string) => Promise<void>
+  deleteVaultItem: (id: string) => Promise<void>,
 ) {
   logger.info(`[DevUtils] Clearing ${vaultItems.length} items`);
 
@@ -134,7 +139,9 @@ export async function dropDatabase(dbName: string = 'app.db') {
   try {
     // Attempt graceful close if the db connection is accessible, otherwise delete directly
     await SQLite.deleteDatabaseAsync(dbName);
-    logger.info(`[DevUtils] Database ${dbName} successfully dropped. Trigger an app reload to recreate tables.`);
+    logger.info(
+      `[DevUtils] Database ${dbName} successfully dropped. Trigger an app reload to recreate tables.`,
+    );
   } catch (error) {
     logger.error(`[DevUtils] Failed to drop database ${dbName}`, error);
     throw error;
@@ -146,20 +153,21 @@ export async function dropDatabase(dbName: string = 'app.db') {
  */
 export async function scheduleTestNotifications(
   vaultItems: VaultSecretT[],
-  scheduleTest: (item: VaultSecretT, delayMs: number) => Promise<string | null>
+  scheduleTest: (item: VaultSecretT, delayMs: number) => Promise<string | null>,
 ) {
   logger.info(`[DevUtils] Scheduling test notifications for ${vaultItems.length} items`);
 
   // Group by type to ensure we hit one of each
-  const types = Array.from(new Set(vaultItems.map(i => i.type)));
-  const uniqueItems = types.map(t => vaultItems.find(i => i.type === t)).filter(Boolean) as VaultSecretT[];
+  const types = Array.from(new Set(vaultItems.map((i) => i.type)));
+  const uniqueItems = types
+    .map((t) => vaultItems.find((i) => i.type === t))
+    .filter(Boolean) as VaultSecretT[];
 
   for (let i = 0; i < uniqueItems.length; i++) {
     const item = uniqueItems[i];
     const delayMs = (i + 1) * 60000; // 1 min, 2 min, etc.
     await scheduleTest(item, delayMs);
   }
-  
+
   logger.info(`[DevUtils] Successfully scheduled ${uniqueItems.length} test notifications`);
 }
-

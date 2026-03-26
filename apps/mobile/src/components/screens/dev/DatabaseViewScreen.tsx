@@ -13,7 +13,7 @@ import { StackHeader } from '@src/components/common/StackHeader';
  */
 export function DatabaseViewScreen() {
   const db = useContext(DrizzleContext);
-  const [data, setData] = useState<typeof schema.vault.$inferSelect[]>([]);
+  const [data, setData] = useState<(typeof schema.vault.$inferSelect)[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
@@ -47,7 +47,8 @@ export function DatabaseViewScreen() {
           isDeleted
             ? 'border-rose-200 bg-rose-50/30 dark:border-rose-900/30 dark:bg-rose-950/10'
             : 'border-zinc-200 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/40'
-        } p-6 shadow-sm`}>
+        } p-6 shadow-sm`}
+      >
         <View className="mb-4 flex-row items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-800">
           <Text className="font-mono text-[10px] uppercase tracking-tight text-zinc-500">
             {item.id.substring(0, 16)}...
@@ -79,7 +80,8 @@ export function DatabaseViewScreen() {
             <View className="rounded-2xl bg-zinc-50 p-3 dark:bg-zinc-950/50">
               <Text
                 className="font-mono text-[11px] leading-4 text-zinc-600 dark:text-zinc-400"
-                numberOfLines={3}>
+                numberOfLines={3}
+              >
                 {item.encryptedData}
               </Text>
             </View>

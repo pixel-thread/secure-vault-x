@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useColorScheme } from 'nativewind';
-import { Ionicons } from '@expo/vector-icons';
 import { useVaultContext } from '@hooks/vault/useVaultContext';
 import { AddSecretForm } from '@src/components/screens/secret/AddSecretForm';
 import { SECRET_TEMPLATES } from '@securevault/constants';
@@ -39,8 +37,6 @@ export default function UpdateSecretPage() {
   // Find the exact matching template or fallback
   const template =
     SECRET_TEMPLATES.find((t) => t.type === selectedSecret.type) || SECRET_TEMPLATES[0];
-
-  const title = selectedSecret.title || 'Secret Details';
 
   return (
     <Container>

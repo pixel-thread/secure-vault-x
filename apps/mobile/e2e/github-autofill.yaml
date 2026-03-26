@@ -1,0 +1,36 @@
+appId: com.pixelthread.securevaultx.dev
+---
+- launchApp:
+    clearState: false
+
+# 1. Add GitHub credential to vault
+- tapOn:
+    id: "add-button"
+- tapOn:
+    id: "template-login"
+- tapOn:
+    id: "field-title"
+- inputText: "GitHub"
+- tapOn:
+    id: "field-username"
+- inputText: "maestro-tester"
+- tapOn:
+    id: "field-password"
+- inputText: "secure-password-123"
+- tapOn:
+    id: "field-website-url"
+- inputText: "github.com"
+- tapOn:
+    id: "save-button"
+
+# 2. Verify in Chrome
+- launchApp: com.android.chrome
+- openLink: https://github.com/login
+- tapOn: "Username or email address"
+
+# 3. Assert Autofill Suggestion
+- assertVisible: "Vault: maestro-tester"
+- tapOn: "Vault: maestro-tester"
+
+# 4. Verify fields filled
+- assertVisible: "maestro-tester"

@@ -1,10 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { DrawerToggleButton } from '@react-navigation/drawer';
 import { useVaultContext } from '@src/hooks/vault/useVaultContext';
 
 /**

@@ -7,7 +7,7 @@ describe("A01: Header Spoofing (Broken Access Control)", () => {
     const res = await request(baseUrl)
       .get("/vault")
       .set("x-user-id", "unauthorized-uuid-123");
-    
+
     expect([401, 429]).toContain(res.status);
   });
 
@@ -15,7 +15,7 @@ describe("A01: Header Spoofing (Broken Access Control)", () => {
     const res = await request(baseUrl)
       .get("/vault")
       .set("x-session-id", "malicious-session-id");
-    
+
     expect([401, 429]).toContain(res.status);
   });
 });

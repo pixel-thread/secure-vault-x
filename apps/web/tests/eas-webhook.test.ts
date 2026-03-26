@@ -52,7 +52,10 @@ describe("EAS Webhook API", () => {
       console.log("Error Response:", await res.json());
     }
     expect(res.status).toBe(201);
-    expect(upsertEASWebhook).toHaveBeenCalledWith("BUILD", expect.objectContaining({ id: "build-123" }));
+    expect(upsertEASWebhook).toHaveBeenCalledWith(
+      "BUILD",
+      expect.objectContaining({ id: "build-123" }),
+    );
     expect(promoteToAppVersion).toHaveBeenCalled();
   });
 
@@ -80,7 +83,10 @@ describe("EAS Webhook API", () => {
       console.log("Error Response:", await res.json());
     }
     expect(res.status).toBe(201);
-    expect(upsertEASWebhook).toHaveBeenCalledWith("UPDATE", expect.objectContaining({ id: "update-123" }));
+    expect(upsertEASWebhook).toHaveBeenCalledWith(
+      "UPDATE",
+      expect.objectContaining({ id: "update-123" }),
+    );
     expect(promoteToAppVersion).not.toHaveBeenCalled();
   });
 });

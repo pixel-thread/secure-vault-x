@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { ErrorResponse, SuccessResponse } from "@/utils/next-response";
-import { 
-  type EasWebhookPayload, 
-  isEasBuildPayload, 
-  isEasUpdatePayload, 
-  isEasSubmitPayload 
+import {
+  type EasWebhookPayload,
+  isEasBuildPayload,
+  isEasUpdatePayload,
+  isEasSubmitPayload,
 } from "@securevault/types";
 import { verifyExpoSignature } from "@/utils/eas/verifyExpoSignature";
 import { promoteToAppVersion } from "@/services/appVersion/promoteToAppVersion";
