@@ -38,9 +38,9 @@ export default function Redirect({ children }: Props) {
   }, [isAuthenticated, isLoading, segments, router]);
 
   // While we are loading auth state or checking for redirects, show the splash/loading screen
-  if (isLoading || isCheckingAuth) {
-    return <LoadingScreen message="Verifying session..." />;
-  }
+  // if (isLoading || isCheckingAuth) {
+  //   return <LoadingScreen message="Verifying session..." />;
+  // }
 
   const inAuthGroup = segments[0] === 'auth';
 
