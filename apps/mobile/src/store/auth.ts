@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { UserT } from '@securevault/types';
 import { DeviceStoreManager } from './device';
-import { PasswordManager } from '@src/PasswordManager';
+import { PasswordManager } from '@utils/PasswordManager';
 
 interface AuthState {
   isAuthenticated: boolean;

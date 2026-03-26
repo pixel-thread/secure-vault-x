@@ -8,7 +8,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import { PasswordManager, Credential } from '@src/PasswordManager';
+import { PasswordManager, Credential } from '@utils/PasswordManager';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -51,7 +51,7 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
         useNativeDriver: true,
       }),
     ]).start();
-  }, [siteKey]);
+  }, [siteKey, slideAnim, opacityAnim]);
 
   const handleSelect = async (cred: Credential) => {
     await PasswordManager.resolveAutofill(cred);

@@ -17,7 +17,7 @@ const {
 const fs = require('fs');
 const path = require('path');
 
-const pkg = { name: 'secure-vault-x-password-manager', version: '2.2.0' };
+const pkg = { name: 'secure-vault-x-password-manager', version: '2.5.0' };
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  KOTLIN TEMPLATES
@@ -318,17 +318,24 @@ class PasswordManagerPackage : ReactPackage {
 }
 `;
 
-const PASSWORD_MANAGER_TS =
-  "import { NativeModules, Platform } from 'react-native';\n" +
-  'const { PasswordManager: Native } = NativeModules;\n' +
-  'export const PasswordManager = {\n' +
-  '  syncVault: (sm) => Native.syncVault(JSON.stringify(sm)),\n' +
-  '  clearVault: () => Native.clearVault(),\n' +
-  '  get: (s) => Native.getCredentials(s).then(JSON.parse),\n' +
-  '  resolveAutofill: (c) => Native.resolveAutofill(c.username, c.password),\n' +
-  '  cancelAutofill: () => Native.cancelAutofill(),\n' +
-  "  getAutofillContext: () => Platform.OS === 'android' ? Native.getAutofillContext() : Promise.resolve(null),\n" +
-  '};';
+const PASSWORD_MANAGER_TS = `import { NativeModules, Platform } from 'react-native';
+
+const { PasswordManager: Native } = NativeModules;
+
+export interface Credential {
+  username: string;
+  password?: string;
+}
+
+export const PasswordManager = {
+  syncVault: (sm: any) => Native.syncVault(JSON.stringify(sm)),
+  clearVault: () => Native.clearVault(),
+  get: (s: string): Promise<Credential[]> => Native.getCredentials(s).then(JSON.parse),
+  resolveAutofill: (c: Credential) => Native.resolveAutofill(c.username, c.password),
+  cancelAutofill: () => Native.cancelAutofill(),
+  getAutofillContext: (): Promise<{ siteKey: string } | null> =>
+    Platform.OS === 'android' ? Native.getAutofillContext() : Promise.resolve(null),
+};`;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  PLUGIN FUNCTIONS
@@ -361,7 +368,10 @@ function withAndroidAutofill(config) {
     else app.service.push(serviceDef);
 
     const mainActivity = app.activity.find((a) => a['$']?.['android:name'] === '.MainActivity');
-    if (mainActivity) mainActivity['$']['android:theme'] = '@style/Theme.App.Translucent';
+    if (mainActivity) {
+      mainActivity['$']['android:theme'] = '@style/Theme.App.Translucent';
+      mainActivity['$']['android:launchMode'] = 'singleTask';
+    }
     return config;
   });
 }
@@ -422,8 +432,10 @@ function withAndroidNativeFiles(config) {
         rep(PASSWORD_MANAGER_PACKAGE_KT),
       );
 
-      // Bridge TS
-      fs.writeFileSync(path.join(root, 'src/PasswordManager.ts'), PASSWORD_MANAGER_TS);
+      // Bridge TS — Updated to src/utils
+      const utilsDir = path.join(root, 'src/utils');
+      fs.mkdirSync(utilsDir, { recursive: true });
+      fs.writeFileSync(path.join(utilsDir, 'PasswordManager.ts'), PASSWORD_MANAGER_TS);
       return config;
     },
   ]);

@@ -3,6 +3,7 @@ import { useRouter, useSegments } from 'expo-router';
 import { useAuthStore } from '../../store/auth';
 import MekSetup from '@src/app/mek';
 import { LoadingScreen } from './LoadingScreen';
+import { useAutofillStore } from '@src/store/autofill';
 
 type Props = {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ export default function Redirect({ children }: Props) {
   const router = useRouter();
   const { isAuthenticated, isLoading, hasMek } = useAuthStore();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { isAutofilling } = useAutofillStore();
 
   useEffect(() => {
     // Wait for the auth store to finish loading its initial state
@@ -38,9 +40,11 @@ export default function Redirect({ children }: Props) {
   }, [isAuthenticated, isLoading, segments, router]);
 
   // While we are loading auth state or checking for redirects, show the splash/loading screen
-  // if (isLoading || isCheckingAuth) {
-  //   return <LoadingScreen message="Verifying session..." />;
-  // }
+  const showLoading = isLoading || isCheckingAuth;
+
+  if (showLoading && !isAutofilling) {
+    return <LoadingScreen message="Verifying session..." />;
+  }
 
   const inAuthGroup = segments[0] === 'auth';
 
