@@ -24,10 +24,10 @@ export async function isBiometricAvailable(): Promise<boolean> {
 export async function authenticateWithBiometric(): Promise<boolean> {
   try {
     const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'Authenticate to access SecureVault',
+      promptMessage: 'Authenticate to access SecureVault X',
       fallbackLabel: 'Use Passcode',
       cancelLabel: 'Cancel',
-      disableDeviceFallback: false,
+      disableDeviceFallback: true,
     });
 
     if (!result.success && result.error) {
@@ -40,3 +40,20 @@ export async function authenticateWithBiometric(): Promise<boolean> {
     return false;
   }
 }
+
+export const promptBiometric = async (): Promise<boolean> => {
+  try {
+    logger.info('Prompting for biometric authentication...');
+    const success = await authenticateWithBiometric();
+    if (success) {
+      logger.info('Biometric authentication successful');
+      return true;
+    } else {
+      logger.warn('Biometric authentication failed or cancelled');
+      return false;
+    }
+  } catch (e) {
+    logger.error('Uncaught error during manual biometric prompt', e);
+    return false;
+  }
+};

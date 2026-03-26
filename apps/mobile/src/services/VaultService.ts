@@ -223,6 +223,7 @@ export class VaultService {
           const site = websiteField?.value || item.title;
           if (!siteMap[site]) siteMap[site] = [];
           siteMap[site].push({
+            id: item.id,
             username: usernameField.value,
             password: passwordField.value,
           });

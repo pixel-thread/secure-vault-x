@@ -23,7 +23,7 @@ function generateMockValue(label: string, type: string, index: number): string {
     return `user_${index + 1}`;
   }
   if (lowerLabel.includes('url') || lowerLabel.includes('website')) {
-    return `https://service-${index + 1}.io/auth`;
+    return `https://github.com`;
   }
   if (lowerLabel.includes('email')) {
     return `dev-${index + 1}@example.com`;

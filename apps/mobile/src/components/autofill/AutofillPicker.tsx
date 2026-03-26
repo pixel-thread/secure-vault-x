@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,13 @@ import {
   Dimensions,
 } from 'react-native';
 import { PasswordManager, Credential } from '@utils/PasswordManager';
-import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-
+import { RefreshControl } from 'react-native-gesture-handler';
+import { useVaultContext } from '@src/hooks/vault/useVaultContext';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface AutofillPickerProps {
-  siteKey: string;
+  siteKey: string | null;
   onClose: () => void;
 }
 
@@ -24,7 +24,13 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
   const [slideAnim] = useState(new Animated.Value(SCREEN_HEIGHT));
   const [opacityAnim] = useState(new Animated.Value(0));
 
+  const {
+    sync,
+    isLoading: { isSyncing },
+  } = useVaultContext();
+
   useEffect(() => {
+    if (!siteKey) return;
     Keyboard.dismiss();
 
     let retries = 0;
@@ -84,24 +90,25 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
 
   return (
     <Animated.View style={{ opacity: opacityAnim }} className="absolute inset-0 justify-end">
-      <BlurView intensity={80} tint="dark" className="absolute inset-0" />
-
       <Animated.View
         style={{ transform: [{ translateY: slideAnim }] }}
         className="max-h-[80%] rounded-t-3xl border border-white/10 bg-[#1c1c1c] pb-10"
       >
         <View className="items-center py-5">
-          <View className="mb-4 h-[5px] w-10 rounded bg-white/20" />
+          <View className="mb-4 h-[5px] w-10 rounded bg-white/20 dark:bg-white/10" />
 
-          <Text className="text-[22px] font-extrabold tracking-wide text-white">SecureVault X</Text>
+          <Text className="text-4xl font-extrabold tracking-tighter text-white dark:text-white">
+            SecureVault <Text className="text-emerald-500">X</Text>
+          </Text>
 
           <Text className="mt-1 text-sm text-white/50">Autofilling for {siteKey}</Text>
         </View>
 
         <FlatList
           data={credentials}
+          refreshControl={<RefreshControl refreshing={isSyncing} onRefresh={() => sync()} />}
           renderItem={renderItem}
-          keyExtractor={(item) => item.username}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 20 }}
           ListEmptyComponent={
             <View className="items-center p-10">

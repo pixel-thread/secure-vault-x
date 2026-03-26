@@ -3,7 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
-import { Wrapper, AutofillWrapper } from '@components/providers';
+import { Wrapper } from '@components/providers';
 import React, { useEffect, useCallback } from 'react';
 import { useSyncTrigger } from '@hooks/useSyncTrigger';
 import { GlobalErrorBoundary } from '@components/common/GlobalErrorBoundary';
@@ -13,6 +13,9 @@ import { AutofillPicker } from '@components/autofill/AutofillPicker';
 import { AppState, View } from 'react-native';
 import { useAutofillStore } from '@store/autofill';
 import { initGlobalErrorTracking } from '@utils/errors';
+import { NavigationIndependentTree, NavigationContainer } from '@react-navigation/native';
+import { logger } from '@securevault/utils-native';
+import { Ternary } from '@src/components/common/Ternary';
 import {
   useFonts,
   JetBrainsMono_400Regular,
@@ -20,8 +23,6 @@ import {
   JetBrainsMono_700Bold,
   JetBrainsMono_800ExtraBold,
 } from '@expo-google-fonts/jetbrains-mono';
-import { Ternary } from '@src/components/common/Ternary';
-import { logger } from '@securevault/utils-native';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -51,18 +52,19 @@ export default function RootLayout() {
     JetBrainsMono_800ExtraBold,
   });
 
-  const { autofillSiteKey, isAutofilling, setAutofillSiteKey, reset } = useAutofillStore();
+  const { autofillSiteKey, setAutofillSiteKey, isAutofilling, reset } = useAutofillStore();
   const [isInitializing, setIsInitializing] = React.useState(true);
 
   const checkAutofill = useCallback(async () => {
     try {
       const context = await PasswordManager.getAutofillContext();
+      logger.info(`[LAYOUT] Context check: ${context?.siteKey ?? 'none'}`);
       if (context?.siteKey) {
         setAutofillSiteKey(context.siteKey);
         await SplashScreen.hideAsync();
       }
     } catch (e) {
-      logger.warn('Autofill check failed', e);
+      logger.warn('[LAYOUT] Autofill check error', e);
     }
   }, [setAutofillSiteKey]);
 
@@ -99,16 +101,25 @@ export default function RootLayout() {
     return <View style={{ flex: 1, backgroundColor: autofillSiteKey ? 'transparent' : '#000' }} />;
   }
 
-  // Normal App Mode
+  // Use a key to force re-mounting of the Wrapper (and BiometricProvider)
+  // when switching between normal app and autofill modes.
+  const layoutMode = autofillSiteKey && isAutofilling ? 'autofill' : 'app';
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GlobalErrorBoundary>
         <SafeAreaProvider>
-          <Wrapper>
+          <Wrapper key={layoutMode}>
             <AppSyncManager>
               <Ternary
-                condition={!!autofillSiteKey && isAutofilling}
-                ifTrue={<AutofillPicker siteKey={autofillSiteKey || ''} onClose={reset} />}
+                condition={layoutMode === 'autofill'}
+                ifTrue={
+                  <NavigationIndependentTree>
+                    <NavigationContainer>
+                      <AutofillPicker siteKey={autofillSiteKey || ''} onClose={reset} />
+                    </NavigationContainer>
+                  </NavigationIndependentTree>
+                }
                 ifFalse={
                   <View style={{ flex: 1, backgroundColor: '#000' }}>
                     <Stack
