@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import { PasswordManager, Credential } from '@utils/PasswordManager';
 import { Ionicons } from '@expo/vector-icons';
 import { RefreshControl } from 'react-native-gesture-handler';
 import { useVaultContext } from '@src/hooks/vault/useVaultContext';
+import { logger } from '@securevault/utils-native';
+
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface AutofillPickerProps {
@@ -19,31 +21,75 @@ interface AutofillPickerProps {
   onClose: () => void;
 }
 
+/**
+ * Normalizes a URL or site key for fuzzy matching, mirroring the native implementation.
+ */
+const normalize = (raw: string) => {
+  if (!raw) return '';
+  let s = raw.toLowerCase().trim();
+  s = s.replace(/^https?:\/\//, '').split('/')[0];
+  const common = ['com.', '.android', '.com', '.net', '.org', '.co.uk', 'www.'];
+  common.forEach((it) => {
+    s = s.replace(it, '');
+  });
+  return s.replace(/[^a-z0-9]/g, '');
+};
+
 export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose }) => {
-  const [credentials, setCredentials] = useState<Credential[]>([]);
   const [slideAnim] = useState(new Animated.Value(SCREEN_HEIGHT));
   const [opacityAnim] = useState(new Animated.Value(0));
 
   const {
+    vaultItems,
     sync,
     isLoading: { isSyncing },
   } = useVaultContext();
 
-  useEffect(() => {
-    if (!siteKey) return;
-    Keyboard.dismiss();
+  /**
+   * Fuzzy-match vault items against the current siteKey in JavaScript.
+   * This replaces the need for native side syncing/matching.
+   */
+  const matchedCredentials = useMemo(() => {
+    if (!siteKey || !vaultItems) return [];
 
-    let retries = 0;
-    const fetch = async () => {
-      const creds = await PasswordManager.get(siteKey);
-      if (creds.length > 0) {
-        setCredentials(creds);
-      } else if (retries < 3) {
-        retries++;
-        setTimeout(fetch, 500);
-      }
-    };
-    fetch();
+    const normSite = normalize(siteKey);
+    logger.info(`[PICKER] Filtering for normSite: ${normSite}`);
+
+    return vaultItems
+      .filter((item) => item.type === 'login')
+      .filter((item) => {
+        // Match against title
+        const normTitle = normalize(item.title || '');
+        if (normTitle.includes(normSite) || normSite.includes(normTitle)) return true;
+
+        // Match against any URL/website fields
+        return item.fields.some((f) => {
+          if (f.type === 'url' || f.label.toLowerCase() === 'website') {
+            const normUrl = normalize(f.value || '');
+            return normUrl.includes(normSite) || normSite.includes(normUrl);
+          }
+          return false;
+        });
+      })
+      .map((item) => {
+        // Transform VaultItem to a Credential object for resolution
+        const usernameField = item.fields.find(
+          (f) => f.id === 'username' || f.id === 'user' || f.label.toLowerCase() === 'username',
+        );
+        const passwordField = item.fields.find(
+          (f) => f.id === 'password' || f.id === 'pass' || f.type === 'password',
+        );
+
+        return {
+          id: item.id,
+          username: usernameField?.value || 'Unknown User',
+          password: passwordField?.value || '',
+        } as Credential;
+      });
+  }, [siteKey, vaultItems]);
+
+  useEffect(() => {
+    Keyboard.dismiss();
 
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -57,14 +103,16 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
         useNativeDriver: true,
       }),
     ]).start();
-  }, [siteKey, slideAnim, opacityAnim]);
+  }, [slideAnim, opacityAnim]);
 
   const handleSelect = async (cred: Credential) => {
+    logger.info(`[PICKER] Resolving autofill for: ${cred.username}`);
     await PasswordManager.resolveAutofill(cred);
     onClose();
   };
 
   const handleCancel = async () => {
+    logger.info('[PICKER] Cancelling autofill');
     await PasswordManager.cancelAutofill();
     onClose();
   };
@@ -105,14 +153,17 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
         </View>
 
         <FlatList
-          data={credentials}
+          data={matchedCredentials}
           refreshControl={<RefreshControl refreshing={isSyncing} onRefresh={() => sync()} />}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 20 }}
           ListEmptyComponent={
             <View className="items-center p-10">
-              <Text className="text-center text-white/30">No credentials found for this site</Text>
+              <Ionicons name="search-outline" size={48} color="rgba(255,255,255,0.1)" />
+              <Text className="mt-4 text-center text-white/30">
+                No credentials found for this site.{'\n'}Pull down to sync or search manualy.
+              </Text>
             </View>
           }
         />

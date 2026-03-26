@@ -8,9 +8,9 @@ export interface Credential {
 }
 
 export const PasswordManager = {
-  syncVault: (sm: any) => Native.syncVault(JSON.stringify(sm)),
-  clearVault: () => Native.clearVault(),
-  get: (s: string): Promise<Credential[]> => Native.getCredentials(s).then(JSON.parse),
+  syncVault: (sm: any) => Promise.resolve(true),
+  clearVault: () => Promise.resolve(true),
+  get: (s: string): Promise<Credential[]> => Promise.resolve([]),
   resolveAutofill: (c: Credential) => Native.resolveAutofill(c.username, c.password),
   cancelAutofill: () => Native.cancelAutofill(),
   getAutofillContext: (): Promise<{ siteKey: string } | null> =>
