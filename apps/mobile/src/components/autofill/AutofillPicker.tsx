@@ -25,6 +25,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
+import { normalizeCredentailSearch } from '@src/utils/helper/normalizeCredentailsSearch';
+import { useThemeStore } from '@src/store/theme';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -33,22 +35,12 @@ interface AutofillPickerProps {
   onClose: () => void;
 }
 
-const normalize = (raw: string) => {
-  if (!raw) return '';
-  let s = raw.toLowerCase().trim();
-  s = s.replace(/^https?:\/\//, '').split('/')[0];
-  const common = ['com.', '.android', '.com', '.net', '.org', '.co.uk', 'www.'];
-  common.forEach((it) => {
-    s = s.replace(it, '');
-  });
-  return s.replace(/[^a-z0-9]/g, '');
-};
-
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
 export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose }) => {
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const opacity = useSharedValue(0);
+  const { isDarkMode } = useThemeStore();
 
   // States for unpaginated search
   const [allCredentials, setAllCredentials] = useState<Credential[]>([]);
@@ -96,11 +88,11 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
 
   const matchedCredentials = useMemo(() => {
     if (!siteKey || allCredentials.length === 0) return [];
-    const normSite = normalize(siteKey);
+    const normSite = normalizeCredentailSearch(siteKey);
 
     return allCredentials.filter((cred: any) => {
       const item = cred._rawItem;
-      const normTitle = normalize(item.title || '');
+      const normTitle = normalizeCredentailSearch(item.title || '');
 
       // Match by title
       if (normTitle.includes(normSite) || normSite.includes(normTitle)) return true;
@@ -108,7 +100,7 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
       // Match by sub-fields (URLs/Websites)
       return item.fields.some((f: any) => {
         if (f.type === 'url' || f.label.toLowerCase() === 'website') {
-          const normUrl = normalize(f.value || '');
+          const normUrl = normalizeCredentailSearch(f.value || '');
           return normUrl.includes(normSite) || normSite.includes(normUrl);
         }
         return false;
@@ -178,20 +170,32 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
 
   const renderItem = ({ item }: { item: Credential }) => (
     <TouchableOpacity
-      className="mb-4 flex-row items-center rounded-2xl border border-white/10 bg-white/5 p-4"
+      className={`mb-4 flex-row items-center rounded-2xl border p-4 ${
+        isDarkMode ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'
+      }`}
       onPress={() => handleSelect(item)}
       activeOpacity={0.7}
     >
-      <View className="mr-4 h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20">
+      <View className="mr-4 h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10">
         <Ionicons name="person-outline" size={24} color="#10b981" />
       </View>
       <View className="flex-1">
-        <Text className="text-base font-bold text-white">{item.username}</Text>
-        <Text className="mt-0.5 text-xs font-medium uppercase leading-4 tracking-widest text-white/40">
+        <Text className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+          {item.username}
+        </Text>
+        <Text
+          className={`mt-0.5 text-xs font-medium uppercase leading-4 tracking-widest ${
+            isDarkMode ? 'text-white/40' : 'text-slate-400'
+          }`}
+        >
           {siteKey}
         </Text>
       </View>
-      <Ionicons name="chevron-forward-outline" size={20} color="rgba(255,255,255,0.2)" />
+      <Ionicons
+        name="chevron-forward-outline"
+        size={20}
+        color={isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}
+      />
     </TouchableOpacity>
   );
 
@@ -203,25 +207,37 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
 
       <GestureDetector gesture={gesture}>
         <Animated.View
-          className="absolute bottom-0 left-0 right-0 max-h-[85%] min-h-[40%] overflow-hidden rounded-t-[32px] border-t border-white/10 bg-[#141416]/90"
+          className={`absolute bottom-0 left-0 right-0 max-h-[85%] min-h-[40%] overflow-hidden rounded-t-[32px] border-t ${
+            isDarkMode ? 'border-white/10 bg-[#141416]' : 'border-slate-200 bg-white'
+          }`}
           style={animatedSheetStyle}
         >
-          <AnimatedBlurView intensity={65} tint="dark" className="absolute inset-0" />
+          <AnimatedBlurView
+            intensity={isDarkMode ? 65 : 45}
+            tint={isDarkMode ? 'dark' : 'light'}
+            className="absolute inset-0"
+          />
 
           <View className="items-center px-6 pb-8 pt-3">
-            <View className="mb-6 h-1 w-12 rounded-full bg-white/20" />
+            <View
+              className={`mb-6 h-1 w-12 rounded-full ${isDarkMode ? 'bg-white/20' : 'bg-slate-200'}`}
+            />
 
             <View className="flex-row items-center">
-              <View className="mr-2 h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 shadow-lg shadow-emerald-500/30">
-                <Ionicons name="shield-checkmark" size={20} color="white" />
-              </View>
-              <Text className="text-3xl font-black tracking-tighter text-white">
-                SecureVault<Text className="italic text-emerald-500">X</Text>
+              <Text
+                className={`text-3xl font-black tracking-tighter ${isDarkMode ? 'text-white' : 'text-slate-900'}`}
+              >
+                SecureVault&nbsp;<Text className="text-4xl font-bold text-emerald-500">X</Text>
               </Text>
             </View>
 
-            <Text className="mt-3 text-sm font-medium text-white/40">
-              Pick a credential for <Text className="font-bold text-white/80">{siteKey}</Text>
+            <Text
+              className={`mt-3 text-sm font-medium ${isDarkMode ? 'text-white/40' : 'text-slate-500'}`}
+            >
+              Pick a credential for{' '}
+              <Text className={`font-bold ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>
+                {siteKey}
+              </Text>
             </Text>
           </View>
 
@@ -246,13 +262,23 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
                   <ActivityIndicator size="large" color="#10b981" />
                 ) : (
                   <>
-                    <View className="mb-5 h-20 w-20 items-center justify-center rounded-full border border-white/5 bg-white/5">
-                      <Ionicons name="search-outline" size={36} color="rgba(255,255,255,0.15)" />
+                    <View
+                      className={`mb-5 h-20 w-20 items-center justify-center rounded-full border ${isDarkMode ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50'}`}
+                    >
+                      <Ionicons
+                        name="search-outline"
+                        size={36}
+                        color={isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}
+                      />
                     </View>
-                    <Text className="text-center text-lg font-bold text-white/40">
+                    <Text
+                      className={`text-center text-lg font-bold ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}
+                    >
                       No matches found
                     </Text>
-                    <Text className="mt-2 px-10 text-center text-sm text-white/20">
+                    <Text
+                      className={`mt-2 px-10 text-center text-sm ${isDarkMode ? 'text-white/20' : 'text-slate-300'}`}
+                    >
                       We couldn't find any credentials for {siteKey} in your vault.
                     </Text>
                   </>
@@ -262,10 +288,12 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
           />
 
           <TouchableOpacity
-            className="mx-6 mb-12 items-center rounded-3xl border border-white/5 bg-white/5 py-4 active:bg-white/10"
+            className={`mx-6 mb-12 items-center rounded-3xl border py-4 active:bg-white/10 ${isDarkMode ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50'}`}
             onPress={() => closePicker(true)}
           >
-            <Text className="text-xs font-black uppercase tracking-[3px] text-white/40">
+            <Text
+              className={`text-xs font-black uppercase tracking-[3px] ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}
+            >
               Dismiss
             </Text>
           </TouchableOpacity>
