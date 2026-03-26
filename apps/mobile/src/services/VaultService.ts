@@ -7,7 +7,7 @@ import { DeviceStoreManager } from '@store/device';
 import { logger } from '@securevault/utils-native';
 import { z } from 'zod';
 import { VaultItemSchema } from '@utils/validators/vault';
-import { PasswordManager } from '@utils/PasswordManager';
+import { PasswordManager } from '@utils/native-bridges/PasswordManager';
 
 type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
 

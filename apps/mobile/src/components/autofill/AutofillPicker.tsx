@@ -157,7 +157,7 @@ export const AutofillPicker: React.FC<AutofillPickerProps> = ({ siteKey, onClose
   }, [fetchAllLogins]);
 
   const handleSelect = async (cred: Credential) => {
-    logger.info(`[PICKER] Resolving: ${cred.username}`);
+    logger.info(`[PICKER] Resolving: ${!!cred.username}`);
     await PasswordManager.resolveAutofill(cred);
     onClose();
   };

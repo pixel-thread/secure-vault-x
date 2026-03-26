@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { UserT } from '@securevault/types';
 import { DeviceStoreManager } from './device';
-import { PasswordManager } from '@utils/PasswordManager';
+import { PasswordManager } from '@utils/native-bridges/PasswordManager';
+import { logger } from '@securevault/utils-native';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -37,7 +38,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Physically destroy the DKEK backing the device trust.
     // This permanently bricks local Vault access on this device until re-registered.
     await DeviceStoreManager.clearAll();
-    await PasswordManager.clearVault().catch(() => {}); // Security: Wipe RAM bridge on purge
+    // Security: Wipe RAM bridge on purge
+    await PasswordManager.clearVault().catch((e: any) => {
+      logger.error('Error clearing vault', e);
+    });
     set({ isAuthenticated: false, user: null, hasMek: false });
   },
   _hydrate: () => {

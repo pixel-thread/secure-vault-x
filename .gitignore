@@ -18,8 +18,8 @@ expo-env.d.ts
 
 
 
-ios
-android
+/apps/mobile/ios
+/apps/mobile/android
 
 # macOS
 .DS_Store
@@ -42,3 +42,4 @@ apps/api/.env.local
 .env.local
 check-logs.js
 test-logger.js
+nativewind-env.d.ts
