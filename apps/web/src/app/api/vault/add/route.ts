@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { VaultService } from "@/services/vault.service";
 import { addSecretSchema } from "@securevault/validators";
 import { SuccessResponse } from "@/utils/next-response";
