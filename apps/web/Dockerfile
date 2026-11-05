@@ -6,15 +6,15 @@ ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
-# Copy standalone build
-COPY .next/standalone ./
+# Copy standalone output
+COPY apps/web/.next/standalone ./
 
-# Copy static assets
-COPY .next/static ./.next/static
+# Copy Next.js static assets
+COPY apps/web/.next/static ./apps/web/.next/static
 
 # Copy public assets
-COPY public ./public
+COPY apps/web/public ./apps/web/public
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]
